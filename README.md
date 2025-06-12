@@ -1,1 +1,1 @@
-# ScrapArtAdmin
+# football core web app

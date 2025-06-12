@@ -1,0 +1,67 @@
+# Entornos virtuales
+venv/
+env/
+.venv/
+.env/
+
+# Archivos de configuración sensibles
+*.env
+*.env.*
+
+# __pycache__ y archivos compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de log
+*.log
+
+# Archivos de base de datos locales
+*.sqlite3
+*.db
+*.db-journal
+
+# Archivos de test y cobertura
+htmlcov/
+.tox/
+.coverage
+.cache/
+pytest_cache/
+nosetests.xml
+coverage.xml
+
+# VSCode y otros editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de build
+build/
+dist/
+*.egg-info/
+
+# Archivos generados por Pydantic o tools
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Docker (si usas)
+*.pid
+*.sock
+
+# Alembic (migraciones si usas)
+alembic/versions/*.pyc
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# FastAPI specific
+instance/
+
+# Streamlit (si usas en desarrollo)
+.streamlit/
+
+# Otros
+.DS_Store
+Thumbs.db
