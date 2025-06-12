@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.routers import (
-    estados, roles
+    estados, roles, ligas, auth, users, temporadas, equipos, partidos, estadisticas
 )
 
 # Crear tablas de base de datos al iniciar
@@ -37,5 +37,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(estados.router)
 app.include_router(roles.router)
+app.include_router(temporadas.router)
+app.include_router(equipos.router)
+app.include_router(partidos.router)
+app.include_router(estadisticas.router)
