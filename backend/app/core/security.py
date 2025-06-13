@@ -20,7 +20,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # OAuth2PasswordBearer para gestionar la extracción de tokens de la cabecera Authorization
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-async def get_db_for_auth() -> AsyncGenerator[AsyncSession, None, None]:
+async def get_db_for_auth() -> AsyncGenerator[AsyncSession, None]:
     """
     Proporciona una sesión de base de datos asíncrona específica para funciones de autenticación.
     Garantiza el manejo adecuado de la sesión incluso cuando se llama fuera del flujo típico del punto final FastAPI.

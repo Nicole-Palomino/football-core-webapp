@@ -22,4 +22,3 @@ class Estado(Base):
     # Relación uno a muchos con Equipo y Partido
     equipos = relationship("Equipo", back_populates="estado")
     partidos = relationship("Partido", back_populates="estado")
-    paquetes_moneda = relationship("PaqueteMoneda", back_populates="estado")

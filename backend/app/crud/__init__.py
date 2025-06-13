@@ -30,15 +30,19 @@ from .crud_estadistica import (
     get_estadistica, get_estadistica_by_partido_id, get_estadisticas, create_estadistica,
     update_estadistica, delete_estadistica
 )
-# from .crud_paquete_moneda import (
-#     get_paquete_moneda, get_paquete_moneda_by_name, get_paquete_moneda_by_paypal_id, 
-#     get_paquetes_moneda, create_paquete_moneda, update_paquete_moneda, delete_paquete_moneda
-# )
-# from .crud_balance_usuario import (
-#     get_balance_usuario, get_balance_usuario_by_user_id, create_balance_usuario,
-#     update_balance_usuario, add_coins_to_balance, deduct_coins_from_balance, delete_balance_usuario
-# )
-# from .crud_transaccion_moneda import (
-#     get_transaccion_moneda, get_transacciones_moneda, create_transaccion_moneda,
-#     update_transaccion_moneda, delete_transaccion_moneda
-# )
+from .crud_paquete_moneda import (
+    get_paquete_by_id, create_paquete, deactivate_paquete, delete_paquete, update_paquete,
+    list_paquetes, get_paquete_by_nombre
+)
+from .crud_balance_usuario import (
+    get_balance_usuario, get_balance_usuario_by_user_id, create_balance_usuario,
+    update_balance_usuario, add_coins_to_balance, deduct_coins_from_balance, delete_balance_usuario
+)
+from .crud_compra_moneda import (
+    get_compra_by_id, capture_and_apply_topup, create_compra, delete_compra, get_compra_by_order_id, 
+    list_all_compras, list_compras_by_user, update_compra_status
+)
+from .crud_webhook_evento import (
+    crear_webhook_evento, eliminar_webhook_evento, listar_webhooks, marcar_como_procesado, 
+    obtener_webhook_evento, obtener_webhook_por_event_id
+)

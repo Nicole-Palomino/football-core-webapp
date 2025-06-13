@@ -33,8 +33,6 @@ class UserBase(BaseModel):
     """Esquema base para Usuario (tb_usuario)."""
     usuario: str = Field(..., min_length=3, max_length=50)
     correo: EmailStr
-    id_estado: int
-    id_rol: int
 
 class UserCreate(UserBase):
     """Esquema para dar de alta un nuevo Usuario."""

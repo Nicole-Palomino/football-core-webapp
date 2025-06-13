@@ -14,7 +14,6 @@ async def get_estado(db: AsyncSession, estado_id: int):
         .options(
             joinedload(models.Estado.equipos),
             joinedload(models.Estado.partidos),
-            joinedload(models.Estado.paquetes_moneda)
         )
         .filter(models.Estado.id_estado == estado_id)
     )

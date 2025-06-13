@@ -9,6 +9,9 @@ from app.core.security import get_password_hash
 from app.crud import crud_balance_usuario, crud_rol, crud_estado 
 from app.utils.email_sender import send_email
 
+DEFAULT_ESTADO = 1  # Activo
+DEFAULT_ROL = 3     # Usuario normal
+
 async def get_user(db: AsyncSession, user_id: int):
     """
     Recupera un único usuario por su ID de forma asíncrona, cargando ansiosamente roles, saldo y transacciones.
@@ -19,7 +22,7 @@ async def get_user(db: AsyncSession, user_id: int):
             joinedload(models.User.rol), 
             joinedload(models.User.estado), 
             joinedload(models.User.balance),
-            joinedload(models.User.transacciones)
+            joinedload(models.User.compras)
         )
         .filter(models.User.id_usuario == user_id)
     )
@@ -35,7 +38,7 @@ async def get_user_by_correo(db: AsyncSession, correo: str):
             joinedload(models.User.rol),
             joinedload(models.User.estado),
             joinedload(models.User.balance),
-            joinedload(models.User.transacciones)
+            joinedload(models.User.compras)
         )
         .filter(models.User.correo == correo)
     )
@@ -51,7 +54,7 @@ async def get_user_by_username(db: AsyncSession, username: str):
             joinedload(models.User.rol),
             joinedload(models.User.estado),
             joinedload(models.User.balance),
-            joinedload(models.User.transacciones)
+            joinedload(models.User.compras)
         )
         .filter(models.User.usuario == username)
     )
@@ -62,22 +65,24 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
     Crea un nuevo Usuario de forma asíncrona, haciendo hash de la contraseña y asociando rol y estado.
     También inicializa una entrada BalanceUsuario para el nuevo usuario con 15 monedas.
     """
+    id_estado = DEFAULT_ESTADO
+    id_rol = DEFAULT_ROL
     # Verificar la existencia de roles y estados
-    role = await crud_rol.get_role(db, user.id_rol)
+    role = await crud_rol.get_role(db, id_rol)
     if not role:
-        raise ValueError(f"Rol con ID {user.id_rol} no encontrado.")
+        raise ValueError(f"Rol con ID {id_rol} no encontrado.")
     
-    estado = await crud_estado.get_estado(db, user.id_estado)
+    estado = await crud_estado.get_estado(db, id_estado)
     if not estado:
-        raise ValueError(f"Estado con ID {user.id_estado} no encontrado.")
+        raise ValueError(f"Estado con ID {id_estado} no encontrado.")
 
     hashed_contrasena = get_password_hash(user.contrasena)
     db_user = models.User(
         usuario=user.usuario,
         correo=user.correo,
         contrasena=hashed_contrasena,
-        id_estado=user.id_estado,
-        id_rol=user.id_rol,
+        id_estado=id_estado,
+        id_rol=id_rol,
         registro=datetime.utcnow()
     )
     
