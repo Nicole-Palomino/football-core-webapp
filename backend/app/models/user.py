@@ -40,7 +40,7 @@ class User(Base):
     balance = relationship("BalanceUsuario", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
     
     # Relación uno a muchos con TransaccionMoneda
-    compras = relationship("CompraMoneda", back_populates="usuario")
+    compras = relationship("CompraMoneda", back_populates="usuario", lazy="selectin")
     
     # Relación muchos-a-uno con Rol (un usuario pertenece a un rol)
     rol = relationship("Rol", back_populates="users")

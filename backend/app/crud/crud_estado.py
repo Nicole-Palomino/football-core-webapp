@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from app import models, schemas
 
 async def get_estado(db: AsyncSession, estado_id: int):
@@ -12,8 +12,8 @@ async def get_estado(db: AsyncSession, estado_id: int):
     result = await db.execute(
         select(models.Estado)
         .options(
-            joinedload(models.Estado.equipos),
-            joinedload(models.Estado.partidos),
+            selectinload(models.Estado.equipos),
+            selectinload(models.Estado.partidos),
         )
         .filter(models.Estado.id_estado == estado_id)
     )

@@ -109,7 +109,7 @@ async def get_current_admin_user(current_user: schemas.User = Depends(get_curren
     admin_role_found = False
     # Comprobar si el atributo roles existe y es iterable
     if hasattr(current_user, 'rol') and current_user.rol: # Acceso directo a la función única
-        if current_user.rol.nombre_rol == "admin":
+        if current_user.rol.nombre_rol == "Administrador":
             admin_role_found = True
     
     if not admin_role_found:

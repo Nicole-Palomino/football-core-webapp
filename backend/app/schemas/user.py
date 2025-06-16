@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
+from decimal import Decimal
 
 from app.schemas.rol import Rol 
 from app.schemas.estado import Estado 
@@ -15,17 +16,13 @@ class BalanceUsuario(BaseModel):
     class Config:
         from_attributes = True
 
-class TransaccionMoneda(BaseModel):
-    id_transaccion: int
+class CompraMoneda(BaseModel):
+    id_compra: int
     id_usuario: int
     id_paquete: Optional[int] = None
+    paypal_order_id: Optional[str] = None
+    monto_usd: Decimal
     cantidad_monedas: int
-    tipo_transaccion: str
-    fecha_transaccion: datetime
-    paypal_transaction_id: Optional[str] = None
-    estado_transaccion: str
-    created_at: datetime
-    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -49,7 +46,7 @@ class UserUpdate(BaseModel): # UserUpdate puede tener campos opcionales
 
 
 class User(UserBase):
-    """Esquema para devolver datos de Usuario (incluye ID, estado activo, roles, saldo, transacciones)."""
+    """Esquema para devolver datos de Usuario (incluye ID, estado activo, roles, saldo, compras)."""
     id_usuario: int 
     is_active: bool
     registro: datetime
@@ -63,7 +60,7 @@ class User(UserBase):
     estado: Estado
 
     balance: Optional[BalanceUsuario] = None 
-    transacciones: List[TransaccionMoneda] = [] 
+    compras: List[CompraMoneda] = [] 
 
     class Config:
         from_attributes = True

@@ -1,7 +1,7 @@
 import random
 from datetime import datetime, timedelta
 from typing import List, Optional
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app import models, schemas
@@ -19,10 +19,10 @@ async def get_user(db: AsyncSession, user_id: int):
     result = await db.execute(
         select(models.User)
         .options(
-            joinedload(models.User.rol), 
-            joinedload(models.User.estado), 
-            joinedload(models.User.balance),
-            joinedload(models.User.compras)
+            selectinload(models.User.rol), 
+            selectinload(models.User.estado), 
+            selectinload(models.User.balance),
+            selectinload(models.User.compras)
         )
         .filter(models.User.id_usuario == user_id)
     )
@@ -35,10 +35,10 @@ async def get_user_by_correo(db: AsyncSession, correo: str):
     result = await db.execute(
         select(models.User)
         .options(
-            joinedload(models.User.rol),
-            joinedload(models.User.estado),
-            joinedload(models.User.balance),
-            joinedload(models.User.compras)
+            selectinload(models.User.rol),
+            selectinload(models.User.estado),
+            selectinload(models.User.balance),
+            selectinload(models.User.compras)
         )
         .filter(models.User.correo == correo)
     )
@@ -51,10 +51,10 @@ async def get_user_by_username(db: AsyncSession, username: str):
     result = await db.execute(
         select(models.User)
         .options(
-            joinedload(models.User.rol),
-            joinedload(models.User.estado),
-            joinedload(models.User.balance),
-            joinedload(models.User.compras)
+            selectinload(models.User.rol),
+            selectinload(models.User.estado),
+            selectinload(models.User.balance),
+            selectinload(models.User.compras)
         )
         .filter(models.User.usuario == username)
     )
@@ -93,7 +93,22 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
     # Inicializar el saldo para el nuevo usuario con 15 monedas
     await crud_balance_usuario.create_balance_usuario(db, schemas.BalanceUsuarioCreate(id_usuario=db_user.id_usuario, cantidad_monedas=15))
 
-    return db_user
+    await db.refresh(db_user)
+    
+    stmt = (
+        select(models.User)
+        .options(
+            selectinload(models.User.rol),
+            selectinload(models.User.estado),
+            selectinload(models.User.balance),
+            selectinload(models.User.compras),
+        )
+        .where(models.User.id_usuario == db_user.id_usuario)
+    )
+    result = await db.execute(stmt)
+    user_with_relations = result.scalars().first()
+    
+    return user_with_relations
 
 async def update_user(db: AsyncSession, user_id: int, user: schemas.UserUpdate):
     """
