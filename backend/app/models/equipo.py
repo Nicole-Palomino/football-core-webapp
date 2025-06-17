@@ -25,15 +25,15 @@ class Equipo(Base):
     id_liga = Column(Integer, ForeignKey("tb_liga.id_liga"), nullable=False)
 
     # Relaciones con otros modelos
-    estado = relationship("Estado", back_populates="equipos")
-    liga = relationship("Liga", back_populates="equipos")
+    estado = relationship("Estado", back_populates="equipos", lazy="selectin")
+    liga = relationship("Liga", back_populates="equipos", lazy="selectin")
 
     # Relaciones con el Partido para los equipos locales y visitantes
     partidos_local = relationship(
-        "Partido", foreign_keys="Partido.id_equipo_local", back_populates="equipo_local"
+        "Partido", foreign_keys="Partido.id_equipo_local", back_populates="equipo_local", lazy="selectin"
     )
     partidos_visita = relationship(
-        "Partido", foreign_keys="Partido.id_equipo_visita", back_populates="equipo_visita"
+        "Partido", foreign_keys="Partido.id_equipo_visita", back_populates="equipo_visita", lazy="selectin"
     )
 
     # Fecha de creación del registro, por defecto la hora actual

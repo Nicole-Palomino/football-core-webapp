@@ -2,9 +2,13 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-# Utilización de importaciones relativas y referencias directas para modelos que puedan tener dependencias circulares.
-from app.schemas.estado import Estado 
-from app.schemas.liga import Liga    
+class EstadoOut(BaseModel):
+    id_estado: int
+    nombre_estado: str
+
+class LigaOut(BaseModel):
+    id_liga: int
+    nombre_liga: str
 
 # Referencia para el esquema de Partido para evitar importaciones circulares.
 # Este esquema de Partido es una representación mínima para su uso dentro de las relaciones de Equipo.
@@ -50,10 +54,10 @@ class Equipo(EquipoBase):
     id_equipo: int
     created_at: datetime
     updated_at: datetime
-    estado: Estado 
-    liga: Liga    
-    partidos_local: List["Partido"] = [] 
-    partidos_visita: List["Partido"] = []
+    estado: EstadoOut 
+    liga: LigaOut    
+    partidos_local: List[Partido] = [] 
+    partidos_visita: List[Partido] = []
 
     class Config:
         from_attributes = True

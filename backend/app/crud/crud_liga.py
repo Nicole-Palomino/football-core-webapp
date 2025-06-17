@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from app import models, schemas
 
 async def get_liga(db: AsyncSession, liga_id: int):
@@ -11,7 +11,7 @@ async def get_liga(db: AsyncSession, liga_id: int):
     result = await db.execute(
         select(models.Liga)
         .filter(models.Liga.id_liga == liga_id)
-        .options(joinedload(models.Liga.equipos), joinedload(models.Liga.partidos))
+        .options(selectinload(models.Liga.equipos), selectinload(models.Liga.partidos))
     )
     return result.scalars().first()
 
@@ -22,7 +22,7 @@ async def get_liga_by_name(db: AsyncSession, nombre_liga: str):
     result = await db.execute(
         select(models.Liga)
         .filter(models.Liga.nombre_liga == nombre_liga)
-        .options(joinedload(models.Liga.equipos), joinedload(models.Liga.partidos))
+        .options(selectinload(models.Liga.equipos), selectinload(models.Liga.partidos))
     )
     return result.scalars().first()
 
@@ -30,7 +30,15 @@ async def get_ligas(db: AsyncSession, skip: int = 0, limit: int = 100):
     """
     Recupera una lista de Ligas de forma asíncrona.
     """
-    result = await db.execute(select(models.Liga).offset(skip).limit(limit))
+    result = await db.execute(
+        select(models.Liga)
+        .options(
+            selectinload(models.Liga.equipos),
+            selectinload(models.Liga.partidos)
+        )
+        .offset(skip)
+        .limit(limit)
+    )
     return result.scalars().all()
 
 async def create_liga(db: AsyncSession, liga: schemas.LigaCreate):

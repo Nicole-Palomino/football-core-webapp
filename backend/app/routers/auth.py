@@ -11,6 +11,7 @@ from app.core.security import (
     authenticate_user,
     create_access_token,
     get_current_active_user,
+    get_current_admin_user,
     get_password_hash
 )
 from app.core.config import settings
@@ -69,6 +70,31 @@ async def register_user(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
+@router.post("/register-admin", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+async def register_user_admin(
+    user_create: schemas.user.UserCreateAdmin, 
+    db: AsyncSession = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_admin_user)
+):
+    """
+    Registra un nuevo usuario en el sistema.
+    Inicializa el saldo del usuario con 15 monedas.
+    """
+    db_user_by_email = await crud.get_user_by_correo(db, correo=user_create.correo)
+    if db_user_by_email:
+        raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+    
+    db_user_by_username = await crud.get_user_by_username(db, username=user_create.usuario)
+    if db_user_by_username:
+        raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+
+    try:
+        new_user = await crud.crud_user.create_user_admin(db=db, user=user_create)
+        return new_user
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
 @router.post("/request-password-reset")
 async def request_password_reset(

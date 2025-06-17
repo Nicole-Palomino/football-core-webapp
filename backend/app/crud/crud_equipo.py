@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from app import models, schemas
 
 async def get_equipo(db: AsyncSession, equipo_id: int):
@@ -10,10 +10,10 @@ async def get_equipo(db: AsyncSession, equipo_id: int):
     result = await db.execute(
         select(models.Equipo)
         .options(
-            joinedload(models.Equipo.estado),
-            joinedload(models.Equipo.liga),
-            joinedload(models.Equipo.partidos_local),
-            joinedload(models.Equipo.partidos_visita)
+            selectinload(models.Equipo.estado),
+            selectinload(models.Equipo.liga),
+            selectinload(models.Equipo.partidos_local),
+            selectinload(models.Equipo.partidos_visita)
         )
         .filter(models.Equipo.id_equipo == equipo_id)
     )
@@ -35,7 +35,10 @@ async def get_equipos(db: AsyncSession, skip: int = 0, limit: int = 100):
     """
     result = await db.execute(
         select(models.Equipo)
-        .options(joinedload(models.Equipo.estado), joinedload(models.Equipo.liga))
+        .options(
+            selectinload(models.Equipo.estado), 
+            selectinload(models.Equipo.liga)
+        )
         .offset(skip).limit(limit)
     )
     return result.scalars().all()

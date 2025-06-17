@@ -57,8 +57,8 @@ class Liga(LigaBase):
     id_liga: int
     created_at: datetime
     updated_at: datetime
-    equipos: List["Equipo"] = [] # Relación con el Equipo
-    partidos: List["Partido"] = [] # Relación con el Partido
+    equipos: List[Equipo] = [] # Relación con el Equipo
+    partidos: List[Partido] = [] # Relación con el Partido
 
     class Config:
         from_attributes = True

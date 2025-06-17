@@ -38,7 +38,7 @@ class Temporada(TemporadaBase):
     id_temporada: int
     created_at: datetime
     updated_at: datetime
-    partidos: List["Partido"] = [] # Relación con Partido
+    partidos: List[Partido] = [] # Relación con Partido
 
     class Config:
         from_attributes = True

@@ -12,6 +12,22 @@ from app.utils.email_sender import send_email
 DEFAULT_ESTADO = 1  # Activo
 DEFAULT_ROL = 3     # Usuario normal
 
+async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
+    """
+    Recupera todos los usuarios de forma asíncrona, cargando ansiosamente roles, estado, balance y compras.
+    """
+    result = await db.execute(
+        select(models.User)
+        .options(
+            selectinload(models.User.rol),
+            selectinload(models.User.estado),
+            selectinload(models.User.balance),
+            selectinload(models.User.compras)
+        )
+        .offset(skip).limit(limit)
+    )
+    return result.scalars().all()
+
 async def get_user(db: AsyncSession, user_id: int):
     """
     Recupera un único usuario por su ID de forma asíncrona, cargando ansiosamente roles, saldo y transacciones.
@@ -95,6 +111,56 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
 
     await db.refresh(db_user)
     
+    stmt = (
+        select(models.User)
+        .options(
+            selectinload(models.User.rol),
+            selectinload(models.User.estado),
+            selectinload(models.User.balance),
+            selectinload(models.User.compras),
+        )
+        .where(models.User.id_usuario == db_user.id_usuario)
+    )
+    result = await db.execute(stmt)
+    user_with_relations = result.scalars().first()
+    
+    return user_with_relations
+
+async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreateAdmin):
+    """
+    Crea un nuevo Usuario administrador de forma asíncrona, permitiendo definir manualmente el rol y estado.
+    También inicializa una entrada BalanceUsuario para el nuevo usuario con 15 monedas.
+    """
+    # Verificar la existencia de rol y estado proporcionados
+    role = await crud_rol.get_role(db, user.id_rol)
+    if not role:
+        raise ValueError(f"Rol con ID {user.id_rol} no encontrado.")
+    
+    estado = await crud_estado.get_estado(db, user.id_estado)
+    if not estado:
+        raise ValueError(f"Estado con ID {user.id_estado} no encontrado.")
+
+    hashed_contrasena = get_password_hash(user.contrasena)
+    db_user = models.User(
+        usuario=user.usuario,
+        correo=user.correo,
+        contrasena=hashed_contrasena,
+        id_estado=user.id_estado,
+        id_rol=user.id_rol,
+        registro=datetime.utcnow()
+    )
+    
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+
+    # Inicializar el saldo para el nuevo usuario con 15 monedas
+    await crud_balance_usuario.create_balance_usuario(
+        db, schemas.BalanceUsuarioCreate(id_usuario=db_user.id_usuario, cantidad_monedas=15)
+    )
+
+    await db.refresh(db_user)
+
     stmt = (
         select(models.User)
         .options(

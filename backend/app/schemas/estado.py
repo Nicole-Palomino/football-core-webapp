@@ -67,9 +67,9 @@ class Estado(EstadoBase):
     id_estado: int
     created_at: datetime
     updated_at: datetime
-    equipos: List["Equipo"] = [] # Relación con el Equipo
-    partidos: List["Partido"] = [] # Relación con el Partido
-    paquetes_moneda: List["PaqueteMoneda"] = [] # Relación con el PaqueteMoneda
+    equipos: List[Equipo] = [] # Relación con el Equipo
+    partidos: List[Partido] = [] # Relación con el Partido
+    paquetes_moneda: List[PaqueteMoneda] = [] # Relación con el PaqueteMoneda
 
     class Config:
         from_attributes = True

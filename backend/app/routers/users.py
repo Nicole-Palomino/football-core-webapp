@@ -17,6 +17,14 @@ router = APIRouter(
 # Nota: El POST /users/ endpoint para crear un usuario ha sido movido a /auth/register
 # ya que suele formar parte del flujo de autenticación.
 
+@router.get("/", response_model=list[schemas.User])
+async def read_estadisticas(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    """
+    Recupera una lista de todos los Usuarios. Accesible por cualquier usuario autentificado.
+    """
+    usuarios = await crud.crud_user.get_all_users(db, skip=skip, limit=limit)
+    return usuarios
+
 @router.get("/{user_id}", response_model=schemas.User)
 async def read_user(user_id: int, db: AsyncSession = Depends(get_db), current_user: schemas.User = Depends(get_current_admin_user)):
     """
