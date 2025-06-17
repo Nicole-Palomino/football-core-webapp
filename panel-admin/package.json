@@ -1,0 +1,19 @@
+{
+    "name": "panel-admin",
+    "version": "1.0.0",
+    "description": "Admin panel for FastAPI football app using Electron.js",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "keywords": [
+        "Electron",
+        "FastAPI",
+        "Admin Panel"
+    ],
+    "author": "Nicole Palomino Alvarado",
+    "license": "MIT",
+    "devDependencies": {
+        "electron": "^28.0.0"
+    }
+}
