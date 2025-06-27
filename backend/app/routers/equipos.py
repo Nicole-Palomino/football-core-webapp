@@ -61,6 +61,15 @@ async def read_equipo(equipo_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Equipo no encontrado")
     return db_equipo
 
+@router.get("/activos", response_model=list[schemas.Equipo])
+async def get_equipos_activos(db: AsyncSession = Depends(get_db)):
+    """
+    Retorna todos los equipos cuyo estado es '1' (activo).
+    """
+    query = select(models.Equipo).where(models.Equipo.id_estado == 1)
+    result = await db.execute(query)
+    return result.scalars().all()
+
 @router.put("/{equipo_id}", response_model=schemas.Equipo)
 async def update_equipo(
     equipo_id: int, 

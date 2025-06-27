@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from typing import Optional
 from app import crud, schemas, models
 from app.dependencies import get_db
@@ -40,7 +40,7 @@ async def create_partido(
 @router.get("/", response_model=list[schemas.Partido])
 async def read_partidos(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 20, 
     liga_id: Optional[int] = None,
     temporada_id: Optional[int] = None,
     equipo_id: Optional[int] = None,
@@ -50,16 +50,24 @@ async def read_partidos(
     """
     Recupera una lista de todos los Partidos (partidos) con filtros opcionales. Accesible por cualquier usuario autenticado.
     """
-    partidos = await crud.get_partidos(
-        db, 
-        skip=skip, 
-        limit=limit, 
-        liga_id=liga_id, 
-        temporada_id=temporada_id, 
-        equipo_id=equipo_id, 
-        estado_id=estado_id
-    )
-    return partidos
+    query = select(models.Partido)
+
+    if liga_id:
+        query = query.where(models.Partido.id_liga == liga_id)
+    if temporada_id:
+        query = query.where(models.Partido.id_temporada == temporada_id)
+    if equipo_id:
+        query = query.where(
+            (models.Partido.id_equipo_local == equipo_id) | 
+            (models.Partido.id_equipo_visitante == equipo_id)
+        )
+    if estado_id:
+        query = query.where(models.Partido.id_estado == estado_id)
+
+    query = query.order_by(desc(models.Partido.created_at)).offset(skip).limit(limit)
+
+    result = await db.execute(query)
+    return result.scalars().all()
 
 @router.get("/{partido_id}", response_model=schemas.Partido)
 async def read_partido(partido_id: int, db: AsyncSession = Depends(get_db)):
@@ -106,9 +114,9 @@ async def delete_partido(
     return {"message": "Partido eliminado exitosamente"}
 
 @router.post("/upload-data", status_code=status.HTTP_200_OK,
-             summary="Sube un archivo CSV o Excel para registrar partidos y estadísticas",
-             response_model=Dict[str, Any], # Devolverá un resumen de los resultados
-             dependencies=[Depends(get_current_admin_user)]) # Solo administradores pueden subir archivos
+            summary="Sube un archivo CSV o Excel para registrar partidos y estadísticas",
+            response_model=Dict[str, Any], # Devolverá un resumen de los resultados
+            dependencies=[Depends(get_current_admin_user)]) # Solo administradores pueden subir archivos
 async def upload_matches_and_stats(
     file: UploadFile = File(..., description="Archivo CSV o Excel con datos de partidos y estadísticas."),
     db: AsyncSession = Depends(get_db),
@@ -149,24 +157,28 @@ async def upload_matches_and_stats(
     - `HR` (int)
     - `AR` (int)
     """
-    successful_imports = []
-    failed_imports = []
+    successful = []
+    failed = []
 
     try:
         # Leer el contenido del archivo
         contents = await file.read()
-        file_like_object = io.BytesIO(contents)
+        file_like = io.BytesIO(contents)
 
         df: pd.DataFrame
         if file.filename.endswith('.csv'):
-            df = pd.read_csv(file_like_object)
+            df = pd.read_csv(file_like)
         elif file.filename.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(file_like_object)
+            df = pd.read_excel(file_like)
         else:
             raise HTTPException(status_code=400, detail="Formato de archivo no soportado. Por favor, sube un archivo CSV o Excel.")
         
+        partidos_to_create = []
+        estadisticas_to_create = []
+        row_map = {}
+
         # Iterar sobre las filas del DataFrame
-        for index, row in df.iterrows():
+        for idx, row in df.iterrows():
             try:
                 # --- Preparar y validar datos del Partido ---
                 partido_data = {
@@ -175,24 +187,35 @@ async def upload_matches_and_stats(
                     "dia": row["dia"], # Pydantic es flexible con formatos de fecha comunes
                     "id_equipo_local": row["id_equipo_local"],
                     "id_equipo_visita": row["id_equipo_visita"],
+                    "enlace_threesixfive": row.get("enlace_threesixfive") or None,
+                    "enlace_fotmob": row.get("enlace_fotmob") or None,
+                    "enlace_datafactory": row.get("enlace_datafactory") or None,
                     "id_estado": row["id_estado"],
-                    "enlace_threesixfive": row.get("enlace_threesixfive"),
-                    "enlace_fotmob": row.get("enlace_fotmob"),
-                    "enlace_datafactory": row.get("enlace_datafactory"),
                 }
-                # Asegurar que los valores nulos para los enlaces opcionales sean None
-                for k in ["enlace_threesixfive", "enlace_fotmob", "enlace_datafactory"]:
-                    if k in partido_data and pd.isna(partido_data[k]):
-                        partido_data[k] = None
 
                 partido_create = schemas.PartidoCreate(**partido_data)
-                
-                # --- Crear el Partido en la base de datos ---
-                db_partido = await crud.create_partido(db=db, partido=partido_create)
+                partido_db = models.Partido(**partido_create.dict())
+                partidos_to_create.append(partido_db)
+                row_map[idx] = partido_db
+            except Exception as e:
+                failed.append({
+                    "row": idx + 2,
+                    "error": f"Error al procesar partido: {e}",
+                    "data": row.to_dict()
+                })
 
+        # Agrega los partidos en bloque
+        db.add_all(partidos_to_create)
+        await db.flush()  # Asigna IDs
+
+        # Crea las estadísticas relacionadas
+        for idx, row in df.iterrows():
+            if idx not in row_map:
+                continue
+            try:
                 # --- Preparar y validar datos de Estadísticas (usando el id_partido recién creado) ---
                 estadistica_data = {
-                    "id_partido": db_partido.id_partido, # Asocia al partido recién creado
+                    "id_partido": row_map[idx].id_partido,
                     "FTHG": row.get("FTHG"),
                     "FTAG": row.get("FTAG"),
                     "FTR": row.get("FTR"),
@@ -212,54 +235,39 @@ async def upload_matches_and_stats(
                     "HR": row.get("HR"),
                     "AR": row.get("AR"),
                 }
-                # Asegurar que los valores nulos de pandas (NaN) sean None para los campos opcionales
-                for key, value in estadistica_data.items():
-                    if pd.isna(value):
-                        estadistica_data[key] = None
+                # Limpiar valores NaN
+                estadistica_data = {k: (None if pd.isna(v) else v) for k, v in estadistica_data.items()}
 
                 estadistica_create = schemas.EstadisticaCreate(**estadistica_data)
+                estadistica_db = models.Estadistica(**estadistica_create.dict())
+                estadisticas_to_create.append(estadistica_db)
 
-                # --- Crear las Estadísticas en la base de datos ---
-                db_estadistica = await crud.create_estadistica(db=db, estadistica=estadistica_create)
-
-                successful_imports.append({
-                    "row_number": index + 2, # +2 porque index es base 0 y queremos 1-based, y +1 por la fila de cabecera
-                    "id_partido": db_partido.id_partido,
-                    "id_estadistica": db_estadistica.id_estadistica,
-                    "message": "Partido y estadísticas creados exitosamente."
+                successful.append({
+                    "row": idx + 2,
+                    "id_partido": row_map[idx].id_partido
                 })
 
-            except (ValidationError, ValueError, IntegrityError) as e:
-                # Captura errores de validación de Pydantic, ValueError de CRUD, o IntegrityError de la DB
-                error_detail = str(e)
-                if isinstance(e, IntegrityError):
-                    await db.rollback() # Hacer rollback de la transacción para esta fila si hubo un error de DB
-                    error_detail = f"Error de base de datos: {e.orig}" # Captura el error original de SQLAlchemy
-                
-                logger.error(f"Error procesando la fila {index + 2}: {error_detail}", exc_info=True)
-                failed_imports.append({
-                    "row_number": index + 2,
-                    "data": row.to_dict(),
-                    "reason": error_detail
-                })
             except Exception as e:
-                logger.error(f"Error inesperado procesando la fila {index + 2}: {e}", exc_info=True)
-                failed_imports.append({
-                    "row_number": index + 2,
-                    "data": row.to_dict(),
-                    "reason": f"Error inesperado: {str(e)}"
+                failed.append({
+                    "row": idx + 2,
+                    "error": f"Error al procesar estadísticas: {e}",
+                    "data": row.to_dict()
                 })
-        
+
+        # Agrega todas las estadísticas en bloque
+        db.add_all(estadisticas_to_create)
+        await db.commit()
+
         return {
-            "message": "Procesamiento de archivo completado.",
-            "total_rows_processed": len(df),
-            "successful_imports": successful_imports,
-            "failed_imports": failed_imports
+            "message": "Carga completada.",
+            "procesadas": len(df),
+            "exitosas": len(successful),
+            "fallidas": failed
         }
 
     except Exception as e:
-        logger.error(f"Error al subir o procesar el archivo: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error al subir o procesar el archivo: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error interno: {e}")
     
 @router.get("/stats/total", response_model=int)
 async def get_total_partidos(db: AsyncSession = Depends(get_db)):
