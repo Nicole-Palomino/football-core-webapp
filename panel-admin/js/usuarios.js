@@ -232,6 +232,7 @@ function resetUserForm() {
     // Asegurar que los selectores se restablecen a la opción por defecto si hay una vacía
     userEstadoSelect.value = '';
     userRolSelect.value = '';
+    loadLookupDataForUsers();
 }
 
 cancelUserEditBtn.onclick = resetUserForm;

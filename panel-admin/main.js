@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs'); // Módulo fs para leer archivos
 
 // Variable para almacenar el token de autenticación de forma segura en el proceso principal
 let authToken = null;
@@ -61,10 +62,13 @@ const API_BASE_URL = 'http://127.0.0.1:8000'; // Asegúrate de que esta URL sea 
  */
 
 async function fetchAuthenticated(url, options = {}) {
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-    };
+    const headers = { ...options.headers }; // Inicia con cualquier encabezado personalizado
+
+    // Solo establece Content-Type a application/json si el cuerpo es una cadena y no se ha especificado ya
+    // Para FormData, fetch establecerá automáticamente el Content-Type correcto.
+    if (options.body && typeof options.body === 'string' && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
@@ -80,6 +84,10 @@ async function fetchAuthenticated(url, options = {}) {
         console.log('Token expirado o no autorizado. Redirigiendo al login.');
         authToken = null; // Limpiar el token
         
+        const currentWindow = BrowserWindow.getAllWindows()[0]; // Asume que solo hay una ventana principal
+        if (currentWindow) {
+            currentWindow.loadFile('login.html');
+        }
         throw new Error('Unauthorized');
     }
 
@@ -403,6 +411,22 @@ ipcMain.handle('delete-liga', async (event, id) => {
     }
 });
 
+ipcMain.handle('get-total-ligas', async () => {
+    console.log('ipcMain: Solicitud para obtener total de ligas');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/ligas/stats/total`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de ligas:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de ligas:', error);
+        return 0;
+    }
+});
+
 // --- IPC para la gestión de equipos (ahora con autenticación) ---
 
 ipcMain.handle('get-teams', async () => {
@@ -475,6 +499,22 @@ ipcMain.handle('delete-team', async (event, id) => {
     }
 });
 
+ipcMain.handle('get-total-teams', async () => {
+    console.log('ipcMain: Solicitud para obtener total de equipos');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/equipos/stats/total`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de equipos:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de equipos:', error);
+        return 0;
+    }
+});
+
 // --- IPC para la gestión de usuarios (ahora con autenticación) ---
 
 ipcMain.handle('get-users', async () => {
@@ -544,5 +584,335 @@ ipcMain.handle('delete-user', async (event, id) => {
     } catch (error) {
         console.error('Error de red al eliminar usuario:', error);
         return false;
+    }
+});
+
+ipcMain.handle('get-total-users', async () => {
+    console.log('ipcMain: Solicitud para obtener total de usuarios');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/users/stats/total`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de usuarios:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de usuarios:', error);
+        return 0;
+    }
+});
+
+ipcMain.handle('get-total-users-by-dia', async () => {
+    console.log('ipcMain: Solicitud para obtener total de usuarios');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/users/stats/usuarios-por-dia`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de usuarios:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de usuarios:', error);
+        return 0;
+    }
+});
+
+// --- IPC para la gestión de temporadas (ahora con autenticación) ---
+
+ipcMain.handle('get-seasons', async () => {
+    console.log('ipcMain: Solicitud para obtener temporadas (autenticada)');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/temporadas/`);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error al obtener temporadas:', response.status, response.statusText);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error de red al obtener temporadas:', error);
+        return [];
+    }
+});
+
+ipcMain.handle('add-season', async (event, season) => {
+    console.log('ipcMain: Solicitud para añadir temporada (autenticada)', season);
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/temporadas/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(season)
+        });
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error al añadir temporada:', response.status, response.statusText);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error de red al añadir temporada:', error);
+        return null;
+    }
+});
+
+ipcMain.handle('update-season', async (event, updatedSeason) => {
+    console.log('ipcMain: Solicitud para actualizar temporada (autenticada)', updatedSeason);
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/temporadas/${updatedSeason.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updatedSeason)
+        });
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error al actualizar temporada:', response.status, response.statusText);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error de red al actualizar temporada:', error);
+        return null;
+    }
+});
+
+ipcMain.handle('delete-season', async (event, id) => {
+    console.log('ipcMain: Solicitud para eliminar temporada (autenticada)', id);
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/temporadas/${id}`, {
+            method: 'DELETE'
+        });
+        return response.ok; // Devuelve true si la eliminación fue exitosa (código 200/204)
+    } catch (error) {
+        console.error('Error de red al eliminar temporada:', error);
+        return false;
+    }
+});
+
+ipcMain.handle('get-total-seasons', async () => {
+    console.log('ipcMain: Solicitud para obtener total de temporadas');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/temporadas/stats/total`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de temporadas:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de temporadas:', error);
+        return 0;
+    }
+});
+
+// IPC para la subida de archivos de partidos/estadísticas
+ipcMain.handle('open-file-dialog', async (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+        properties: ['openFile'],
+        filters: [
+            { name: 'Archivos CSV & Excel', extensions: ['csv', 'xls', 'xlsx'] },
+            { name: 'Todos los archivos', extensions: ['*'] }
+        ]
+    });
+    if (canceled) {
+        return null;
+    } else {
+        return filePaths[0];
+    }
+});
+
+ipcMain.handle('upload-match-data', async (event, filePath) => {
+    if (!filePath) {
+        return { success: false, message: 'No se seleccionó ningún archivo.' };
+    }
+
+    try {
+        // Lee el contenido del archivo de forma síncrona (para simplificar, usar asíncrona en producción si los archivos son muy grandes)
+        const fileContent = fs.readFileSync(filePath);
+        const fileName = path.basename(filePath);
+
+        // Crea un objeto FormData. Electron's fetch soporta Blob/File directamente.
+        const formData = new FormData();
+        // El nombre del campo 'file' debe coincidir con el nombre esperado por tu endpoint de FastAPI (e.g., File(file: UploadFile))
+        formData.append('file', new Blob([fileContent]), fileName);
+
+        console.log(`ipcMain: Subiendo archivo ${fileName} a ${API_BASE_URL}/partidos/upload-data`);
+
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/upload-data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: formData,
+            // fetchAuthenticated se encarga de añadir el Authorization header y no necesitamos Content-Type aquí
+            // ya que FormData lo configura automáticamente con el boundary correcto.
+        });
+
+        const responseData = await response.json();
+
+        if (response.ok) {
+            console.log('Archivo subido con éxito:', responseData);
+            return { success: true, message: responseData.message || 'Archivo subido y procesado con éxito.' };
+        } else {
+            console.error('Error al subir archivo:', response.status, response.statusText, responseData);
+            return { success: false, message: responseData.detail || 'Error al procesar el archivo en el servidor.' };
+        }
+
+    } catch (error) {
+        console.error('Error durante la subida del archivo:', error);
+        if (error.message === 'Unauthorized') {
+             return { success: false, message: 'Su sesión ha expirado. Por favor, inicie sesión de nuevo.' };
+        }
+        return { success: false, message: `Error al leer o subir el archivo: ${error.message}` };
+    }
+});
+
+// --- IPC para la gestión de partidos (ahora con autenticación) ---
+
+ipcMain.handle('get-matches', async () => {
+    console.log('ipcMain: Solicitud para obtener partidos (autenticada)');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/`);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error al obtener partidos:', response.status, response.statusText);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error de red al obtener partidos:', error);
+        return [];
+    }
+});
+
+ipcMain.handle('add-match', async (event, match) => {
+    console.log('ipcMain: Solicitud para añadir partido (autenticada)', match);
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(match)
+        });
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error al añadir partido:', response.status, response.statusText);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error de red al añadir partido:', error);
+        return null;
+    }
+});
+
+ipcMain.handle('update-match', async (event, updatedMatch) => {
+    console.log('ipcMain: Solicitud para actualizar partido (autenticada)', updatedMatch);
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/${updatedMatch.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updatedMatch)
+        });
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error al actualizar partido:', response.status, response.statusText);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error de red al actualizar partido:', error);
+        return null;
+    }
+});
+
+ipcMain.handle('delete-match', async (event, id) => {
+    console.log('ipcMain: Solicitud para eliminar partido (autenticada)', id);
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/${id}`, {
+            method: 'DELETE'
+        });
+        return response.ok; // Devuelve true si la eliminación fue exitosa (código 200/204)
+    } catch (error) {
+        console.error('Error de red al eliminar partido:', error);
+        return false;
+    }
+});
+
+ipcMain.handle('get-total-matches', async () => {
+    console.log('ipcMain: Solicitud para obtener total de partidos');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/stats/total`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de partidos:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de partidos:', error);
+        return 0;
+    }
+});
+
+// IPC para la Gestión de Estadísticas
+ipcMain.handle('get-statistics-by-match-id', async (event, matchId) => {
+    console.log(`ipcMain: Solicitud para obtener estadísticas para partido ID: ${matchId}`);
+    try {
+        // Suponemos que tu API tiene un endpoint como /statistics/by_match/{match_id}
+        const response = await fetchAuthenticated(`${API_BASE_URL}/estadisticas/partido/${matchId}`);
+        if (response.ok) {
+            const data = await response.json();
+            // La API puede devolver una lista si no hay estadísticas, o el objeto directamente
+            // Si la API devuelve un 404 para no encontrado, se maneja en fetchAuthenticated
+            return data;
+        } else if (response.status === 404) {
+            // Si no se encuentran estadísticas, devolver null para indicar que no existen
+            return null;
+        } else {
+            console.error('Error al obtener estadísticas:', response.status, response.statusText);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener estadísticas:', error);
+        return null;
+    }
+});
+
+ipcMain.handle('save-statistics', async (event, statsData) => {
+    console.log('ipcMain: Solicitud para guardar estadísticas:', statsData);
+    let response;
+    try {
+        if (statsData.id_estadistica) {
+            // Si tiene id_estadistica, es una actualización (PUT)
+            response = await fetchAuthenticated(`${API_BASE_URL}/estadisticas/${statsData.id_estadistica}`, {
+                method: 'PUT',
+                body: JSON.stringify(statsData)
+            });
+        } else {
+            // Si no tiene id_estadistica, es una creación (POST)
+            response = await fetchAuthenticated(`${API_BASE_URL}/estadisticas/`, { // Endpoint para crear
+                method: 'POST',
+                body: JSON.stringify(statsData)
+            });
+        }
+
+        const responseData = await response.json();
+
+        if (response.ok) {
+            return { success: true, message: responseData.message || 'Estadísticas guardadas con éxito.', data: responseData };
+        } else {
+            console.error('Error al guardar estadísticas:', response.status, response.statusText, responseData);
+            return { success: false, message: responseData.detail || 'Error desconocido al guardar estadísticas.' };
+        }
+    } catch (error) {
+        console.error('Error de red al guardar estadísticas:', error);
+        return { success: false, message: `Error de red o inesperado al guardar estadísticas: ${error.message}` };
     }
 });

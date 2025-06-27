@@ -226,6 +226,7 @@ function resetTeamForm() {
     teamIdInput.value = '';
     teamFormTitle.textContent = 'Añadir Nuevo Equipo';
     cancelTeamEditBtn.classList.add('d-none');
+    loadLookupDataForTeams();
 }
 
 cancelTeamEditBtn.onclick = resetTeamForm;
