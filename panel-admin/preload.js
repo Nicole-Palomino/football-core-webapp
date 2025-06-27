@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld('api', {
     updateTeam: (team) => ipcRenderer.invoke('update-team', team),
     deleteTeam: (id) => ipcRenderer.invoke('delete-team', id),
     getTeamsTotal: () => ipcRenderer.invoke('get-total-teams'),
+    getTeamsActives: () => ipcRenderer.invoke('get-teams-actives'),
 
     // Métodos para interactuar con la gestión de ligas
     getLigas: () => ipcRenderer.invoke('get-ligas'),

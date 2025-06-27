@@ -515,6 +515,22 @@ ipcMain.handle('get-total-teams', async () => {
     }
 });
 
+ipcMain.handle('get-teams-actives', async () => {
+    console.log('ipcMain: Solicitud para obtener total de equipos que sean activos');
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/equipos/activos`);
+        if (response.ok) {
+            return await response.json(); // esto será un número
+        } else {
+            console.error('Error al obtener total de equipos que sean activos:', response.status, response.statusText);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error de red al obtener total de equipos que sean activos:', error);
+        return 0;
+    }
+});
+
 // --- IPC para la gestión de usuarios (ahora con autenticación) ---
 
 ipcMain.handle('get-users', async () => {
@@ -739,17 +755,15 @@ ipcMain.handle('upload-match-data', async (event, filePath) => {
 
         // Crea un objeto FormData. Electron's fetch soporta Blob/File directamente.
         const formData = new FormData();
+        const blob = new Blob([fileContent]);
         // El nombre del campo 'file' debe coincidir con el nombre esperado por tu endpoint de FastAPI (e.g., File(file: UploadFile))
-        formData.append('file', new Blob([fileContent]), fileName);
+        formData.append('file', blob, fileName);
 
         console.log(`ipcMain: Subiendo archivo ${fileName} a ${API_BASE_URL}/partidos/upload-data`);
 
         const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/upload-data`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: formData,
+            body: formData
             // fetchAuthenticated se encarga de añadir el Authorization header y no necesitamos Content-Type aquí
             // ya que FormData lo configura automáticamente con el boundary correcto.
         });

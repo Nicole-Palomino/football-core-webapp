@@ -30,7 +30,7 @@ async function loadLookupDataForMatches() {
     try {
         allLigasMatch = await window.api.getLigas();
         allTemporadasMatch = await window.api.getSeasons();
-        allEquiposMatch = await window.api.getTeams();
+        allEquiposMatch = await window.api.getTeamsActives();
         allEstadosMatch = await window.api.getEstados();
 
         // Limpiar y poblar el selector de ligas
@@ -287,46 +287,49 @@ uploadDataBtn.onclick = async () => {
         cancelButtonText: 'Cancelar'
     });
 
-    if (result.isConfirmed) {
-        const filePath = await window.api.openFileDialog();
+    if (!result.isConfirmed) {
+        showAlert('info', 'Cancelado', 'No se seleccionó ningún archivo.');
+        return;
+    }
 
-        if (filePath) {
-            let loadingAlert;
-            Swal.fire({
-                title: 'Subiendo...',
-                text: 'Por favor espera mientras se procesa el archivo.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                    loadingAlert = Swal.getPopup();
-                }
-            });
+    const filePath = await window.api.openFileDialog();
+    if (!filePath) {
+        showAlert('info', 'Cancelado', 'No se seleccionó ningún archivo.');
+        return;
+    }
 
-            const uploadResult = await window.api.uploadMatchData(filePath);
-
-            if (loadingAlert) {
-                Swal.close();
-            }
-
-            if (uploadResult.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Subida Exitosa!',
-                    text: uploadResult.message,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-                loadMatches();
-                updateDashboard();
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de Subida',
-                    text: uploadResult.message
-                });
-            }
-        } else {
-            showAlert('info', 'Cancelado', 'No se seleccionó ningún archivo.');
+    // Mostrar spinner antes del await
+    Swal.fire({
+        title: 'Subiendo archivo...',
+        html: 'Por favor espera mientras se procesa el archivo.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
+    });
+
+    // Espera el resultado mientras se muestra el spinner
+    const uploadResult = await window.api.uploadMatchData(filePath);
+
+    // Cierra el spinner
+    Swal.close();
+
+    // Mostrar resultado
+    if (uploadResult.success) {
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Subida Exitosa!',
+            text: uploadResult.message || 'Archivo procesado con éxito.',
+            timer: 3000,
+            timerProgressBar: true
+        });
+        loadMatches();
+        updateDashboard();
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de Subida',
+            text: uploadResult.message || 'No se pudo subir el archivo.'
+        });
     }
 };
