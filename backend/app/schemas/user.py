@@ -3,8 +3,17 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 from decimal import Decimal
 
-from app.schemas.rol import Rol 
-from app.schemas.estado import Estado 
+class Rol(BaseModel):
+    id_rol: int
+    nombre_rol: str
+    class Config:
+        from_attributes = True
+
+class Estado(BaseModel):
+    id_estado: int
+    nombre_estado: str
+    class Config:
+        from_attributes = True
 
 # Esta relación debe definirse si tb_estados está vinculado.
 class BalanceUsuario(BaseModel):
@@ -62,9 +71,6 @@ class User(UserBase):
 
     rol: Rol 
     estado: Estado
-
-    balance: Optional[BalanceUsuario] = None 
-    compras: List[CompraMoneda] = [] 
 
     class Config:
         from_attributes = True

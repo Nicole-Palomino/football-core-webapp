@@ -6,8 +6,9 @@ from pydantic import ValidationError
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from typing import Optional
-from app import crud, schemas
+from app import crud, schemas, models
 from app.dependencies import get_db
 from app.core.security import get_current_admin_user, get_current_active_user
 
@@ -259,3 +260,9 @@ async def upload_matches_and_stats(
     except Exception as e:
         logger.error(f"Error al subir o procesar el archivo: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error al subir o procesar el archivo: {e}")
+    
+@router.get("/stats/total", response_model=int)
+async def get_total_partidos(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(func.count()).select_from(models.Partido))
+    total = result.scalar()
+    return total

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from app import models, schemas
 
 async def get_temporada(db: AsyncSession, temporada_id: int):
@@ -11,7 +11,7 @@ async def get_temporada(db: AsyncSession, temporada_id: int):
     result = await db.execute(
         select(models.Temporada)
         .filter(models.Temporada.id_temporada == temporada_id)
-        .options(joinedload(models.Temporada.partidos))
+        .options(selectinload(models.Temporada.partidos))
     )
     return result.scalars().first()
 

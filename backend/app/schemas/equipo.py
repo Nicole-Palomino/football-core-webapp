@@ -4,30 +4,9 @@ from pydantic import BaseModel, Field
 
 class EstadoOut(BaseModel):
     id_estado: int
-    nombre_estado: str
 
 class LigaOut(BaseModel):
     id_liga: int
-    nombre_liga: str
-
-# Referencia para el esquema de Partido para evitar importaciones circulares.
-# Este esquema de Partido es una representación mínima para su uso dentro de las relaciones de Equipo.
-class Partido(BaseModel):
-    id_partido: int
-    id_liga: int
-    id_temporada: int
-    dia: str 
-    id_equipo_local: int
-    id_equipo_visita: int
-    enlace_threesixfive: Optional[str] = None
-    enlace_fotmob: Optional[str] = None
-    enlace_datafactory: Optional[str] = None
-    id_estado: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class EquipoBase(BaseModel):
     """Esquema base para Equipo."""
@@ -56,8 +35,6 @@ class Equipo(EquipoBase):
     updated_at: datetime
     estado: EstadoOut 
     liga: LigaOut    
-    partidos_local: List[Partido] = [] 
-    partidos_visita: List[Partido] = []
 
     class Config:
         from_attributes = True

@@ -2,11 +2,20 @@ from datetime import date, datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-# Importación de esquemas de modelos relacionados para permitir el anidamiento
-from app.schemas.liga import Liga
-from app.schemas.temporada import Temporada
-from app.schemas.estado import Estado
-from app.schemas.equipo import Equipo
+class Liga(BaseModel):
+    id_liga: int
+
+class Temporada(BaseModel):
+    id_temporada: int
+
+class Estado(BaseModel):
+    id_estado: int
+
+class Equipo(BaseModel):
+    id_equipo: int
+    nombre_equipo: Optional[str] = None
+    estadio: Optional[str] = None
+    logo: Optional[str] = None
 
 # Referencia para el esquema Estadistica
 class Estadistica(BaseModel):

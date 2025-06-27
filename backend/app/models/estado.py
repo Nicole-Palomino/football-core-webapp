@@ -20,5 +20,5 @@ class Estado(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relación uno a muchos con Equipo y Partido
-    equipos = relationship("Equipo", back_populates="estado", lazy="selectin")
-    partidos = relationship("Partido", back_populates="estado", lazy="selectin")
+    equipos = relationship("Equipo", back_populates="estado", lazy="noload")
+    partidos = relationship("Partido", back_populates="estado", lazy="noload")

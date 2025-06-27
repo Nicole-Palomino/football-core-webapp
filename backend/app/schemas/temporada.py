@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
@@ -7,12 +7,9 @@ class Partido(BaseModel):
     id_partido: int
     id_liga: int
     id_temporada: int
-    dia: str 
+    dia: date 
     id_equipo_local: int
     id_equipo_visita: int
-    enlace_threesixfive: Optional[str] = None
-    enlace_fotmob: Optional[str] = None
-    enlace_datafactory: Optional[str] = None
     id_estado: int
     created_at: datetime
     updated_at: datetime

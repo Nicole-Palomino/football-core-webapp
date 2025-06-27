@@ -14,9 +14,9 @@ load_dotenv()
 # Esto creará tablas basadas en models.py si no existen
 # Para motores asíncronos, create_all se hace típicamente de forma síncrona una vez o a través de migraciones.
 # Esto intentará crear tablas al inicio usando las capacidades de sincronización del motor.
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+# async def init_db():
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.create_all)
 
 app = FastAPI(
     title="API de Football Core (MySQL Async)",
@@ -26,9 +26,9 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-@app.on_event("startup")
-async def on_startup():
-    await init_db()
+# @app.on_event("startup")
+# async def on_startup():
+#     await init_db()
     
 # Configurar CORS (Cross-Origin Resource Sharing)
 # Ajuste los orígenes según sea necesario para su aplicación frontend

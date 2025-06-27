@@ -1,6 +1,7 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from typing import Optional
 from app import models, schemas
 from app.crud import crud_liga, crud_temporada, crud_equipo, crud_estado
@@ -12,12 +13,12 @@ async def get_partido(db: AsyncSession, partido_id: int):
     result = await db.execute(
         select(models.Partido)
         .options(
-            joinedload(models.Partido.liga),
-            joinedload(models.Partido.temporada),
-            joinedload(models.Partido.equipo_local),
-            joinedload(models.Partido.equipo_visita),
-            joinedload(models.Partido.estado),
-            joinedload(models.Partido.estadisticas)
+            selectinload(models.Partido.liga),
+            selectinload(models.Partido.temporada),
+            selectinload(models.Partido.equipo_local),
+            selectinload(models.Partido.equipo_visita),
+            selectinload(models.Partido.estado),
+            selectinload(models.Partido.estadisticas)
         )
         .filter(models.Partido.id_partido == partido_id)
     )
@@ -36,11 +37,11 @@ async def get_partidos(
     Recupera una lista de Partidos de forma asíncrona con filtrado opcional.
     """
     query = select(models.Partido).options(
-        joinedload(models.Partido.liga),
-        joinedload(models.Partido.temporada),
-        joinedload(models.Partido.equipo_local),
-        joinedload(models.Partido.equipo_visita),
-        joinedload(models.Partido.estado)
+        selectinload(models.Partido.liga),
+        selectinload(models.Partido.temporada),
+        selectinload(models.Partido.equipo_local),
+        selectinload(models.Partido.equipo_visita),
+        selectinload(models.Partido.estado)
     )
 
     if liga_id:
@@ -60,27 +61,32 @@ async def get_partidos(
 
 async def create_partido(db: AsyncSession, partido: schemas.PartidoCreate):
     """
-    Crea un nuevo Partido de forma asíncrona.
-    Realiza comprobaciones de existencia de entidades de clave externa relacionadas.
+    Crea un nuevo Partido de forma asíncrona con validación optimizada de claves externas.
     """
-    # Verificar la existencia de claves externas
-    liga = await crud_liga.get_liga(db, partido.id_liga)
+    # Ejecutar verificaciones en paralelo
+    liga_task = crud_liga.get_liga(db, partido.id_liga)
+    temporada_task = crud_temporada.get_temporada(db, partido.id_temporada)
+    equipo_local_task = crud_equipo.get_equipo(db, partido.id_equipo_local)
+    equipo_visita_task = crud_equipo.get_equipo(db, partido.id_equipo_visita)
+    estado_task = crud_estado.get_estado(db, partido.id_estado)
+
+    liga, temporada, equipo_local, equipo_visita, estado = await asyncio.gather(
+        liga_task,
+        temporada_task,
+        equipo_local_task,
+        equipo_visita_task,
+        estado_task
+    )
+
+    # Validación
     if not liga:
         raise ValueError(f"Liga con ID {partido.id_liga} no encontrada.")
-    
-    temporada = await crud_temporada.get_temporada(db, partido.id_temporada)
     if not temporada:
         raise ValueError(f"Temporada con ID {partido.id_temporada} no encontrada.")
-
-    equipo_local = await crud_equipo.get_equipo(db, partido.id_equipo_local)
     if not equipo_local:
         raise ValueError(f"Equipo local con ID {partido.id_equipo_local} no encontrado.")
-
-    equipo_visita = await crud_equipo.get_equipo(db, partido.id_equipo_visita)
     if not equipo_visita:
         raise ValueError(f"Equipo visita con ID {partido.id_equipo_visita} no encontrado.")
-
-    estado = await crud_estado.get_estado(db, partido.id_estado)
     if not estado:
         raise ValueError(f"Estado con ID {partido.id_estado} no encontrado.")
 
@@ -103,7 +109,7 @@ async def create_partido(db: AsyncSession, partido: schemas.PartidoCreate):
 async def update_partido(db: AsyncSession, partido_id: int, partido: schemas.PartidoUpdate):
     """
     Actualiza un Partido existente de forma asíncrona.
-    Realiza comprobaciones de existencia de entidades de clave externa relacionadas si se están actualizando.
+    Realiza comprobaciones de existencia de claves externas sólo si se actualizan.
     """
     db_partido = await get_partido(db, partido_id)
     if not db_partido:
@@ -111,28 +117,34 @@ async def update_partido(db: AsyncSession, partido_id: int, partido: schemas.Par
 
     update_data = partido.model_dump(exclude_unset=True)
 
-    # Compruebe si las claves externas forman parte de la actualización
-    if "id_liga" in update_data:
-        liga = await crud_liga.get_liga(db, update_data["id_liga"])
-        if not liga:
-            raise ValueError(f"Liga con ID {update_data['id_liga']} no encontrada.")
-    if "id_temporada" in update_data:
-        temporada = await crud_temporada.get_temporada(db, update_data["id_temporada"])
-        if not temporada:
-            raise ValueError(f"Temporada con ID {update_data['id_temporada']} no encontrada.")
-    if "id_equipo_local" in update_data:
-        equipo_local = await crud_equipo.get_equipo(db, update_data["id_equipo_local"])
-        if not equipo_local:
-            raise ValueError(f"Equipo local con ID {update_data['id_equipo_local']} no encontrado.")
-    if "id_equipo_visita" in update_data:
-        equipo_visita = await crud_equipo.get_equipo(db, update_data["id_equipo_visita"])
-        if not equipo_visita:
-            raise ValueError(f"Equipo visita con ID {update_data['id_equipo_visita']} no encontrado.")
-    if "id_estado" in update_data:
-        estado = await crud_estado.get_estado(db, update_data["id_estado"])
-        if not estado:
-            raise ValueError(f"Estado con ID {update_data['id_estado']} no encontrado.")
+    # Preparar tareas asíncronas solo para las claves foráneas que se actualizan
+    tasks = []
+    checks = {}
 
+    if "id_liga" in update_data:
+        tasks.append(crud_liga.get_liga(db, update_data["id_liga"]))
+        checks["id_liga"] = "Liga"
+    if "id_temporada" in update_data:
+        tasks.append(crud_temporada.get_temporada(db, update_data["id_temporada"]))
+        checks["id_temporada"] = "Temporada"
+    if "id_equipo_local" in update_data:
+        tasks.append(crud_equipo.get_equipo(db, update_data["id_equipo_local"]))
+        checks["id_equipo_local"] = "Equipo local"
+    if "id_equipo_visita" in update_data:
+        tasks.append(crud_equipo.get_equipo(db, update_data["id_equipo_visita"]))
+        checks["id_equipo_visita"] = "Equipo visita"
+    if "id_estado" in update_data:
+        tasks.append(crud_estado.get_estado(db, update_data["id_estado"]))
+        checks["id_estado"] = "Estado"
+
+    # Ejecutar todas las validaciones en paralelo
+    if tasks:
+        results = await asyncio.gather(*tasks)
+        for (field, label), result in zip(checks.items(), results):
+            if not result:
+                raise ValueError(f"{label} con ID {update_data[field]} no encontrado.")
+
+    # Aplicar la actualización
     for key, value in update_data.items():
         setattr(db_partido, key, value)
     

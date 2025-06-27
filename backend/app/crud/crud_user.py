@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app import models, schemas
 from app.core.security import get_password_hash
 from app.crud import crud_balance_usuario, crud_rol, crud_estado 
@@ -50,12 +50,6 @@ async def get_user_by_correo(db: AsyncSession, correo: str):
     """
     result = await db.execute(
         select(models.User)
-        .options(
-            selectinload(models.User.rol),
-            selectinload(models.User.estado),
-            selectinload(models.User.balance),
-            selectinload(models.User.compras)
-        )
         .filter(models.User.correo == correo)
     )
     return result.scalars().first()
@@ -66,12 +60,6 @@ async def get_user_by_username(db: AsyncSession, username: str):
     """
     result = await db.execute(
         select(models.User)
-        .options(
-            selectinload(models.User.rol),
-            selectinload(models.User.estado),
-            selectinload(models.User.balance),
-            selectinload(models.User.compras)
-        )
         .filter(models.User.usuario == username)
     )
     return result.scalars().first()
@@ -221,6 +209,18 @@ async def delete_user(db: AsyncSession, user_id: int):
         await db.commit()
         return True
     return False
+
+async def get_usuarios_por_dia(db: AsyncSession):
+    stmt = (
+        select(
+            func.date(models.User.registro).label("fecha"),
+            func.count(models.User.id_usuario).label("cantidad")
+        )
+        .group_by(func.date(models.User.registro))
+        .order_by(func.date(models.User.registro))
+    )
+    result = await db.execute(stmt)
+    return result.all()
 
 # --- Funciones de recuperación de contraseñas ---
 async def set_user_verification_code(db: AsyncSession, user: models.User):

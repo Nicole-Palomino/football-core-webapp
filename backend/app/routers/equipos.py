@@ -1,6 +1,9 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app import crud, schemas
+from sqlalchemy import select, func
+from app import crud, schemas, models
 from app.dependencies import get_db
 from app.core.security import get_current_admin_user, get_current_active_user
 
@@ -20,19 +23,24 @@ async def create_equipo(
     """
     Crea un nuevo Equipo. Requiere privilegios de administrador.
     """
-    # Check if foreign keys exist
-    estado = await crud.get_estado(db, equipo.id_estado)
+    # Ejecutar validaciones de claves foráneas en paralelo
+    estado_task = crud.get_estado(db, equipo.id_estado)
+    liga_task = crud.get_liga(db, equipo.id_liga)
+    equipo_existente_task = crud.get_equipo_by_name(db, nombre_equipo=equipo.nombre_equipo)
+
+    estado, liga, db_equipo = await asyncio.gather(
+        estado_task,
+        liga_task,
+        equipo_existente_task
+    )
+
     if not estado:
         raise HTTPException(status_code=400, detail=f"Estado con ID {equipo.id_estado} no encontrado.")
-    
-    liga = await crud.get_liga(db, equipo.id_liga)
     if not liga:
         raise HTTPException(status_code=400, detail=f"Liga con ID {equipo.id_liga} no encontrada.")
-
-    db_equipo = await crud.get_equipo_by_name(db, nombre_equipo=equipo.nombre_equipo)
     if db_equipo:
-        raise HTTPException(status_code=400, detail="El equipo ya existe")
-    
+        raise HTTPException(status_code=400, detail="El equipo ya existe.")
+
     return await crud.create_equipo(db=db, equipo=equipo)
 
 @router.get("/", response_model=list[schemas.Equipo])
@@ -63,20 +71,31 @@ async def update_equipo(
     """
     Actualiza un Equipo existente por su ID. Requiere privilegios de administrador.
     """
-    # Check if foreign keys exist if they are being updated
+    tasks = []
+    checks = {}
+
     if equipo.id_estado is not None:
-        estado = await crud.get_estado(db, equipo.id_estado)
-        if not estado:
-            raise HTTPException(status_code=400, detail=f"Estado con ID {equipo.id_estado} no encontrado.")
-    
+        tasks.append(crud.get_estado(db, equipo.id_estado))
+        checks["id_estado"] = equipo.id_estado
+
     if equipo.id_liga is not None:
-        liga = await crud.get_liga(db, equipo.id_liga)
-        if not liga:
-            raise HTTPException(status_code=400, detail=f"Liga con ID {equipo.id_liga} no encontrada.")
+        tasks.append(crud.get_liga(db, equipo.id_liga))
+        checks["id_liga"] = equipo.id_liga
+
+    # Ejecutar validaciones en paralelo
+    if tasks:
+        results = await asyncio.gather(*tasks)
+        for (field, id_value), result in zip(checks.items(), results):
+            if not result:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{'Estado' if field == 'id_estado' else 'Liga'} con ID {id_value} no encontrado."
+                )
 
     db_equipo = await crud.update_equipo(db=db, equipo_id=equipo_id, equipo=equipo)
     if db_equipo is None:
         raise HTTPException(status_code=404, detail="Equipo no encontrado")
+    
     return db_equipo
 
 @router.delete("/{equipo_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -92,3 +111,9 @@ async def delete_equipo(
     if not success:
         raise HTTPException(status_code=404, detail="Equipo no encontrado")
     return {"message": "Equipo eliminado exitosamente"}
+
+@router.get("/stats/total", response_model=int)
+async def get_total_equipos(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(func.count()).select_from(models.Equipo))
+    total = result.scalar()
+    return total

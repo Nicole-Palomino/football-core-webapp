@@ -20,4 +20,4 @@ class Temporada(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relación de uno a muchos con Partido
-    partidos = relationship("Partido", back_populates="temporada")
+    partidos = relationship("Partido", back_populates="temporada", lazy="selectin")

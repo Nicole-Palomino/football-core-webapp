@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from app import models, schemas
 from app.crud import crud_partido
 
@@ -10,7 +10,7 @@ async def get_estadistica(db: AsyncSession, estadistica_id: int):
     """
     result = await db.execute(
         select(models.Estadistica)
-        .options(joinedload(models.Estadistica.partido))
+        .options(selectinload(models.Estadistica.partido))
         .filter(models.Estadistica.id_estadistica == estadistica_id)
     )
     return result.scalars().first()

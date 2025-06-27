@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
-from app import crud, schemas
+from app import crud, schemas, models
 from app.core.security import get_current_admin_user, get_current_active_user
 from app.crud import crud_rol, crud_estado
 
@@ -68,3 +69,14 @@ async def delete_user_endpoint(user_id: int, db: AsyncSession = Depends(get_db),
 
 # Los métodos de asignación/eliminación de roles ya no son necesarios ya que id_rol es directo sobre la tabla User.
 # Si necesitas cambiar el rol de un usuario, usarías el endpoint PUT /users/{user_id} y actualizarías id_rol.
+
+@router.get("/stats/total", response_model=int)
+async def get_total_usuarios(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(func.count()).select_from(models.User))
+    total = result.scalar()
+    return total
+
+@router.get("/stats/usuarios-por-dia")
+async def estadistica_usuarios_por_dia(db: AsyncSession = Depends(get_db)):
+    datos = await crud.crud_user.get_usuarios_por_dia(db)
+    return [{"fecha": str(fecha), "cantidad": cantidad} for fecha, cantidad in datos]

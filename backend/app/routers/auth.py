@@ -1,6 +1,8 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
@@ -36,9 +38,11 @@ async def login_for_access_token(
             detail="Credenciales de usuario incorrectas",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Solo aquí se refresca el rol
+    await db.refresh(user, attribute_names=["rol"])
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    # El campo “sub” en el payload JWT debe ser único, usando email (correo)
-    # Los roles son directamente accesibles ahora a través de user.rol.nombre_rol
     access_token = create_access_token(
         data={"sub": user.correo, "roles": [user.rol.nombre_rol]},
         expires_delta=access_token_expires,
@@ -155,9 +159,18 @@ async def reset_password(
     return {"message": "Contraseña restablecida exitosamente."}
 
 @router.get("/users/me/", response_model=schemas.User)
-async def read_users_me(current_user: schemas.User = Depends(get_current_active_user)):
+async def read_users_me(
+    current_user: models.User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Recupera información sobre el usuario autenticado actual.
     Requiere un token de usuario activo.
     """
-    return current_user
+    result = await db.execute(
+        select(models.User)
+        .options(selectinload(models.User.rol), selectinload(models.User.estado))
+        .where(models.User.id_usuario == current_user.id_usuario)
+    )
+    user = result.scalars().first()
+    return user

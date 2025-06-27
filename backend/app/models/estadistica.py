@@ -34,4 +34,4 @@ class Estadistica(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relación con Partido
-    partido = relationship("Partido", back_populates="estadisticas")
+    partido = relationship("Partido", back_populates="estadisticas", lazy="selectin")

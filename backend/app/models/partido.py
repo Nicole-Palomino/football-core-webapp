@@ -24,13 +24,13 @@ class Partido(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relaciones
-    liga = relationship("Liga", back_populates="partidos")
-    temporada = relationship("Temporada", back_populates="partidos")
+    liga = relationship("Liga", back_populates="partidos", lazy="selectin")
+    temporada = relationship("Temporada", back_populates="partidos", lazy="selectin")
     equipo_local = relationship(
-        "Equipo", foreign_keys=[id_equipo_local], back_populates="partidos_local"
+        "Equipo", foreign_keys=[id_equipo_local], back_populates="partidos_local", lazy="selectin"
     )
     equipo_visita = relationship(
-        "Equipo", foreign_keys=[id_equipo_visita], back_populates="partidos_visita"
+        "Equipo", foreign_keys=[id_equipo_visita], back_populates="partidos_visita", lazy="selectin"
     )
-    estado = relationship("Estado", back_populates="partidos")
-    estadisticas = relationship("Estadistica", back_populates="partido", uselist=False, cascade="all, delete-orphan")
+    estado = relationship("Estado", back_populates="partidos", lazy="selectin")
+    estadisticas = relationship("Estadistica", back_populates="partido", uselist=False, cascade="all, delete-orphan", lazy="selectin")

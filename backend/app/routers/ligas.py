@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app import crud, schemas
+from sqlalchemy import select, func
+from app import crud, schemas, models
 from app.dependencies import get_db
 from app.core.security import get_current_admin_user, get_current_active_user
 
@@ -71,3 +72,9 @@ async def delete_liga(
     if not success:
         raise HTTPException(status_code=404, detail="Liga no encontrada")
     return {"message": "Liga eliminada exitosamente"}
+
+@router.get("/stats/total", response_model=int)
+async def get_total_ligas(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(func.count()).select_from(models.Liga))
+    total = result.scalar()
+    return total

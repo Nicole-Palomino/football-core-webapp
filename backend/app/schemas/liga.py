@@ -16,24 +16,6 @@ class Equipo(BaseModel):
     class Config:
         from_attributes = True
 
-# Referencia del esquema del Partido
-class Partido(BaseModel):
-    id_partido: int
-    id_liga: int
-    id_temporada: int
-    dia: str # Representar como cadena para la fecha
-    id_equipo_local: int
-    id_equipo_visita: int
-    enlace_threesixfive: Optional[str] = None
-    enlace_fotmob: Optional[str] = None
-    enlace_datafactory: Optional[str] = None
-    id_estado: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
 class LigaBase(BaseModel):
     """Esquema base de la Liga."""
     nombre_liga: str = Field(..., min_length=1, max_length=140)
@@ -58,7 +40,6 @@ class Liga(LigaBase):
     created_at: datetime
     updated_at: datetime
     equipos: List[Equipo] = [] # Relación con el Equipo
-    partidos: List[Partido] = [] # Relación con el Partido
 
     class Config:
         from_attributes = True

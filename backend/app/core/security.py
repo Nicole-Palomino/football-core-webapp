@@ -69,7 +69,6 @@ async def authenticate_user(db: AsyncSession, username_or_email: str, password: 
         return False
     return user
 
-
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db_for_auth)):
     """
     Dependencia que recupera el usuario actual del token JWT.
@@ -102,7 +101,7 @@ async def get_current_active_user(current_user: schemas.User = Depends(get_curre
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Usuario inactivo")
     return current_user
 
-async def get_current_admin_user(current_user: schemas.User = Depends(get_current_active_user)):
+async def get_current_admin_user(current_user: schemas.User  = Depends(get_current_active_user)):
     """
     Dependencia que asegura que el usuario activo actual tiene rol “admin”.
     """

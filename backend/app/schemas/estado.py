@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
@@ -21,7 +21,7 @@ class Partido(BaseModel):
     id_partido: int
     id_liga: int
     id_temporada: int
-    dia: str # Representar como cadena para la fecha
+    dia: date # Representar como cadena para la fecha
     id_equipo_local: int
     id_equipo_visita: int
     enlace_threesixfive: Optional[str] = None
@@ -67,8 +67,6 @@ class Estado(EstadoBase):
     id_estado: int
     created_at: datetime
     updated_at: datetime
-    equipos: List[Equipo] = [] # Relación con el Equipo
-    partidos: List[Partido] = [] # Relación con el Partido
     paquetes_moneda: List[PaqueteMoneda] = [] # Relación con el PaqueteMoneda
 
     class Config:
