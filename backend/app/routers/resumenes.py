@@ -101,5 +101,5 @@ async def ver_resumen(id_resumen: int, id_usuario: int, db: AsyncSession = Depen
     if not balance or balance.cantidad_monedas < resumen.costo_monedas:
         raise HTTPException(status_code=400, detail="No tienes monedas suficientes")
 
-    await crud_balance_usuario.descontar_monedas(db, id_usuario, resumen.costo_monedas)
+    await crud_balance_usuario.deduct_coins_from_balance(db, id_usuario, resumen.costo_monedas)
     return resumen
