@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from app import models, schemas
 from app.crud import crud_user
+from fastapi import HTTPException
 
 async def get_balance_usuario(db: AsyncSession, balance_id: int):
     """
@@ -115,3 +116,16 @@ async def delete_balance_usuario(db: AsyncSession, balance_id: int):
         await db.commit()
         return True
     return False
+
+async def descontar_monedas(db: AsyncSession, id_usuario: int, cantidad: int):
+    balance = await get_balance_usuario_by_user_id(db, id_usuario)
+    if not balance:
+        raise HTTPException(status_code=404, detail="No se encontró el balance del usuario")
+
+    if balance.cantidad_monedas < cantidad:
+        raise HTTPException(status_code=400, detail="Saldo insuficiente")
+
+    balance.cantidad_monedas -= cantidad
+    await db.commit()
+    await db.refresh(balance)
+    return balance
