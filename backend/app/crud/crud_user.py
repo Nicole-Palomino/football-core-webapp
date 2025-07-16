@@ -1,28 +1,25 @@
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app import models, schemas
 from app.core.security import get_password_hash
-from app.crud import crud_balance_usuario, crud_rol, crud_estado 
 from app.utils.email_sender import send_email
+from app.crud import crud_role, crud_state
 
 DEFAULT_ESTADO = 1  # Activo
 DEFAULT_ROL = 3     # Usuario normal
 
 async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
     """
-    Recupera todos los usuarios de forma asíncrona, cargando ansiosamente roles, estado, balance y compras.
+    Recupera todos los usuarios de forma asíncrona, cargando ansiosamente roles y estado.
     """
     result = await db.execute(
         select(models.User)
         .options(
             selectinload(models.User.rol),
             selectinload(models.User.estado),
-            selectinload(models.User.balance),
-            selectinload(models.User.compras)
         )
         .offset(skip).limit(limit)
     )
@@ -37,8 +34,6 @@ async def get_user(db: AsyncSession, user_id: int):
         .options(
             selectinload(models.User.rol), 
             selectinload(models.User.estado), 
-            selectinload(models.User.balance),
-            selectinload(models.User.compras)
         )
         .filter(models.User.id_usuario == user_id)
     )
@@ -67,16 +62,15 @@ async def get_user_by_username(db: AsyncSession, username: str):
 async def create_user(db: AsyncSession, user: schemas.UserCreate):
     """
     Crea un nuevo Usuario de forma asíncrona, haciendo hash de la contraseña y asociando rol y estado.
-    También inicializa una entrada BalanceUsuario para el nuevo usuario con 15 monedas.
     """
     id_estado = DEFAULT_ESTADO
     id_rol = DEFAULT_ROL
     # Verificar la existencia de roles y estados
-    role = await crud_rol.get_role(db, id_rol)
+    role = await crud_role.get_role(db, id_rol)
     if not role:
         raise ValueError(f"Rol con ID {id_rol} no encontrado.")
     
-    estado = await crud_estado.get_estado(db, id_estado)
+    estado = await crud_state.get_estado(db, id_estado)
     if not estado:
         raise ValueError(f"Estado con ID {id_estado} no encontrado.")
 
@@ -93,19 +87,12 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
     db.add(db_user)
     await db.commit()
     await db.refresh(db_user)
-
-    # Inicializar el saldo para el nuevo usuario con 15 monedas
-    await crud_balance_usuario.create_balance_usuario(db, schemas.BalanceUsuarioCreate(id_usuario=db_user.id_usuario, cantidad_monedas=15))
-
-    await db.refresh(db_user)
     
     stmt = (
         select(models.User)
         .options(
             selectinload(models.User.rol),
             selectinload(models.User.estado),
-            selectinload(models.User.balance),
-            selectinload(models.User.compras),
         )
         .where(models.User.id_usuario == db_user.id_usuario)
     )
@@ -117,14 +104,13 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
 async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreateAdmin):
     """
     Crea un nuevo Usuario administrador de forma asíncrona, permitiendo definir manualmente el rol y estado.
-    También inicializa una entrada BalanceUsuario para el nuevo usuario con 15 monedas.
     """
     # Verificar la existencia de rol y estado proporcionados
-    role = await crud_rol.get_role(db, user.id_rol)
+    role = await crud_role.get_role(db, user.id_rol)
     if not role:
         raise ValueError(f"Rol con ID {user.id_rol} no encontrado.")
     
-    estado = await crud_estado.get_estado(db, user.id_estado)
+    estado = await crud_state.get_estado(db, user.id_estado)
     if not estado:
         raise ValueError(f"Estado con ID {user.id_estado} no encontrado.")
 
@@ -142,20 +128,11 @@ async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreateAdmin
     await db.commit()
     await db.refresh(db_user)
 
-    # Inicializar el saldo para el nuevo usuario con 15 monedas
-    await crud_balance_usuario.create_balance_usuario(
-        db, schemas.BalanceUsuarioCreate(id_usuario=db_user.id_usuario, cantidad_monedas=15)
-    )
-
-    await db.refresh(db_user)
-
     stmt = (
         select(models.User)
         .options(
             selectinload(models.User.rol),
             selectinload(models.User.estado),
-            selectinload(models.User.balance),
-            selectinload(models.User.compras),
         )
         .where(models.User.id_usuario == db_user.id_usuario)
     )
@@ -180,11 +157,11 @@ async def update_user(db: AsyncSession, user_id: int, user: schemas.UserUpdate):
     
     # Comprobar si las claves externas se están actualizando
     if "id_rol" in update_data:
-        role = await crud_rol.get_role(db, update_data["id_rol"])
+        role = await crud_role.get_role(db, update_data["id_rol"])
         if not role:
             raise ValueError(f"Rol con ID {update_data['id_rol']} no encontrado.")
     if "id_estado" in update_data:
-        estado = await crud_estado.get_estado(db, update_data["id_estado"])
+        estado = await crud_state.get_estado(db, update_data["id_estado"])
         if not estado:
             raise ValueError(f"Estado con ID {update_data['id_estado']} no encontrado.")
 

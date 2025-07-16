@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_db
 from app import crud, schemas, models
 from app.core.security import get_current_admin_user, get_current_active_user
-from app.crud import crud_rol, crud_estado
 
 router = APIRouter(
     prefix="/users",
@@ -18,8 +17,9 @@ router = APIRouter(
 # Nota: El POST /users/ endpoint para crear un usuario ha sido movido a /auth/register
 # ya que suele formar parte del flujo de autenticación.
 
+# ✅
 @router.get("/", response_model=list[schemas.User])
-async def read_estadisticas(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def read_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     """
     Recupera una lista de todos los Usuarios. Accesible por cualquier usuario autentificado.
     """
@@ -27,7 +27,7 @@ async def read_estadisticas(skip: int = 0, limit: int = 100, db: AsyncSession = 
     return usuarios
 
 @router.get("/{user_id}", response_model=schemas.User)
-async def read_user(user_id: int, db: AsyncSession = Depends(get_db), current_user: schemas.User = Depends(get_current_admin_user)):
+async def read_user_by_id(user_id: int, db: AsyncSession = Depends(get_db), current_user: schemas.User = Depends(get_current_admin_user)):
     """
     Recupera un único usuario por ID. Requiere privilegios de administrador.
     """
@@ -36,6 +36,7 @@ async def read_user(user_id: int, db: AsyncSession = Depends(get_db), current_us
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return db_user
 
+# ✅
 @router.put("/{user_id}", response_model=schemas.User)
 async def update_user_endpoint(
     user_id: int, 
@@ -56,7 +57,7 @@ async def update_user_endpoint(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error de integridad de datos. Verifique los IDs de estado y rol, o unicidad de usuario/correo.")
 
-
+# ✅
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user_endpoint(user_id: int, db: AsyncSession = Depends(get_db), current_user: schemas.User = Depends(get_current_admin_user)):
     """
@@ -70,13 +71,15 @@ async def delete_user_endpoint(user_id: int, db: AsyncSession = Depends(get_db),
 # Los métodos de asignación/eliminación de roles ya no son necesarios ya que id_rol es directo sobre la tabla User.
 # Si necesitas cambiar el rol de un usuario, usarías el endpoint PUT /users/{user_id} y actualizarías id_rol.
 
+# ✅
 @router.get("/stats/total", response_model=int)
-async def get_total_usuarios(db: AsyncSession = Depends(get_db)):
+async def get_total_users(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(func.count()).select_from(models.User))
     total = result.scalar()
     return total
 
+# ✅
 @router.get("/stats/usuarios-por-dia")
-async def estadistica_usuarios_por_dia(db: AsyncSession = Depends(get_db)):
+async def stat_users_by_date(db: AsyncSession = Depends(get_db)):
     datos = await crud.crud_user.get_usuarios_por_dia(db)
     return [{"fecha": str(fecha), "cantidad": cantidad} for fecha, cantidad in datos]

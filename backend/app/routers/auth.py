@@ -23,6 +23,24 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+@router.get("/users/me/", response_model=schemas.User)
+async def read_users_me(
+    current_user: models.User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Recupera información sobre el usuario autenticado actual.
+    Requiere un token de usuario activo.
+    """
+    result = await db.execute(
+        select(models.User)
+        .options(selectinload(models.User.rol), selectinload(models.User.estado))
+        .where(models.User.id_usuario == current_user.id_usuario)
+    )
+    user = result.scalars().first()
+    return user
+
+# ✅
 @router.post("/token", response_model=schemas.Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
@@ -56,7 +74,6 @@ async def register_user(
 ):
     """
     Registra un nuevo usuario en el sistema.
-    Inicializa el saldo del usuario con 15 monedas.
     """
     db_user_by_email = await crud.get_user_by_correo(db, correo=user_create.correo)
     if db_user_by_email:
@@ -74,6 +91,7 @@ async def register_user(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
+# ✅
 @router.post("/register-admin", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def register_user_admin(
     user_create: schemas.user.UserCreateAdmin, 
@@ -82,7 +100,6 @@ async def register_user_admin(
 ):
     """
     Registra un nuevo usuario en el sistema.
-    Inicializa el saldo del usuario con 15 monedas.
     """
     db_user_by_email = await crud.get_user_by_correo(db, correo=user_create.correo)
     if db_user_by_email:
@@ -157,20 +174,3 @@ async def reset_password(
     
     await crud.update_user_password(db, user, reset_data.nueva_contrasena)
     return {"message": "Contraseña restablecida exitosamente."}
-
-@router.get("/users/me/", response_model=schemas.User)
-async def read_users_me(
-    current_user: models.User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Recupera información sobre el usuario autenticado actual.
-    Requiere un token de usuario activo.
-    """
-    result = await db.execute(
-        select(models.User)
-        .options(selectinload(models.User.rol), selectinload(models.User.estado))
-        .where(models.User.id_usuario == current_user.id_usuario)
-    )
-    user = result.scalars().first()
-    return user

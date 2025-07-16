@@ -15,26 +15,6 @@ class Estado(BaseModel):
     class Config:
         from_attributes = True
 
-# Esta relación debe definirse si tb_estados está vinculado.
-class BalanceUsuario(BaseModel):
-    id_balance: int
-    id_usuario: int
-    cantidad_monedas: int
-    ultima_actualizacion: datetime
-    created_at: datetime
-    class Config:
-        from_attributes = True
-
-class CompraMoneda(BaseModel):
-    id_compra: int
-    id_usuario: int
-    id_paquete: Optional[int] = None
-    paypal_order_id: Optional[str] = None
-    monto_usd: Decimal
-    cantidad_monedas: int
-    class Config:
-        from_attributes = True
-
 class UserBase(BaseModel):
     """Esquema base para Usuario (tb_usuario)."""
     usuario: str = Field(..., min_length=3, max_length=50)

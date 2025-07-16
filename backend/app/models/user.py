@@ -35,15 +35,10 @@ class User(Base):
     # Fecha de la última actualización del registro, se actualiza cuando se produce un cambio
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relaciones:
-    # Relación personalizada con BalanceUsuario
-    balance = relationship("BalanceUsuario", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
-    
-    # Relación uno a muchos con TransaccionMoneda
-    compras = relationship("CompraMoneda", back_populates="usuario", lazy="noload")
+    # Relaciones
     
     # Relación muchos-a-uno con Rol (un usuario pertenece a un rol)
     rol = relationship("Rol", back_populates="users", lazy="selectin")
-    
     # Relación de muchos a uno con Estado (un usuario tiene un estado)
     estado = relationship("Estado") # Esta relación debe definirse si tb_estados está vinculado.
+    favoritos = relationship("Favorito", back_populates="usuario", cascade="all, delete")

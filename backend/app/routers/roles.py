@@ -11,8 +11,9 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+# ✅
 @router.post("/", response_model=schemas.Rol)
-async def create_rol(
+async def create_role(
     rol: schemas.RolCreate, 
     db: AsyncSession = Depends(get_db),
     current_user: schemas.User = Depends(get_current_admin_user) # Sólo el administrador puede crear
@@ -25,6 +26,7 @@ async def create_rol(
         raise HTTPException(status_code=400, detail="El rol ya existe")
     return await crud.create_role(db=db, rol=rol)
 
+# ✅
 @router.get("/", response_model=list[schemas.Rol])
 async def read_roles(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     """
@@ -33,8 +35,9 @@ async def read_roles(skip: int = 0, limit: int = 100, db: AsyncSession = Depends
     roles = await crud.get_roles(db, skip=skip, limit=limit)
     return roles
 
+# ⚠️
 @router.get("/{rol_id}", response_model=schemas.Rol)
-async def read_rol(rol_id: int, db: AsyncSession = Depends(get_db)):
+async def read_role(rol_id: int, db: AsyncSession = Depends(get_db)):
     """
     Recupera un único Rol por su ID. Accesible por cualquier usuario autenticado.
     """
@@ -43,8 +46,9 @@ async def read_rol(rol_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Rol no encontrado")
     return db_rol
 
+# ✅
 @router.put("/{rol_id}", response_model=schemas.Rol)
-async def update_rol(
+async def update_role(
     rol_id: int, 
     rol: schemas.RolUpdate, 
     db: AsyncSession = Depends(get_db),
@@ -58,8 +62,9 @@ async def update_rol(
         raise HTTPException(status_code=404, detail="Rol no encontrado")
     return db_rol
 
+# ✅
 @router.delete("/{rol_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_rol(
+async def delete_role(
     rol_id: int, 
     db: AsyncSession = Depends(get_db),
     current_user: schemas.User = Depends(get_current_admin_user) # Sólo el administrador puede borrar
