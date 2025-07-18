@@ -1,8 +1,8 @@
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, asc, or_, and_
+from sqlalchemy import select, asc, or_, and_, desc
 from sqlalchemy.orm import selectinload
-from app.utils.matches import preparar_dataset_para_kmeans, aplicar_kmeans, describir_clusters_avanzado
+from app.utils.matches import preparar_dataset_para_kmeans, aplicar_kmeans, describir_clusters_avanzado, preparar_dataset_para_random_forest
 from app import models, schemas
 from app.core.state import state
 from app.crud import crud_season
@@ -51,6 +51,32 @@ async def get_partidos(
         )
     )
 
+    result = await db.execute(query)
+    return result.scalars().all()
+
+async def obtener_ultimos_partidos_de_equipo(
+    db: AsyncSession, 
+    equipo_id: int, 
+    limite: int = 10
+):
+    query = (
+        select(models.Partido)
+        .where(
+            models.Partido.id_estado == 4,
+            or_(
+                models.Partido.id_equipo_local == equipo_id,
+                models.Partido.id_equipo_visita == equipo_id
+            )
+        )
+        .options(
+            selectinload(models.Partido.equipo_local),
+            selectinload(models.Partido.equipo_visita),
+            selectinload(models.Partido.estado),
+            selectinload(models.Partido.estadisticas)
+        )
+        .order_by(desc(models.Partido.dia))
+        .limit(limite)
+    )
     result = await db.execute(query)
     return result.scalars().all()
 
@@ -211,6 +237,34 @@ async def analizar_clusters_partidos_entre_equipos(
         "descripcion_clusters": descripcion_clusters,
         "modelo": modelo
     }
+
+async def analizar_clusters_partidos_equipos_individuales(
+    db: AsyncSession, equipo_1_id: int, equipo_2_id: int, k: int = 3
+):
+    partidos_equipo_1 = await obtener_ultimos_partidos_de_equipo(db, equipo_1_id, limite=10)
+    partidos_equipo_2 = await obtener_ultimos_partidos_de_equipo(db, equipo_2_id, limite=10)
+
+    partidos = partidos_equipo_1 + partidos_equipo_2
+    df = preparar_dataset_para_random_forest(partidos)
+
+    if df.empty or len(df) < k:
+        return {"error": "No hay suficientes partidos para agrupar en k clústeres"}
+
+    df_clusterizado, modelo = aplicar_kmeans(df, n_clusters=k)
+
+    resumen_clusters = df_clusterizado.groupby('cluster').mean().round(2).to_dict(orient="index")
+    state.perfiles_clusters = resumen_clusters
+    state.modelo_global = modelo
+
+    descripcion_clusters = describir_clusters_avanzado(df_clusterizado)
+
+    return {
+        "partidos_clusterizados": df_clusterizado.to_dict(orient="records"),
+        "resumen_por_cluster": resumen_clusters,
+        "descripcion_clusters": descripcion_clusters,
+        "modelo": modelo
+    }
+
 
 async def obtener_ultimo_partido_entre_equipos(
     db: AsyncSession,

@@ -7,11 +7,11 @@ from typing import Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
-from app.schemas.match import PartidoOut, PartidoComp, PartidoInput
+from sqlalchemy import select, func
+from app.schemas.match import PartidoOut
 from app import crud, schemas, models
 from app.core.state import state
-from app.utils.matches import analizar_estadisticas, predecir_cluster_partido, generar_perfil_por_cluster, verificar_o_entrenar_modelo, predecir_cluster_nuevo_partido
+from app.utils.matches import analizar_estadisticas, predecir_cluster_partido, generar_perfil_por_cluster, verificar_o_entrenar_modelo, predecir_cluster_nuevo_partido, verificar_o_entrenar_modelo_predictivo
 from app.dependencies import get_db
 from app.core.security import get_current_admin_user, get_current_active_user
 
@@ -406,7 +406,7 @@ async def predecir_cluster_modelo(
 ):
     # 0. Asegurar que el modelo y los perfiles estén cargados
     if state.modelo_predictivo is None or state.perfiles_clusters is None:
-        verificacion = await verificar_o_entrenar_modelo(db, equipo_1_id, equipo_2_id)
+        verificacion = await verificar_o_entrenar_modelo_predictivo(db, equipo_1_id, equipo_2_id)
         if "error" in verificacion:
             raise HTTPException(status_code=500, detail=verificacion["error"])
         state.modelo_predictivo = verificacion.get("modelo")

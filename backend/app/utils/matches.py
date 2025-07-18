@@ -8,7 +8,6 @@ from typing import Dict, Any, List
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 from app.core.state import state
 from app.utils.model_storage import guardar_modelo, cargar_modelo_predictivo, guardar_modelo_predictivo
 from app import crud
@@ -218,9 +217,39 @@ def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
 
     return descripciones
 
+def preparar_dataset_para_random_forest(partidos):
+    datos = []
+
+    for p in partidos:
+        est = p.estadisticas
+        datos.append({
+            "goles_local": est.FTHG,
+            "goles_visitante": est.FTAG,
+            "goles_ht_local": est.HTHG,
+            "goles_ht_visitante": est.HTAG,
+            "tiros_local": est.HS,
+            "tiros_visitante": est.AS_,
+            "tiros_arco_local": est.HST,
+            "tiros_arco_visitante": est.AST,
+            "corners_local": est.HC,
+            "corners_visitante": est.AC,
+            "faltas_local": est.HF,
+            "faltas_visitante": est.AF,
+            "amarillas_local": est.HY,
+            "amarillas_visitante": est.AY,
+            "rojas_local": est.HR,
+            "rojas_visitante": est.AR,
+            "resultado": (
+                1 if est.FTHG > est.FTAG else -1 if est.FTHG < est.FTAG else 0
+            )  # etiqueta (target)
+        })
+
+    df = pd.DataFrame(datos)
+    return df
+
 # modelo predictivo
 def entrenar_modelo_predictivo(df_clusterizado: pd.DataFrame):
-    X = df_clusterizado.drop(columns=["cluster"])
+    X = df_clusterizado.drop(columns=["cluster", "resultado"])
     y = df_clusterizado["cluster"]
 
     model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -277,9 +306,19 @@ def generar_perfil_por_cluster(df: pd.DataFrame, etiquetas: np.ndarray) -> dict:
 
 def predecir_cluster_nuevo_partido(datos_partido: dict) -> dict:
     modelo = cargar_modelo_predictivo()
+    if modelo is None:
+        raise ValueError("Modelo no disponible")
+
     df = pd.DataFrame([datos_partido])
-    cluster_predicho = modelo.predict(df)[0]
-    return {"cluster": int(cluster_predicho)}
+
+    try:
+        columnas_esperadas = modelo.feature_names_in_
+        df = df[columnas_esperadas]
+
+        cluster_predicho = modelo.predict(df)[0]
+        return {"cluster": int(cluster_predicho)}
+    except Exception as e:
+        raise ValueError(f"Error al predecir el clúster: {e}")
 
 FECHA_ENTRENAMIENTO = Path("app/storage/last_trained_at.txt")
 
@@ -326,11 +365,6 @@ async def verificar_o_entrenar_modelo(
         state.perfiles_clusters = generar_perfil_por_cluster(df_clusterizado, etiquetas)
         guardar_modelo(state.modelo_global)
 
-        # RandomForest
-        modelo_predictivo = entrenar_modelo_predictivo(df_clusterizado)
-        guardar_modelo_predictivo(modelo_predictivo)
-        state.modelo_predictivo = modelo_predictivo
-
         with open(FECHA_ENTRENAMIENTO, "w") as f:
             f.write(hoy.strftime("%Y-%m-%d"))
         
@@ -349,4 +383,66 @@ async def verificar_o_entrenar_modelo(
             "modelo": state.modelo_global,
             "perfiles": state.perfiles_clusters,
             "modelo_predictivo": state.modelo_predictivo
+        }
+    
+async def verificar_o_entrenar_modelo_predictivo(
+    db: AsyncSession,
+    equipo_1_id: int,
+    equipo_2_id: int,
+    k: int = 3
+) -> dict:
+    
+    hoy = datetime.now().date()
+
+    necesita_entrenar = (
+        state.modelo_predictivo is None or
+        state.perfiles_clusters is None or
+        not FECHA_ENTRENAMIENTO.exists()
+    )
+
+    if not necesita_entrenar:
+        with open(FECHA_ENTRENAMIENTO, "r") as f:
+            fecha_str = f.read().strip()
+            ultima_fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            print('ULTIMA FECHA: ', ultima_fecha)
+            if (hoy - ultima_fecha).days >= 15:
+                necesita_entrenar = True
+
+    if necesita_entrenar:
+        resultado = await crud.crud_match.analizar_clusters_partidos_equipos_individuales(
+            db, equipo_1_id, equipo_2_id, k
+        )
+        print("DEBUG - Resultado de analizar_clusters_partidos_equipos_individuales:", resultado)
+        
+        if "error" in resultado:
+            return {"error": resultado["error"]}
+        
+        if "modelo" not in resultado:
+            return {"error": "No se pudo entrenar el modelo, resultado incompleto."}
+
+        df_clusterizado = pd.DataFrame(resultado["partidos_clusterizados"])
+        etiquetas = df_clusterizado["cluster"].values
+
+        # RandomForest
+        modelo_predictivo = entrenar_modelo_predictivo(df_clusterizado)
+        state.perfiles_clusters = generar_perfil_por_cluster(df_clusterizado, etiquetas)
+        guardar_modelo_predictivo(modelo_predictivo)
+        state.modelo_predictivo = modelo_predictivo
+
+        with open(FECHA_ENTRENAMIENTO, "w") as f:
+            f.write(hoy.strftime("%Y-%m-%d"))
+        
+        print("✅ Modelo entrenado y guardado.")
+
+        return {
+            "ok": True,
+            "perfiles": state.perfiles_clusters,
+            "modelo": state.modelo_predictivo
+        }
+    else:
+        print("🔁 Modelo válido, no es necesario reentrenar.")
+        return {
+            "ok": True,
+            "perfiles": state.perfiles_clusters,
+            "modelo": state.modelo_predictivo
         }
