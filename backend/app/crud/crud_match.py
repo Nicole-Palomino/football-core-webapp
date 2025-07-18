@@ -24,6 +24,22 @@ async def get_partido(db: AsyncSession, estado_id: int):
     )
     return result.scalars().all()
 
+async def get_partido_by_id(db: AsyncSession, partido_id: int):
+    """
+    Recupera un único Partido según su ID,
+    incluyendo los equipos local y visita, y el estado del partido.
+    """
+    result = await db.execute(
+        select(models.Partido)
+        .options(
+            selectinload(models.Partido.equipo_local),
+            selectinload(models.Partido.equipo_visita),
+            selectinload(models.Partido.estado),
+        )
+        .filter(models.Partido.id_partido == partido_id)
+    )
+    return result.scalars().first()
+
 async def get_partidos(
     db: AsyncSession, 
     equipo_1_id: int,

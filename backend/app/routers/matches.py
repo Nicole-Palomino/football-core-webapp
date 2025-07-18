@@ -292,7 +292,7 @@ async def clusterizar_partidos_historicos(
 
     return resultado
 
-@router.post("/predecir-cluster/")
+@router.post("/predecir-k-means/")
 async def predecir_cluster_automatico(
     equipo_1_id: int,
     equipo_2_id: int,
@@ -398,7 +398,7 @@ async def predecir_cluster_automatico(
     }
 
 # -------------------- RANDOM FOREST --------------------
-@router.get("/predecir-cluster-modelo/")
+@router.get("/predecir-random-forest/")
 async def predecir_cluster_modelo(
     equipo_1_id: int,
     equipo_2_id: int,

@@ -1,5 +1,6 @@
 from . favorite import Favorito
-from .history import HistorialPrediccion
+from .history_kmeans import ResultadoKMeans
+from .history_rf import ResultadoRF
 from .league import Liga
 from .match import Partido
 from .role import Rol

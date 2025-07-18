@@ -37,3 +37,6 @@ class Partido(Base):
     estadisticas = relationship("Estadistica", back_populates="partido", uselist=False, cascade="all, delete-orphan", lazy="noload")
     resumenes = relationship("ResumenEstadistico", back_populates="partido", cascade="all, delete-orphan", lazy="noload")
     favoritos = relationship("Favorito", back_populates="partido", cascade="all, delete-orphan")
+    resultados_kmeans = relationship("ResultadoKMeans", back_populates="partido", cascade="all, delete-orphan", lazy="noload")
+    resultados_rf = relationship("ResultadoRF", back_populates="partido", cascade="all, delete-orphan", lazy="noload")
+

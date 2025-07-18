@@ -2,6 +2,7 @@ from . import auth
 from . import favorites
 from . import leagues
 from . import matches
+from . import results
 from . import roles
 from . import seasons
 from . import states
