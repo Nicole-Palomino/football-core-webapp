@@ -100,3 +100,30 @@ class PartidoOut(PartidoBase):
     
     class Config:
         from_attributes = True
+
+class PartidoComp(BaseModel):
+    dia: date 
+    id_partido: int
+    equipo_local: Equipo
+    equipo_visita: Equipo
+    estado: Estado
+    estadisticas: Optional[Estadistica] = None
+    
+    class Config:
+        from_attributes = True
+
+class PartidoInput(BaseModel):
+    goles_local: float
+    goles_visitante: float
+    tiros_local: float
+    tiros_visitante: float
+    tiros_arco_local: float
+    tiros_arco_visitante: float
+    corners_local: float
+    corners_visitante: float
+    faltas_local: float
+    faltas_visitante: float
+    amarillas_local: float
+    amarillas_visitante: float
+    rojas_local: float
+    rojas_visitante: float

@@ -1,4 +1,5 @@
 from . favorite import Favorito
+from .history import HistorialPrediccion
 from .league import Liga
 from .match import Partido
 from .role import Rol
