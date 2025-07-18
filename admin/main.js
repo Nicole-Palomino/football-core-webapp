@@ -962,3 +962,143 @@ ipcMain.handle('delete-summary', async (event, id) => {
         return false
     }
 })
+
+
+// ---------- PREDICCIONES K-MEANS ----------
+// --- IPC para la gestión de predicciones con k-means (ahora con autenticación) ---
+ipcMain.handle('get-kmeans', async () => {
+    console.log('ipcMain: Solicitud para obtener predicciones (autenticada)')
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/kmeans/`)
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.error('Error al obtener predicciones:', response.status, response.statusText)
+            return []
+        }
+    } catch (err) {
+        console.error('Error de red al obtener predicciones: ', err)
+        return []
+    }
+})
+
+ipcMain.handle('add-kmeans', async (event, kmeans) => {
+    console.log('ipcMain: Solicitud para añadir predicciones (autenticada)', kmeans)
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/kmeans/`, {
+            method: 'POST',
+            body: JSON.stringify(kmeans)
+        })
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.error('Error al añadir predicciones:', response.status, response.statusText)
+            return null
+        }
+    } catch (err) {
+        console.error('Error de red al añdir predicciones: ', err)
+        return null
+    }
+})
+
+ipcMain.handle('update-kmeans', async (event, upatedKmeans) => {
+    console.log('ipcMain: Solicitud para actualizar predicciones (autenticada)', upatedKmeans)
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/kmeans/${upatedKmeans.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(upatedKmeans)
+        })
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.log('Error al actualizar predicciones:', response.status, response.statusText)
+            return null
+        }
+    } catch (err) {
+        console.log('Error de red al actualizar predicciones: ', err)
+        return null
+    }
+})
+
+ipcMain.handle('delete-kmeans', async (event, id) => {
+    console.log('ipcMain: Solicitud para eliminar predicción (autenticada)', id)
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/kmeans/${id}`, {
+            method: 'DELETE'
+        })
+        return response.ok
+    } catch (err) {
+        console.error('Error de red al eliminar predicción: ', err)
+        return false
+    }
+})
+
+
+// ---------- PREDICCIONES RANDOM FOREST ----------
+// --- IPC para la gestión de predicciones con random forest (ahora con autenticación) ---
+ipcMain.handle('get-rf', async () => {
+    console.log('ipcMain: Solicitud para obtener predicciones (autenticada)')
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/rf/`)
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.error('Error al obtener predicciones:', response.status, response.statusText)
+            return []
+        }
+    } catch (err) {
+        console.error('Error de red al obtener predicciones: ', err)
+        return []
+    }
+})
+
+ipcMain.handle('add-rf', async (event, rf) => {
+    console.log('ipcMain: Solicitud para añadir predicciones (autenticada)', rf)
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/rf/`, {
+            method: 'POST',
+            body: JSON.stringify(rf)
+        })
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.error('Error al añadir predicciones:', response.status, response.statusText)
+            return null
+        }
+    } catch (err) {
+        console.error('Error de red al añdir predicciones: ', err)
+        return null
+    }
+})
+
+ipcMain.handle('update-rf', async (event, upatedRf) => {
+    console.log('ipcMain: Solicitud para actualizar predicciones (autenticada)', upatedRf)
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/rf/${upatedRf.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(upatedRf)
+        })
+        if (response.ok) {
+            return await response.json()
+        } else {
+            console.log('Error al actualizar predicciones:', response.status, response.statusText)
+            return null
+        }
+    } catch (err) {
+        console.log('Error de red al actualizar predicciones: ', err)
+        return null
+    }
+})
+
+ipcMain.handle('delete-rf', async (event, id) => {
+    console.log('ipcMain: Solicitud para eliminar predicción (autenticada)', id)
+    try {
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/rf/${id}`, {
+            method: 'DELETE'
+        })
+        return response.ok
+    } catch (err) {
+        console.error('Error de red al eliminar predicción: ', err)
+        return false
+    }
+})

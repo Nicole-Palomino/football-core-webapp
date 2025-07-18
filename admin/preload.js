@@ -73,4 +73,16 @@ contextBridge.exposeInMainWorld('api', {
     addSummary: (summary) => ipcRenderer.invoke('add-summary', summary),
     updateSummary: (summary) => ipcRenderer.invoke('update-summary', summary),
     deleteSummary: (id) => ipcRenderer.invoke('delete-summary', id),
+
+    // Métodos para interactuar con la gestión de predicciones con k-means
+    getKmeansData: () => ipcRenderer.invoke('get-kmeans'),
+    addKmean: (kmeans) => ipcRenderer.invoke('add-kmeans', kmeans),
+    updateKmean: (kmeans) => ipcRenderer.invoke('update-kmeans', kmeans),
+    deleteKmean: (id) => ipcRenderer.invoke('delete-kmeans', id),
+
+    // Métodos para interactuar con la gestión de predicciones con random forest
+    getRfData: () => ipcRenderer.invoke('get-rf'),
+    addRf: (rf) => ipcRenderer.invoke('add-rf', rf),
+    updateRf: (rf) => ipcRenderer.invoke('update-rf', rf),
+    deleteRf: (id) => ipcRenderer.invoke('delete-rf', id),
 })
