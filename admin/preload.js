@@ -53,7 +53,7 @@ contextBridge.exposeInMainWorld('api', {
 
     // Métodos para interactuar con la gestión de partidos
     getMatchData: () => ipcRenderer.invoke('get-matches'),
-    getMatchByStateData: () => ipcRenderer.invoke('get-matches-by-state'),
+    getMatchByStateData: (id) => ipcRenderer.invoke('get-matches-by-state', id),
     addMatch: (match) => ipcRenderer.invoke('add-match', match),
     updateMatch: (match) => ipcRenderer.invoke('update-match', match),
     deleteMatch: (id) => ipcRenderer.invoke('delete-match', id),

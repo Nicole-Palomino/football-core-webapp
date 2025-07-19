@@ -713,10 +713,10 @@ ipcMain.handle('get-matches', async () => {
     }
 })
 
-ipcMain.handle('get-matches-by-state', async () => {
+ipcMain.handle('get-matches-by-state', async (event, id) => {
     console.log('ipcMain: Solicitud para obtener partidos por su estado (autenticada)')
     try {
-        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/8`)
+        const response = await fetchAuthenticated(`${API_BASE_URL}/partidos/${id}`)
         if (response.ok) {
             return await response.json()
         } else {
@@ -985,9 +985,8 @@ ipcMain.handle('get-kmeans', async () => {
 ipcMain.handle('add-kmeans', async (event, kmeans) => {
     console.log('ipcMain: Solicitud para añadir predicciones (autenticada)', kmeans)
     try {
-        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/kmeans/`, {
-            method: 'POST',
-            body: JSON.stringify(kmeans)
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/kmeans/${kmeans.id_partido}`, {
+            method: 'POST'
         })
         if (response.ok) {
             return await response.json()
@@ -1055,9 +1054,8 @@ ipcMain.handle('get-rf', async () => {
 ipcMain.handle('add-rf', async (event, rf) => {
     console.log('ipcMain: Solicitud para añadir predicciones (autenticada)', rf)
     try {
-        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/rf/`, {
-            method: 'POST',
-            body: JSON.stringify(rf)
+        const response = await fetchAuthenticated(`${API_BASE_URL}/resultados/rf/${rf.id_partido}`, {
+            method: 'POST'
         })
         if (response.ok) {
             return await response.json()

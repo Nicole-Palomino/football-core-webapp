@@ -52,6 +52,10 @@ function cargarVista(vista) {
                 initSummariesPage()
             } else if (vista === 'dashboard') {
                 initDashboardPage()
+            } else if (vista === 'kmeans') {
+                initKmeansPage()
+            } else if (vista === 'randomforest') {
+                initRfPage()
             }
         })
 }

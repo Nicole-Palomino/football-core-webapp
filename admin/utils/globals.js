@@ -5,7 +5,8 @@ window._catalogos = {
     ligas: null,
     seasons: null,
     teams: null,
-    matches: null
+    matches: null,
+    matches_byplay: null,
 }
 
 // Función para cargar roles y estados (solo si aún no están cargados)
@@ -26,6 +27,9 @@ async function cargarCatalogos() {
         window._catalogos.teams = await window.api.getTeamsActives()
     }
     if (!window._catalogos.matches) {
-        window._catalogos.matches = await window.api.getMatchByStateData()
+        window._catalogos.matches = await window.api.getMatchByStateData(8)
+    }
+    if (!window._catalogos.matches_byplay) {
+        window._catalogos.matches_byplay = await window.api.getMatchByStateData(5)
     }
 }
