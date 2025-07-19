@@ -281,7 +281,6 @@ async def analizar_clusters_partidos_equipos_individuales(
         "modelo": modelo
     }
 
-
 async def obtener_ultimo_partido_entre_equipos(
     db: AsyncSession,
     equipo_1_id: int,

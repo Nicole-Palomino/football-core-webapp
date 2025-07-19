@@ -273,7 +273,7 @@ async def get_total_matches(db: AsyncSession = Depends(get_db)):
     total = result.scalar()
     return total
 
-# -------------------- K-MEANS --------------------
+# -------------------- CLUSTERES --------------------
 @router.get("/historicos/clusters")
 async def clusterizar_partidos_historicos(
     equipo_1_id: int,
@@ -292,6 +292,7 @@ async def clusterizar_partidos_historicos(
 
     return resultado
 
+# -------------------- K-MEANS --------------------
 @router.post("/predecir-k-means/")
 async def predecir_cluster_automatico(
     equipo_1_id: int,

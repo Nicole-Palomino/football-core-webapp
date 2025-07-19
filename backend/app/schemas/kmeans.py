@@ -17,8 +17,11 @@ class ResultadoKMeansUpdate(BaseModel):
     predicciones: Optional[Any] = None
 
 class ResultadoKMeans(ResultadoKMeansBase):
-    id_historial: int
-    creado_en: datetime
+    id_resultado_kmeans: int
+    created_at: datetime
 
     class Config:
         orm_mode = True
+
+class KMeansInput(BaseModel):
+    id_partido: int

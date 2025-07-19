@@ -17,8 +17,8 @@ class ResultadoRFUpdate(BaseModel):
     predicciones: Optional[Any] = None
 
 class ResultadoRF(ResultadoRFBase):
-    id_historial: int
-    creado_en: datetime
+    id_resultado_rf: int
+    created_at: datetime
 
     class Config:
         orm_mode = True

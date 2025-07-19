@@ -9,7 +9,7 @@ router = APIRouter(
     tags=["Resultados"],
     dependencies=[Depends(get_current_active_user)], # Todos los endpoints de este router requieren un usuario activo
     responses={404: {"description": "Not found"}},
-),
+)
 
 # ----- KMeans -----
 # ✅ 
@@ -26,7 +26,7 @@ async def read_kmeans_resultado(id_historial: int, db: AsyncSession = Depends(ge
     return db_resultado
 
 # ✅ 
-@router.post("/kmeans/", response_model=schemas.kmeans.ResultadoKMeans)
+@router.post("/kmeans/{id_partido}", response_model=schemas.kmeans.ResultadoKMeans)
 async def create_kmeans_resultado(
     id_partido: int, 
     db: AsyncSession = Depends(get_db),
@@ -89,7 +89,7 @@ async def read_rf_resultado(id_historial: int, db: AsyncSession = Depends(get_db
     return db_resultado
 
 # ✅ 
-@router.post("/rf/", response_model=schemas.random_forest.ResultadoRF)
+@router.post("/rf/{id_partido}", response_model=schemas.random_forest.ResultadoRF)
 async def create_rf_resultado(
     id_partido: int, 
     db: AsyncSession = Depends(get_db),
