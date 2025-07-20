@@ -5,13 +5,16 @@ import MatchList from "./MatchList"
 const MatchAccordion = ({ data }) => {
 
     const partidosPorLiga = data.reduce((acc, partido) => {
-        if (!acc[partido.liga.nombre_liga]) {
-            acc[partido.liga.nombre_liga] = {
+        const key = partido.liga.id_liga
+
+        if (!acc[key]) {
+            acc[key] = {
+                nombre_liga: partido.liga.nombre_liga,
                 logo_liga: partido.liga.imagen_pais,
                 partidos: [],
             }
         }
-        acc[partido.liga.nombre_liga].partidos.push(partido)
+        acc[key].partidos.push(partido)
         return acc
     }, {})
 
@@ -22,15 +25,25 @@ const MatchAccordion = ({ data }) => {
                     <AccordionSummary
                         expandIcon={<KeyboardArrowUp sx={{ color: "white" }} />}
                         sx={{
-                            backgroundColor: "#002855",
+                            backgroundColor: "#202121",
                             color: "white",
                             "& .MuiAccordionSummary-content": { alignItems: "center" },
+                            borderBottom: 1,
                         }}>
-                        <Avatar alt={liga} src={ligaData.logo_liga} style={{ width: 30, height: 30, marginRight: 10 }} />
-                        <Typography sx={{ fontWeight: "bold", fontSize: "15px" }}>{liga}</Typography>
+                        <Avatar alt={ligaData.nombre_liga} src={ligaData.logo_liga} 
+                            sx={{ 
+                                width: 35, 
+                                height: 35, 
+                                marginRight: 3, 
+                                backgroundColor: '#f5f5dc', 
+                                '& img': {
+                                    objectFit: 'contain'
+                                }
+                            }} />
+                        <Typography sx={{ fontWeight: "bold", fontSize: "18px" }}>{ligaData.nombre_liga}</Typography>
                     </AccordionSummary>
 
-                    <AccordionDetails sx={{ backgroundColor: "#123456", color: "white" }}>
+                    <AccordionDetails sx={{ backgroundColor: "#202121", color: "white" }}>
                         <MatchList partidos={ligaData.partidos} />
                     </AccordionDetails>
                 </Accordion>

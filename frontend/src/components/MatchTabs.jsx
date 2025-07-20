@@ -4,7 +4,6 @@ import { formatFecha } from '../services/encryptionService'
 import MatchAccordion from './MatchAccordion'
 
 const MatchTabs = ({ match }) => {
-
     const [value, setValue] = useState(0)
     const handleChange = (event, newValue) => { setValue(newValue) }
 
@@ -12,7 +11,7 @@ const MatchTabs = ({ match }) => {
     
     return (
         <Box sx={{ width: "100%", marginBottom: '50px' }}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider", backgroundColor: "#002855" }}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider", backgroundColor: "#202121" }}>
                 <Tabs
                     value={value}
                     onChange={handleChange}

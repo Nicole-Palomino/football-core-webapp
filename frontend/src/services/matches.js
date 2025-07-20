@@ -12,3 +12,21 @@ export const getMatchAll = async (seasonId) => {
         throw err
     }
 }
+// get all the matches by teams
+export const getMatchesTeams = async (teams) => {
+    try {
+        const response = await axiosInstance.get(`/partidos/h2h/${teams.equipo_1_id}&${teams.equipo_2_id}`)
+        return response.data
+    } catch (err) {
+        throw err
+    }
+}
+// get all stats the matches
+export const getMatchesStats = async (teams) => {
+    try {
+        const response = await axiosInstance.get(`/partidos/historicos/${teams.equipo_1_id}&${teams.equipo_2_id}`)
+        return response.data
+    } catch (err) {
+        throw err
+    }
+}

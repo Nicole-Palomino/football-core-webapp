@@ -63,7 +63,7 @@ const NavbarUsers = () => {
 
     return (
         <header className="shadow-md bg-navbar">
-            <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+            <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8 border-b border-white/20 shadow-xl">
                 {/* Logo */}
                 <div className="flex flex-1">
                     <Link to="/dashboard" className="flex items-center space-x-2">
