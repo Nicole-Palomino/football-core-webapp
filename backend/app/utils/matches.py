@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from app.core.state import state
-from app.utils.model_storage import guardar_modelo, cargar_modelo_predictivo, guardar_modelo_predictivo
+from app.utils.model_storage import guardar_modelo, cargar_modelo_predictivo, guardar_modelo_predictivo, cargar_modelo_guardado
 from app import crud
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -217,46 +217,6 @@ def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
 
     return descripciones
 
-def preparar_dataset_para_random_forest(partidos):
-    datos = []
-
-    for p in partidos:
-        est = p.estadisticas
-        datos.append({
-            "goles_local": est.FTHG,
-            "goles_visitante": est.FTAG,
-            "goles_ht_local": est.HTHG,
-            "goles_ht_visitante": est.HTAG,
-            "tiros_local": est.HS,
-            "tiros_visitante": est.AS_,
-            "tiros_arco_local": est.HST,
-            "tiros_arco_visitante": est.AST,
-            "corners_local": est.HC,
-            "corners_visitante": est.AC,
-            "faltas_local": est.HF,
-            "faltas_visitante": est.AF,
-            "amarillas_local": est.HY,
-            "amarillas_visitante": est.AY,
-            "rojas_local": est.HR,
-            "rojas_visitante": est.AR,
-            "resultado": (
-                1 if est.FTHG > est.FTAG else -1 if est.FTHG < est.FTAG else 0
-            )  # etiqueta (target)
-        })
-
-    df = pd.DataFrame(datos)
-    return df
-
-# modelo predictivo
-def entrenar_modelo_predictivo(df_clusterizado: pd.DataFrame):
-    X = df_clusterizado.drop(columns=["cluster", "resultado"])
-    y = df_clusterizado["cluster"]
-
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X, y)
-
-    return model
-
 def predecir_cluster_partido(model, partido_input: Dict[str, float]) -> int:
     df_input = pd.DataFrame([partido_input])
     print(df_input.head())
@@ -304,6 +264,46 @@ def generar_perfil_por_cluster(df: pd.DataFrame, etiquetas: np.ndarray) -> dict:
         perfiles[cluster] = perfil
     return perfiles
 
+# random forest
+def preparar_dataset_para_random_forest(partidos):
+    datos = []
+
+    for p in partidos:
+        est = p.estadisticas
+        datos.append({
+            "goles_local": est.FTHG,
+            "goles_visitante": est.FTAG,
+            "goles_ht_local": est.HTHG,
+            "goles_ht_visitante": est.HTAG,
+            "tiros_local": est.HS,
+            "tiros_visitante": est.AS_,
+            "tiros_arco_local": est.HST,
+            "tiros_arco_visitante": est.AST,
+            "corners_local": est.HC,
+            "corners_visitante": est.AC,
+            "faltas_local": est.HF,
+            "faltas_visitante": est.AF,
+            "amarillas_local": est.HY,
+            "amarillas_visitante": est.AY,
+            "rojas_local": est.HR,
+            "rojas_visitante": est.AR,
+            "resultado": (
+                1 if est.FTHG > est.FTAG else -1 if est.FTHG < est.FTAG else 0
+            )  # etiqueta (target)
+        })
+
+    df = pd.DataFrame(datos)
+    return df
+
+def entrenar_modelo_predictivo(df_clusterizado: pd.DataFrame):
+    X = df_clusterizado.drop(columns=["cluster", "resultado"])
+    y = df_clusterizado["cluster"]
+
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X, y)
+
+    return model
+
 def predecir_cluster_nuevo_partido(datos_partido: dict) -> dict:
     modelo = cargar_modelo_predictivo()
     if modelo is None:
@@ -320,6 +320,7 @@ def predecir_cluster_nuevo_partido(datos_partido: dict) -> dict:
     except Exception as e:
         raise ValueError(f"Error al predecir el clúster: {e}")
 
+# verificaciones de modelos
 FECHA_ENTRENAMIENTO = Path("app/storage/last_trained_at.txt")
 
 async def verificar_o_entrenar_modelo(
@@ -384,7 +385,7 @@ async def verificar_o_entrenar_modelo(
             "perfiles": state.perfiles_clusters,
             "modelo_predictivo": state.modelo_predictivo
         }
-    
+   
 async def verificar_o_entrenar_modelo_predictivo(
     db: AsyncSession,
     equipo_1_id: int,

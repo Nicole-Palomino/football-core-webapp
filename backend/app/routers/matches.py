@@ -41,11 +41,11 @@ async def create_match(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error de integridad de datos. Verifique los IDs de las relaciones.")
 
-# ⚠️
-@router.get("/historicos")
+# ✅ 
+@router.get("/historicos/{equipo_1_id}&{equipo_2_id}")
 async def read_matches(
-    equipo_1_id: int = Query(..., description="ID del primer equipo"),
-    equipo_2_id: int = Query(..., description="ID del segundo equipo"),
+    equipo_1_id: int,
+    equipo_2_id: int,
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -53,6 +53,19 @@ async def read_matches(
     """
     partidos = await crud.get_partidos(db, equipo_1_id, equipo_2_id)
     return analizar_estadisticas(partidos)
+
+# ✅ 
+@router.get("/h2h/{equipo_1_id}&{equipo_2_id}", response_model=List[schemas.Partido])
+async def read_matches(
+    equipo_1_id: int,
+    equipo_2_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Obtiene partidos históricos (estado = 4) entre dos equipos.
+    """
+    partidos = await crud.get_partidos(db, equipo_1_id, equipo_2_id)
+    return partidos
 
 # ✅
 @router.get("/{estado_id}", response_model=List[PartidoOut])
