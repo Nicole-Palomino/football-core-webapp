@@ -25,6 +25,16 @@ export const getMatchesTeams = async (teams) => {
 export const getMatchesStats = async (teams) => {
     try {
         const response = await axiosInstance.get(`/partidos/historicos/${teams.equipo_1_id}&${teams.equipo_2_id}`)
+        console.log('stats',response)
+        return response.data
+    } catch (err) {
+        throw err
+    }
+}
+
+export const getMatcheByID = async (teams) => {
+    try {
+        const response = await axiosInstance.get(`/partidos/by-id/${teams.id_partido}`)
         return response.data
     } catch (err) {
         throw err

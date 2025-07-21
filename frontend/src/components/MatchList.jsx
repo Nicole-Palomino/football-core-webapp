@@ -4,11 +4,15 @@ import AutoFixHigh from "@mui/icons-material/AutoFixHigh"
 import InfoOutlined from "@mui/icons-material/InfoOutlined"
 import StarBorderIcon from '@mui/icons-material/StarBorder'
 import { formatFecha } from '../services/encryptionService'
-import { getMatchesTeams, getMatchesStats } from '../services/matches'
+import { getMatchesTeams, getMatchesStats, getMatcheByID } from '../services/matches'
 // import { getWinsDrawLoses, getMatchById, getAvgGoals, getFoulsTargetCorner, getTablePosition, getH2H, getUltimosPartidos } from "../../services/api"
 import { HorizontalRule } from "@mui/icons-material"
 import { a11yProps, CustomTabPanel } from '../utils/a11yProps'
 import { motion } from "framer-motion"
+import PieChart from './PieChart'
+import RadarCharts from './Radar'
+import Barra from './Radar'
+import TotalMatch from './TotalMatch'
 
 const MatchList = ({ partidos }) => {
 
@@ -28,10 +32,8 @@ const MatchList = ({ partidos }) => {
 
     const handleChange = (event, newValue) => { setValue(newValue) }
     const handleChangeH2H = (event, newValue) => { setValueH2H(newValue) }
-    const matchArray = Array.isArray(match) ? match : [match]
-    console.log('matcharray', matchArray)
 
-    const handleOpen = async (team1_id, team2_id) => {
+    const handleOpen = async (team1_id, team2_id, partido_id) => {
         setOpen(true)
         setIsLoading(true)
         
@@ -39,10 +41,13 @@ const MatchList = ({ partidos }) => {
         
         try {
             const matchesData = await getMatchesTeams({ equipo_1_id: team1_id, equipo_2_id: team2_id })
-            setMatch(matchesData || [])
+            setH2HMatches(matchesData || [])
 
             const matchesStats = await getMatchesStats({ equipo_1_id: team1_id, equipo_2_id: team2_id })
             setStats(matchesStats || [])
+
+            const getMatchId = await getMatcheByID({ id_partido: partido_id })
+            setMatch(getMatchId || [])
             // [winsDrawLoses, partidos, goals, foulsTargetCorner, response, h2h, equipoLocal, equipoVisita] = await Promise.all([
             //     getWinsDrawLoses(team1_id, team2_id),
             //     getMatchById(id_partido),
@@ -73,6 +78,9 @@ const MatchList = ({ partidos }) => {
         setOpen(false)
         setStats(null)
     }
+
+    const matchArray = Array.isArray(match) ? match : [match]
+    console.log('matcharray', matchArray)
 
     return (
         <div>
@@ -140,7 +148,7 @@ const MatchList = ({ partidos }) => {
                                     </Tooltip>
 
                                     <Tooltip title="Info">
-                                        <IconButton onClick={() => handleOpen(partido.equipo_local.id_equipo, partido.equipo_visita.id_equipo)}>
+                                        <IconButton onClick={() => handleOpen(partido.equipo_local.id_equipo, partido.equipo_visita.id_equipo, partido.id_partido)}>
                                             <InfoOutlined sx={{ color: "white" }} />
                                         </IconButton>
                                     </Tooltip>
@@ -156,10 +164,10 @@ const MatchList = ({ partidos }) => {
                     width: { xs: "90%", sm: "80%", md: 600 }, 
                     // height: { xs: "60vh", sm: "70vh", md: "60vh" },
                     maxWidth: "95vw",
-                    bgcolor: "#002855", 
+                    bgcolor: "#202121", 
                     // padding: 3, 
                     borderRadius: 3, 
-                    border: '2px solid #001F3F',
+                    border: '2px solid #202121',
                     margin: "auto", 
                     mt: { xs: 5, sm: 8, md: 4 },
                     overflowY: "auto",
@@ -184,16 +192,132 @@ const MatchList = ({ partidos }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 1.2, ease: "easeOut" }}>
-                                {stats ? (
+                                {match ? (
                                     <>
                                         { matchArray.map((partidoID, index) => {
                                             return (
-                                                <Grid container spacing={0}>
-                                                    <Grid item xs={12} sx={{ backgroundColor: '#001F3F', width: '100%', padding: '2px', display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                <Grid container spacing={0} key={index}>
+                                                    {/* Header - Liga */}
+                                                    <Grid item xs={12} sx={{ backgroundColor: '#0e0f0f', width: '100%', padding: '2px', display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                         <span className="text-white font-subtitle text-xl">
                                                             {/* {partidoID.pais}: {partidoID.nombre_liga} */}
-                                                            {partidoID.liga.nombre_liga}
+                                                            {partidoID.liga?.nombre_liga}
                                                         </span>
+                                                    </Grid>
+
+                                                    {/* Estadio */}
+                                                    <Grid item xs={12} sx={{ width: '100%', padding: '2px', display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                        <span className="text-white font-subtitle text-sm">
+                                                            {partidoID.equipo_local?.estadio}
+                                                        </span>
+                                                    </Grid>
+
+                                                    {/* Equipos y marcador en una sola fila */}
+                                                    <Box  sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, width: '100%', paddingX: '9px' }}>
+                                                        {/* Local */}
+                                                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                            <Avatar alt={partidoID.equipo_local?.nombre_equipo} src={partidoID.equipo_local?.logo} 
+                                                                sx={{ width: 67, height: 67, '& img': { objectFit: 'contain' } }} />
+                                                            <span className="text-white font-subtitle text-md mt-3">
+                                                                {partidoID.equipo_local?.nombre_equipo}
+                                                            </span>
+                                                        </Box>
+
+                                                        {/* Marcador */}
+                                                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                            <span className="text-white font-subtitle text-sm">
+                                                                {formatFecha(partidoID.dia)}
+                                                            </span>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                <span className="text-white font-subtitle text-6xl">
+                                                                    {partidoID.estadisticas?.FTHG ?? " "}
+                                                                </span>
+                                                                <span className="text-white font-subtitle text-6xl">
+                                                                    <HorizontalRule />
+                                                                </span>
+                                                                <span className="text-white font-subtitle text-6xl">
+                                                                    {partidoID.estadisticas?.FTAG ?? " "}
+                                                                </span>
+                                                            </div>
+                                                        </Box>
+
+                                                        {/* Visita */}
+                                                        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                                            <Avatar alt={partidoID.equipo_visita?.nombre_equipo} src={partidoID.equipo_visita?.logo} 
+                                                                sx={{ width: 67, height: 67, '& img': { objectFit: 'contain' } }} />
+                                                            <span className="text-white font-subtitle text-md mt-3">
+                                                                {partidoID.equipo_visita?.nombre_equipo}
+                                                            </span>
+                                                        </Box>
+                                                    </Box>
+
+                                                    <Grid item xs={12} sx={{ width: '100%', padding: '2px', display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                        <Box sx={{ width: '100%' }}>
+                                                            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                                                <Tabs 
+                                                                    value={value} 
+                                                                    onChange={handleChange} 
+                                                                    aria-label="basic tabs example"
+                                                                    variant="scrollable"
+                                                                    allowScrollButtonsMobile
+                                                                    sx={{
+                                                                        "& .MuiTabs-indicator": { backgroundColor: "#00FF88" },
+                                                                        "& .MuiTab-root": { color: "white", fontFamily: "cursive" },
+                                                                        "& .MuiTab-root.Mui-selected": { color: "#00FF88" },
+                                                                        "& .MuiTabs-scrollButtons.Mui-disabled": { opacity: 0.3 },
+                                                                        "& .MuiButtonBase-root.MuiTabs-scrollButtons": { color: "#00FF88" }
+                                                                    }}>
+                                                                        <Tab label="Análisis" {...a11yProps(0)} sx={{ color: 'white', fontFamily: 'cursive' }}/>
+                                                                        <Tab label="H2H" {...a11yProps(1)} sx={{ color: 'white', fontFamily: 'cursive' }}/>
+                                                                </Tabs>
+                                                            </Box>
+
+                                                            <CustomTabPanel value={value} index={0}>
+                                                                <div className='mb-4'>
+                                                                    <TotalMatch totalMatches={stats.total_partidos} />
+                                                                </div>
+
+                                                                <div className='mb-4'>
+                                                                    <PieChart stats={stats}/>
+                                                                </div>
+
+                                                                <div className='mb-4'>
+                                                                    <Barra 
+                                                                        label="⚽ Goles Totales ⚽"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.goles_local}
+                                                                        visitanteValue={stats.goles_visitante}/>
+                                                                </div>
+
+                                                                <div className='mb-4'>    
+                                                                    <Barra 
+                                                                        label="🥅 Tiros Totales 🥅"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.total_tiros_local}
+                                                                        visitanteValue={stats.total_tiros_visitante}/>
+                                                                </div>
+
+                                                                <div className='mb-4'>    
+                                                                    <Barra 
+                                                                        label="🎯 Tiros al Arco 🎯"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.tiros_arco_local}
+                                                                        visitanteValue={stats.tiros_arco_visitante}/>
+                                                                </div>
+
+                                                                <div className='mb-4'>    
+                                                                    <Barra 
+                                                                        label="🚩 Tiros de Esquina 🚩"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.corners_local}
+                                                                        visitanteValue={stats.corners_visitante}/>
+                                                                </div>
+                                                            </CustomTabPanel>
+                                                        </Box>
                                                     </Grid>
                                                 </Grid>
                                             )
