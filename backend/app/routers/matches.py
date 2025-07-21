@@ -79,6 +79,17 @@ async def read_match_by_state(estado_id: int, db: AsyncSession = Depends(get_db)
     return db_partido
 
 # ✅ 
+@router.get("/by-id/{partido_id}", response_model=schemas.Partido)
+async def read_match_by_id(partido_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Recupera los Partidos por su Estado. Accesible por cualquier usuario autenticado.
+    """
+    db_partido = await crud.crud_match.get_partido_by_id(db, partido_id=partido_id)
+    if db_partido is None:
+        raise HTTPException(status_code=404, detail="Partido no encontrado")
+    return db_partido
+
+# ✅ 
 @router.get("/season/{season_id}", response_model=List[schemas.Partido])
 async def get_matches_by_states_and_seasons(season_id: int, db: AsyncSession = Depends(get_db)):
     """

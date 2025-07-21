@@ -36,8 +36,9 @@ async def get_partido_by_id(db: AsyncSession, partido_id: int):
             selectinload(models.Partido.equipo_visita),
             selectinload(models.Partido.estado),
         )
-        .filter(models.Partido.id_partido == partido_id)
+        .where(models.Partido.id_partido == partido_id)
     )
+    print(result)
     return result.scalars().first()
 
 async def get_partidos(
