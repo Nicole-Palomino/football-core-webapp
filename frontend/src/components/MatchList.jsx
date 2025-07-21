@@ -13,6 +13,7 @@ import PieChart from './PieChart'
 import RadarCharts from './Radar'
 import Barra from './Radar'
 import TotalMatch from './TotalMatch'
+import H2HTabPanel from './H2HTabPanel'
 
 const MatchList = ({ partidos }) => {
 
@@ -76,7 +77,7 @@ const MatchList = ({ partidos }) => {
 
     const handleClose = () => {
         setOpen(false)
-        setStats(null)
+        // setStats(null)
     }
 
     const matchArray = Array.isArray(match) ? match : [match]
@@ -267,7 +268,7 @@ const MatchList = ({ partidos }) => {
                                                                         "& .MuiTabs-scrollButtons.Mui-disabled": { opacity: 0.3 },
                                                                         "& .MuiButtonBase-root.MuiTabs-scrollButtons": { color: "#00FF88" }
                                                                     }}>
-                                                                        <Tab label="Análisis" {...a11yProps(0)} sx={{ color: 'white', fontFamily: 'cursive' }}/>
+                                                                        <Tab label="Estadísticas" {...a11yProps(0)} sx={{ color: 'white', fontFamily: 'cursive' }}/>
                                                                         <Tab label="H2H" {...a11yProps(1)} sx={{ color: 'white', fontFamily: 'cursive' }}/>
                                                                 </Tabs>
                                                             </Box>
@@ -316,6 +317,38 @@ const MatchList = ({ partidos }) => {
                                                                         localValue={stats.corners_local}
                                                                         visitanteValue={stats.corners_visitante}/>
                                                                 </div>
+
+                                                                <div className='mb-4'>    
+                                                                    <Barra 
+                                                                        label="🚨 Faltas 🚨"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.faltas_local}
+                                                                        visitanteValue={stats.faltas_visitante}/>
+                                                                </div>
+
+                                                                <div className='mb-4'>    
+                                                                    <Barra 
+                                                                        label="🟨 Tarjetas Amarillas 🟨"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.tarjetas_amarillas_local}
+                                                                        visitanteValue={stats.tarjetas_amarillas_visitante}/>
+                                                                </div>
+                                                                <div className='mb-4'>    
+                                                                    <Barra 
+                                                                        label="🟥 Tarjetas Rojas 🟥"
+                                                                        localName={match.equipo_local?.nombre_equipo}
+                                                                        visitanteName={match.equipo_visita?.nombre_equipo}
+                                                                        localValue={stats.tarjetas_rojas_local}
+                                                                        visitanteValue={stats.tarjetas_rojas_visitante}/>
+                                                                </div>
+                                                            </CustomTabPanel>
+
+                                                            <CustomTabPanel value={value} index={1}>
+                                                                {h2hMatches.length > 0 && (
+                                                                    <H2HTabPanel h2hMatches={h2hMatches} />
+                                                                )}
                                                             </CustomTabPanel>
                                                         </Box>
                                                     </Grid>
