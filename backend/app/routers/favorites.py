@@ -13,11 +13,11 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
-@router.post("/", response_model=FavoritoOut)
-async def create_favorite(favorito: FavoritoCreate, id_usuario: int, db: AsyncSession = Depends(get_db)):
-    return await crud_favorite.agregar_favorito(db, id_usuario, favorito)
+@router.post("/", response_model=FavoritoOut, status_code=201)
+async def create_favorite(favorito: FavoritoCreate, db: AsyncSession = Depends(get_db)):
+    return await crud_favorite.agregar_favorito(db, favorito)
 
-@router.delete("/", response_model=FavoritoOut)
+@router.delete("/{id_partido}/{id_usuario}")
 async def delete_favorite(id_usuario: int, id_partido: int, db: AsyncSession = Depends(get_db)):
     favorito = await crud_favorite.eliminar_favorito(db, id_usuario, id_partido)
     if not favorito:

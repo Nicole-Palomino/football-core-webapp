@@ -228,7 +228,6 @@ async def delete_partido(db: AsyncSession, partido_id: int):
         return True
     return False
 
-
 # -------------------- K-MEANS --------------------
 async def analizar_clusters_partidos_entre_equipos(
     db: AsyncSession, equipo_1_id: int, equipo_2_id: int, k: int = 3
@@ -271,7 +270,7 @@ async def analizar_clusters_partidos_equipos_individuales(
 
     resumen_clusters = df_clusterizado.groupby('cluster').mean().round(2).to_dict(orient="index")
     state.perfiles_clusters = resumen_clusters
-    state.modelo_global = modelo
+    state.modelo_predictivo = modelo
 
     descripcion_clusters = describir_clusters_avanzado(df_clusterizado)
 

@@ -1,13 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 from app.models.favorite import Favorito
+from app.models.match import Partido
 from app.schemas.favorite import FavoritoCreate
 
-async def agregar_favorito(db: AsyncSession, id_usuario: int, favorito_data: FavoritoCreate):
+async def agregar_favorito(db: AsyncSession, favorito_data: FavoritoCreate):
     # Verificar si ya existe
     result = await db.execute(
         select(Favorito).where(and_(
-            Favorito.id_usuario == id_usuario,
+            Favorito.id_usuario == favorito_data.id_usuario,
             Favorito.id_partido == favorito_data.id_partido
         ))
     )
@@ -15,7 +17,7 @@ async def agregar_favorito(db: AsyncSession, id_usuario: int, favorito_data: Fav
     if favorito:
         favorito.is_active = True
     else:
-        favorito = Favorito(id_usuario=id_usuario, **favorito_data.model_dump())
+        favorito = Favorito(**favorito_data.model_dump())
         db.add(favorito)
     await db.commit()
     await db.refresh(favorito)
@@ -37,9 +39,20 @@ async def eliminar_favorito(db: AsyncSession, id_usuario: int, id_partido: int):
 
 async def listar_favoritos(db: AsyncSession, id_usuario: int):
     result = await db.execute(
-        select(Favorito).where(and_(
+        select(Favorito)
+        .options(
+            selectinload(Favorito.partido)
+            .options(
+                selectinload(Partido.liga),
+                selectinload(Partido.equipo_local),
+                selectinload(Partido.equipo_visita),
+                selectinload(Partido.estado),
+            )
+        )
+        .where(
             Favorito.id_usuario == id_usuario,
             Favorito.is_active == True
-        ))
+        )
+        .order_by(Favorito.created_at.desc())
     )
     return result.scalars().all()
