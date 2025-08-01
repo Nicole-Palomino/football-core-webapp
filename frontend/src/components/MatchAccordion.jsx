@@ -1,22 +1,24 @@
 import { Accordion, AccordionSummary, AccordionDetails, Avatar, Typography } from "@mui/material"
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp"
 import MatchList from "./MatchList"
+import { useMemo } from "react"
 
 const MatchAccordion = ({ data }) => {
 
-    const partidosPorLiga = data.reduce((acc, partido) => {
-        const key = partido.liga.id_liga
-
-        if (!acc[key]) {
-            acc[key] = {
-                nombre_liga: partido.liga.nombre_liga,
-                logo_liga: partido.liga.imagen_pais,
-                partidos: [],
+    const partidosPorLiga = useMemo(() => {
+        return data.reduce((acc, partido) => {
+            const key = partido.liga.id_liga
+            if (!acc[key]) {
+                acc[key] = {
+                    nombre_liga: partido.liga.nombre_liga,
+                    logo_liga: partido.liga.imagen_pais,
+                    partidos: [],
+                }
             }
-        }
-        acc[key].partidos.push(partido)
-        return acc
-    }, {})
+            acc[key].partidos.push(partido)
+            return acc
+        }, {})
+    }, [data])
 
     return (
         <>
@@ -44,7 +46,7 @@ const MatchAccordion = ({ data }) => {
                     </AccordionSummary>
 
                     <AccordionDetails sx={{ backgroundColor: "#202121", color: "white" }}>
-                        <MatchList partidos={ligaData.partidos} />
+                            <MatchList partidos={ligaData.partidos} />
                     </AccordionDetails>
                 </Accordion>
             ))}

@@ -1,4 +1,4 @@
-import { Box, Grid, List, ListItem, Typography, useMediaQuery } from '@mui/material'
+import { Avatar, Box, Grid, List, ListItem, Typography, useMediaQuery } from '@mui/material'
 import { formatFecha } from '../services/encryptionService'
 
 const ListMatch = ({ matches = [] }) => {
@@ -60,7 +60,15 @@ const ListMatch = ({ matches = [] }) => {
                                                     }}>
                                                     {item.equipo_local.nombre_equipo}
                                                 </Typography>
-                                                <img alt="Avatar" src={item.logo_local} style={{ width: 20, height: 20, minWidth: "20px" }} />
+                                                <Avatar alt={item.equipo_local.nombre_equipo} src={item.equipo_local.logo}
+                                                    sx={{ 
+                                                        width: 20, 
+                                                        height: 20, 
+                                                        // backgroundColor: '#f5f5dc', 
+                                                        '& img': {
+                                                            objectFit: 'contain'
+                                                        }
+                                                    }} />
                                                 <Typography noWrap sx={{ fontWeight: "bold", textAlign: "right", fontSize: "17px", minWidth: "28px", color: "white" }}>
                                                     {item.estadisticas?.FTHG ?? " "}
                                                 </Typography>
@@ -79,7 +87,15 @@ const ListMatch = ({ matches = [] }) => {
                                                     }}>
                                                     {item.equipo_visita.nombre_equipo}
                                                 </Typography>
-                                                <img alt="Avatar" src={item.logo_visita} style={{ width: 20, height: 20, minWidth: "20px" }} />
+                                                <Avatar alt={item.equipo_visita.nombre_equipo} src={item.equipo_visita.logo}
+                                                    sx={{ 
+                                                        width: 20, 
+                                                        height: 20, 
+                                                        // backgroundColor: '#f5f5dc', 
+                                                        '& img': {
+                                                            objectFit: 'contain'
+                                                        }
+                                                    }} />
                                                 <Typography noWrap sx={{ fontWeight: "bold", textAlign: "right", fontSize: "17px", minWidth: "28px", color: "white" }}>
                                                     {item.estadisticas?.FTAG ?? " "}
                                                 </Typography>

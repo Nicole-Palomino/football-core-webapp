@@ -142,14 +142,14 @@ const Match = () => {
                         <Box sx={{ flex: 1, overflowY: "visible" }}>
                             {value === 0 ? (
                                 partidosPorJugar.length > 0 ? (
-                                <MatchTabs match={partidosPorJugar} />
+                                    <MatchTabs match={partidosPorJugar} />
                                 ) : (
-                                <EmptyMessage text="No hay partidos por jugar." />
+                                    <EmptyMessage text="No hay partidos por jugar." />
                                 )
                             ) : partidosFinalizados.length > 0 ? (
-                                <MatchTabs match={partidosFinalizados} />
+                                    <MatchTabs match={partidosFinalizados} />
                             ) : (
-                                <EmptyMessage text="No hay partidos finalizados." />
+                                    <EmptyMessage text="No hay partidos finalizados." />
                             )}
                         </Box>
                     </Box>

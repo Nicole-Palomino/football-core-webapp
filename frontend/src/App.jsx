@@ -1,12 +1,18 @@
 import { lazy, Suspense, useState } from 'react'
 import { AuthProvider } from './contexts/AuthContexts'
-import { BrowserRouter, Route, Router, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import PublicRoute from './routers/PublicRoute'
 import PrivateRoute from './routers/PrivateRoute'
 import HomePage from './pages/HomePage'
 import Form from './pages/Form'
 import Dashboard from './pages/Dashboard'
 import Match from './pages/Match'
+import { FavoritosProvider } from './hooks/FavoritosContext'
+import Favorite from './pages/Favorite'
+import PageProfile from './pages/PageProfile'
+import PageSettings from './pages/PageSettings'
+import Forecasts from './pages/Forecasts'
+import Analysis from './pages/Analysis'
 
 function App() {
 
@@ -19,8 +25,17 @@ function App() {
               <Route path='/' element={<HomePage/>}/>
               <Route path='/get-started' element={<PublicRoute><Form /></PublicRoute>} />
 
-              <Route path='/dashboard' element={<PrivateRoute><Dashboard /></PrivateRoute>}>
+              <Route path='/dashboard' element={
+                <FavoritosProvider>
+                  <PrivateRoute><Dashboard /></PrivateRoute>
+                </FavoritosProvider>
+              }>
                 <Route index element={<PrivateRoute><Match /></PrivateRoute>}/>
+                <Route path='favorites' element={<PrivateRoute><Favorite /></PrivateRoute>}/>
+                <Route path='analysis' element={<PrivateRoute><Analysis /></PrivateRoute>}/>
+                <Route path='forecasts' element={<PrivateRoute><Forecasts /></PrivateRoute>}/>
+                <Route path='profile' element={<PrivateRoute><PageProfile /></PrivateRoute>}/>
+                <Route path='settings' element={<PrivateRoute><PageSettings /></PrivateRoute>}/>
               </Route>
             </Routes>
           </Suspense>

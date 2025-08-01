@@ -77,7 +77,7 @@ const NavbarUsers = () => {
                 {/* Links principales */}
                 <div className="hidden lg:flex flex-1 justify-center space-x-6">
                     <Link to="/dashboard/favorites" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">FAVORITOS</Link>
-                    <Link to="/dashboard" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">ANÁLISIS</Link>
+                    <Link to="/dashboard/analysis" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">ANÁLISIS</Link>
                     <Link to="/dashboard/forecasts" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">PREDICCIÓN</Link>
                 </div>
 
@@ -140,7 +140,7 @@ const NavbarUsers = () => {
                     </div>
                     <div className="mt-6 space-y-4 font">
                         <Link to="/dashboard/favorites" className="block text-lg text-white">FAVORITOS</Link>
-                        <Link to="/dashboard" className="block text-lg text-white">ANÁLISIS</Link>
+                        <Link to="/dashboard/analysis" className="block text-lg text-white">ANÁLISIS</Link>
                         <Link to="/dashboard/forecasts" className="block text-lg text-white">PREDICCIÓN</Link>
 
                         {/* Avatar en menú móvil */}

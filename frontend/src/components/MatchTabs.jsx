@@ -32,8 +32,10 @@ const MatchTabs = ({ match }) => {
             </Box>
 
             {fechasUnicas.map((dia, index) => (
-                <Box key={index} hidden={value !== index}>
-                    <MatchAccordion data={match.filter((p) => formatFecha(p.dia) === dia)} />
+                <Box key={index}>
+                    {value === index && (
+                        <MatchAccordion data={match.filter(p => formatFecha(p.dia) === dia)} />
+                    )}
                 </Box>
             ))}
         </Box>
