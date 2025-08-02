@@ -45,7 +45,8 @@ import {
 } from '@mui/icons-material'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import EnConstruccion from '../components/EnConstruccion'
-import { getCompleteAnalysis, getLigues, getTeams } from '../services/functions'
+import { combinarAnalisisYPrediccion, getAnalyticsCluster, getCompleteAnalysis, getLigues, getPoisson, getPredictionCluster, getTeams } from '../services/functions'
+import { formatFecha } from '../services/encryptionService'
 
 const Analysis = () => {
 
@@ -57,6 +58,10 @@ const Analysis = () => {
     const [selectedEquipo2, setSelectedEquipo2] = useState('')
     const [analysisData, setAnalysisData] = useState(null)
     const [hoveredCard, setHoveredCard] = useState(null)
+    const [poissonData, setPoissonData] = useState(null)
+    const [clusterData, setClusterData] = useState(null)
+    const [predictionData, setPredictionData] = useState(null)
+    const [activeAnalysisType, setActiveAnalysisType] = useState('complete')
 
     function parseLigas(raw) {
         return Object.entries(raw).map(([key, value]) => ({
@@ -66,7 +71,6 @@ const Analysis = () => {
             color: value.color,
         }));
     }
-
 
     useEffect(() => {
         // Fetch ligas on component mount
@@ -115,7 +119,18 @@ const Analysis = () => {
             const response = await getCompleteAnalysis(liga, equipo1, equipo2)
             setAnalysisData(response || [])
 
-            console.log(response)
+            const poisson = await getPoisson(liga, equipo1, equipo2)
+            setPoissonData(poisson || [])
+            console.log(poisson)
+
+            const clusterAnalysis = await getAnalyticsCluster(liga, equipo1, equipo2)
+            console.log(clusterAnalysis)
+            const clusterPrediction = await getPredictionCluster(liga, equipo1, equipo2)
+            console.log(clusterPrediction)
+            const combinado = combinarAnalisisYPrediccion(clusterAnalysis, clusterPrediction)
+            setClusterData(combinado || [])
+
+            console.log(combinado)
         } catch (error) {
             console.error('Error fetching analysis:', error)
         } finally {
@@ -397,7 +412,7 @@ const Analysis = () => {
                     {/* Analysis Results */}
                     {analysisData && (
                         <Fade in={true} timeout={1200}>
-                            <Box>
+                            <Box sx={{ width: "100%", maxWidth: "100vw", px: 2 }}>
                                 {/* Match Summary */}
                                 <Typography 
                                     variant="h4" 
@@ -420,6 +435,7 @@ const Analysis = () => {
                                             onMouseEnter={() => setHoveredCard('summary')}
                                             onMouseLeave={() => setHoveredCard(null)}
                                             sx={{
+                                                // height: 245,
                                                 background: hoveredCard === 'summary' 
                                                     ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 255, 136, 0.1) 100%)'
                                                     : 'rgba(255, 255, 255, 0.05)',
@@ -445,93 +461,7 @@ const Analysis = () => {
                                             </Typography>
                                         </Card>
                                     </Grid>
-
-                                    <Grid item xs={12} md={4}>
-                                        <Card
-                                            onMouseEnter={() => setHoveredCard('prediction')}
-                                            onMouseLeave={() => setHoveredCard(null)}
-                                            sx={{
-                                                background: hoveredCard === 'prediction' 
-                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.05)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: hoveredCard === 'prediction' 
-                                                    ? '2px solid #FFD700'
-                                                    : '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: 4,
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                transform: hoveredCard === 'prediction' ? 'translateY(-5px)' : 'translateY(0)',
-                                                textAlign: 'center',
-                                                p: 3
-                                            }}>
-                                            <InsightsIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
-                                            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
-                                                Goles Esperados
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
-                                                <Box>
-                                                    <Typography variant="h5" sx={{ color: '#00FF88' }}>
-                                                        {/* {analysisData.predicciones.goles_esperados_equipo1} */}
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ color: '#888' }}>
-                                                        {selectedEquipo1}
-                                                    </Typography>
-                                                </Box>
-                                                <Box>
-                                                    <Typography variant="h5" sx={{ color: '#FF4444' }}>
-                                                        {/* {analysisData.predicciones.goles_esperados_equipo2} */}
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ color: '#888' }}>
-                                                        {selectedEquipo2}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Card>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={4}>
-                                        <Card
-                                            onMouseEnter={() => setHoveredCard('probability')}
-                                            onMouseLeave={() => setHoveredCard(null)}
-                                            sx={{
-                                                background: hoveredCard === 'probability' 
-                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 68, 68, 0.1) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.05)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: hoveredCard === 'probability' 
-                                                    ? '2px solid #FF4444'
-                                                    : '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: 4,
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                transform: hoveredCard === 'probability' ? 'translateY(-5px)' : 'translateY(0)',
-                                                textAlign: 'center',
-                                                p: 3
-                                            }}>
-                                            <PsychologyIcon sx={{ fontSize: 48, color: '#FF4444', mb: 2 }} />
-                                            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
-                                                Mayor Probabilidad
-                                            </Typography>
-                                            <Typography variant="h4" sx={{ color: '#FF4444', mb: 1 }}>
-                                                {/* {Math.max(
-                                                    analysisData.resumen.victorias_por_equipo.victoria_equipo1,
-                                                    analysisData.resumen.probabilidades.empate,
-                                                    analysisData.resumen.probabilidades.victoria_equipo2
-                                                ).toFixed(1)}% */}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: '#888' }}>
-                                                {/* {analysisData.resumen.probabilidades.victoria_equipo1 > analysisData.resumen.probabilidades.victoria_equipo2 
-                                                    ? `Victoria ${selectedEquipo1}`
-                                                    : analysisData.resumen.probabilidades.victoria_equipo2 > analysisData.resumen.probabilidades.empate
-                                                    ? `Victoria ${selectedEquipo2}`
-                                                    : 'Empate'
-                                                } */}
-                                            </Typography>
-                                        </Card>
-                                    </Grid>
-                                </Grid>
-
-                                {/* Charts Section */}
-                                <Grid container spacing={3} sx={{ mb: 4 }}>
+                                    
                                     <Grid item xs={12} md={4}>
                                         <ResultPieChart
                                             data={[
@@ -554,122 +484,45 @@ const Analysis = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} md={4}>
-                                        <RadarChartComponent data={analysisData.radar_data} />
-                                    </Grid>
-                                </Grid>
-
-                                {/* Recent Matches */}
-                                <Grid container spacing={3} sx={{ mb: 4 }}>
-                                    <Grid item xs={12} md={6}>
+                                    {/* <Grid item xs={12} md={4}>
                                         <Card
+                                            onMouseEnter={() => setHoveredCard('probability')}
+                                            onMouseLeave={() => setHoveredCard(null)}
                                             sx={{
-                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                background: hoveredCard === 'probability' 
+                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 68, 68, 0.1) 100%)'
+                                                    : 'rgba(255, 255, 255, 0.05)',
                                                 backdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                border: hoveredCard === 'probability' 
+                                                    ? '2px solid #FF4444'
+                                                    : '1px solid rgba(255, 255, 255, 0.1)',
                                                 borderRadius: 4,
-                                                overflow: 'hidden',
-                                                position: 'relative',
-                                                '&::before': {
-                                                    content: '""',
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '4px',
-                                                    background: `linear-gradient(90deg, #00FF88, #17FF4D)`
-                                                }
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                transform: hoveredCard === 'probability' ? 'translateY(-5px)' : 'translateY(0)',
+                                                textAlign: 'center',
+                                                p: 3
                                             }}>
-                                            <CardContent sx={{ p: 3 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                                    <SportsIcon sx={{ color: '#00FF88', mr: 2 }} />
-                                                    <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
-                                                        🟦 Últimos 5 partidos de {selectedEquipo1}
-                                                    </Typography>
-                                                </Box>
-
-                                                <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
-                                                    <Table size="small">
-                                                        <TableHead>
-                                                            <TableRow>
-                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Fecha</TableCell>
-                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Local</TableCell>
-                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Visitante</TableCell>
-                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Resultado</TableCell>
-                                                            </TableRow>
-                                                        </TableHead>
-                                                        <TableBody>
-                                                            {analysisData.ultimos_partidos[selectedEquipo1].map((partido, index) => (
-                                                                <TableRow key={index} sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' } }}>
-                                                                    <TableCell sx={{ color: 'white' }}>{partido.Date}</TableCell>
-                                                                    <TableCell sx={{ color: 'white' }}>{partido.HomeTeam}</TableCell>
-                                                                    <TableCell sx={{ color: 'white' }}>{partido.AwayTeam}</TableCell>
-                                                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                                        {partido.FTHG} - {partido.FTAG}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ))}
-                                                        </TableBody>
-                                                    </Table>
-                                                </TableContainer>
-                                            </CardContent>        
-                                        </Card>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={6}>
-                                        <Card
-                                            sx={{
-                                                background: 'rgba(255, 255, 255, 0.05)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: 4,
-                                                overflow: 'hidden',
-                                                position: 'relative',
-                                                '&::before': {
-                                                    content: '""',
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '4px',
-                                                    background: `linear-gradient(90deg, #FF4444, #FF6B6B)`
+                                            <PsychologyIcon sx={{ fontSize: 48, color: '#FF4444', mb: 2 }} />
+                                            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
+                                                Mayor Probabilidad
+                                            </Typography>
+                                            <Typography variant="h4" sx={{ color: '#FF4444', mb: 1 }}>
+                                                {Math.max(
+                                                    analysisData.resumen.victorias_por_equipo.victoria_equipo1,
+                                                    analysisData.resumen.probabilidades.empate,
+                                                    analysisData.resumen.probabilidades.victoria_equipo2
+                                                ).toFixed(1)}%
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ color: '#888' }}>
+                                                {analysisData.resumen.probabilidades.victoria_equipo1 > analysisData.resumen.probabilidades.victoria_equipo2 
+                                                    ? `Victoria ${selectedEquipo1}`
+                                                    : analysisData.resumen.probabilidades.victoria_equipo2 > analysisData.resumen.probabilidades.empate
+                                                    ? `Victoria ${selectedEquipo2}`
+                                                    : 'Empate'
                                                 }
-                                            }}>
-                                                <CardContent sx={{ p: 3 }}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                                        <SportsIcon sx={{ color: '#FF4444', mr: 2 }} />
-                                                        <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
-                                                            🟥 Últimos 5 partidos de {selectedEquipo2}
-                                                        </Typography>
-                                                    </Box>
-
-                                                    <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
-                                                        <Table size="small">
-                                                            <TableHead>
-                                                                <TableRow>
-                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Fecha</TableCell>
-                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Local</TableCell>
-                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Visitante</TableCell>
-                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Resultado</TableCell>
-                                                                </TableRow>
-                                                            </TableHead>
-                                                            <TableBody>
-                                                                {analysisData.ultimos_partidos[selectedEquipo2].map((partido, index) => (
-                                                                    <TableRow key={index} sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' } }}>
-                                                                        <TableCell sx={{ color: 'white' }}>{partido.Date}</TableCell>
-                                                                        <TableCell sx={{ color: 'white' }}>{partido.HomeTeam}</TableCell>
-                                                                        <TableCell sx={{ color: 'white' }}>{partido.AwayTeam}</TableCell>
-                                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                                            {partido.FTHG} - {partido.FTAG}
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                ))}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </TableContainer>
-                                                </CardContent>
+                                            </Typography>
                                         </Card>
-                                    </Grid>
+                                    </Grid> */}
                                 </Grid>
 
                                 {/* Advanced Statistics */}
@@ -723,23 +576,23 @@ const Analysis = () => {
                                                             <TableCell sx={{ 
                                                                 color: stat.Equipo === selectedEquipo1 ? '#00FF88' : '#FF4444', 
                                                                 fontWeight: 'bold',
-                                                                fontSize: '1.1rem'
+                                                                fontSize: '1.1rem', 
                                                             }}>
                                                                 {stat.Equipo}
                                                             </TableCell>
-                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
                                                                 {stat['Goles local/prom']}
                                                             </TableCell>
-                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
                                                                 {stat['Goles visita/prom']}
                                                             </TableCell>
-                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
                                                                 {stat['Posesión ofensiva']}
                                                             </TableCell>
-                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
                                                                 {(stat['Eficiencia ofensiva'] * 100).toFixed(1)}%
                                                             </TableCell>
-                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
                                                                 {stat['Indisciplina']}
                                                             </TableCell>
                                                         </TableRow>
@@ -842,71 +695,322 @@ const Analysis = () => {
                                     </AccordionDetails>
                                 </Accordion>
 
-                                <Accordion 
+                                {/* Recent Matches */}
+                                <Grid container spacing={3} sx={{ mb: 4 }}>
+                                    <Grid item xs={12} md={6}>
+                                        <Card
+                                            sx={{
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: 4,
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                                '&::before': {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    height: '4px',
+                                                    background: `linear-gradient(90deg, #00FF88, #17FF4D)`
+                                                }
+                                            }}>
+                                            <CardContent sx={{ p: 3 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                                    <SportsIcon sx={{ color: '#00FF88', mr: 2 }} />
+                                                    <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
+                                                        🟦 Últimos 5 partidos de {selectedEquipo1}
+                                                    </Typography>
+                                                </Box>
+
+                                                <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                                                    <Table size="small">
+                                                        <TableHead>
+                                                            <TableRow>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Fecha</TableCell>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Local</TableCell>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Visitante</TableCell>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Resultado</TableCell>
+                                                            </TableRow>
+                                                        </TableHead>
+                                                        <TableBody>
+                                                            {analysisData.ultimos_partidos[selectedEquipo1].map((partido, index) => {
+                                                                const esLocal = partido.HomeTeam === selectedEquipo1
+                                                                const esVisitante = partido.AwayTeam === selectedEquipo1
+                                                                return (
+                                                                    <TableRow key={index} 
+                                                                        sx={{ 
+                                                                            '&:hover': { 
+                                                                                backgroundColor: 'rgba(255, 255, 255, 0.05)' 
+                                                                            }, 
+                                                                        }}>
+                                                                        <TableCell sx={{ color: 'white', textAlign: 'center' }}>{formatFecha(partido.Date)}</TableCell>
+                                                                        <TableCell sx={{ color: 'white', textAlign: 'center', fontWeight: esLocal ? '700' : '400', backgroundColor: esLocal ? 'rgba(255, 235, 59, 0.3)' : 'transparent', borderRadius: esLocal ? '4px' : 'none', }}>{partido.HomeTeam}</TableCell>
+                                                                        <TableCell sx={{ color: 'white', textAlign: 'center', fontWeight: esVisitante ? '700' : '400', backgroundColor: esVisitante ? 'rgba(255, 235, 59, 0.3)' : 'transparent', borderRadius: esVisitante ? '4px' : 'none', }}>{partido.AwayTeam}</TableCell>
+                                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                                                                            {partido.FTHG} - {partido.FTAG}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )
+                                                            })}
+                                                        </TableBody>
+                                                    </Table>
+                                                </TableContainer>
+                                            </CardContent>        
+                                        </Card>
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <Card
+                                            sx={{
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: 4,
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                                '&::before': {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    height: '4px',
+                                                    background: `linear-gradient(90deg, #FF4444, #FF6B6B)`
+                                                }
+                                            }}>
+                                                <CardContent sx={{ p: 3 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                                        <SportsIcon sx={{ color: '#FF4444', mr: 2 }} />
+                                                        <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
+                                                            🟥 Últimos 5 partidos de {selectedEquipo2}
+                                                        </Typography>
+                                                    </Box>
+
+                                                    <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                                                        <Table size="small">
+                                                            <TableHead>
+                                                                <TableRow>
+                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Fecha</TableCell>
+                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Local</TableCell>
+                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Visitante</TableCell>
+                                                                    <TableCell sx={{ color: '#888', fontWeight: 'bold' }}>Resultado</TableCell>
+                                                                </TableRow>
+                                                            </TableHead>
+                                                            <TableBody>
+                                                                {analysisData.ultimos_partidos[selectedEquipo2].map((partido, index) => {
+                                                                    const esLocal = partido.HomeTeam === selectedEquipo2
+                                                                    const esVisitante = partido.AwayTeam === selectedEquipo2
+                                                                    return (
+                                                                        <TableRow key={index} sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' } }}>
+                                                                            <TableCell sx={{ color: 'white', textAlign: 'center' }}>{formatFecha(partido.Date)}</TableCell>
+                                                                            <TableCell sx={{ color: 'white', textAlign: 'center', fontWeight: esLocal ? '700' : '400', backgroundColor: esLocal ? 'rgba(255, 235, 59, 0.3)' : 'transparent', borderRadius: esLocal ? '4px' : 'none', }}>{partido.HomeTeam}</TableCell>
+                                                                            <TableCell sx={{ color: 'white', textAlign: 'center', fontWeight: esVisitante ? '700' : '400', backgroundColor: esVisitante ? 'rgba(255, 235, 59, 0.3)' : 'transparent', borderRadius: esVisitante ? '4px' : 'none', }}>{partido.AwayTeam}</TableCell>
+                                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                                                                                {partido.FTHG} - {partido.FTAG}
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                })}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </TableContainer>
+                                                </CardContent>
+                                        </Card>
+                                    </Grid>
+                                </Grid>
+
+                                {/* direct encounters */}
+                                <Grid container spacing={3} sx={{ mb: 4 }}>
+                                    {/* <Grid item xs={12} md={12}> */}
+                                        <Card
+                                            sx={{
+                                                width: "100%", display: "block",
+                                                background: 'rgba(255, 255, 255, 0.05)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: 4,
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                                '&::before': {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    height: '4px',
+                                                    background: `linear-gradient(90deg, #3643F7, #1726FF)`
+                                                }
+                                            }}>
+                                            <CardContent sx={{ p: 3 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                                    <SportsIcon sx={{ color: '#00FF88', mr: 2 }} />
+                                                    <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
+                                                        🟦 Últimos 5 partidos de {selectedEquipo1}
+                                                    </Typography>
+                                                </Box>
+
+                                                <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                                                    <Table size="small">
+                                                        <TableHead>
+                                                            <TableRow>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Fecha</TableCell>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Local</TableCell>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Visitante</TableCell>
+                                                                <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Resultado</TableCell>
+                                                            </TableRow>
+                                                        </TableHead>
+                                                        <TableBody>
+                                                            {analysisData.enfrentamientos_directos.map((partido, index) => {
+                                                                return (
+                                                                    <TableRow key={index} 
+                                                                        sx={{ 
+                                                                            '&:hover': { 
+                                                                                backgroundColor: 'rgba(255, 255, 255, 0.05)' 
+                                                                            }, 
+                                                                        }}>
+                                                                        <TableCell sx={{ color: 'white', textAlign: 'center' }}>{formatFecha(partido.Date)}</TableCell>
+                                                                        <TableCell sx={{ color: 'white', textAlign: 'center' }}>{partido.HomeTeam}</TableCell>
+                                                                        <TableCell sx={{ color: 'white', textAlign: 'center' }}>{partido.AwayTeam}</TableCell>
+                                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                                                                            {partido.FTHG} - {partido.FTAG}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )
+                                                            })}
+                                                        </TableBody>
+                                                    </Table>
+                                                </TableContainer>
+                                            </CardContent>        
+                                        </Card>
+                                    {/* </Grid> */}
+                                </Grid>
+
+                                <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', mb: 2 }} />
+
+                                <Typography 
+                                    variant="h4" 
                                     sx={{ 
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        backdropFilter: 'blur(10px)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: 2,
-                                        '&:before': { display: 'none' }
+                                        color: 'white', 
+                                        mb: 4, 
+                                        textAlign: 'center',
+                                        fontFamily: 'cursive',
+                                        background: 'linear-gradient(45deg, #00FF88, #17FF4D)',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent'
                                     }}>
-                                    <AccordionSummary
-                                        expandIcon={<ExpandMoreIcon sx={{ color: '#FFD700' }} />}
-                                        sx={{ 
-                                            backgroundColor: 'rgba(255, 215, 0, 0.1)',
-                                            '&:hover': { backgroundColor: 'rgba(255, 215, 0, 0.15)' }
-                                        }}
-                                    >
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <TimelineIcon sx={{ color: '#FFD700', mr: 2 }} />
-                                            <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
-                                                📈 Interpretación de los Análisis
+                                    📊 Análisis Probabilístico (Modelo de Poisson)
+                                </Typography>
+
+                                <Typography 
+                                    variant="h6" 
+                                    sx={{ 
+                                        color: '#9E9D9D',
+                                        fontStyle: 'italic',
+                                        maxWidth: 700,
+                                        margin: '0 auto',
+                                        textAlign: 'center'
+                                    }}>
+                                    Análisis probabilístico con modelo de Poisson que incluye goles esperados, probabilidades 1X2, matriz de resultados y métricas clave del partido.
+                                </Typography>
+
+                                <Grid container spacing={3} sx={{ mb: 4, mt: 4 }}>
+                                    <Grid item xs={12} md={4}>
+                                        <Card
+                                            onMouseEnter={() => setHoveredCard('prediction')}
+                                            onMouseLeave={() => setHoveredCard(null)}
+                                            sx={{
+                                                background: hoveredCard === 'prediction' 
+                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%)'
+                                                    : 'rgba(255, 255, 255, 0.05)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: hoveredCard === 'prediction' 
+                                                    ? '2px solid #FFD700'
+                                                    : '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: 4,
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                transform: hoveredCard === 'prediction' ? 'translateY(-5px)' : 'translateY(0)',
+                                                textAlign: 'center',
+                                                p: 3
+                                            }}>
+                                            <InsightsIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
+                                            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
+                                                Goles Esperados
                                             </Typography>
-                                        </Box>
-                                    </AccordionSummary>
-                                    <AccordionDetails sx={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
-                                        <Grid container spacing={3}>
-                                            <Grid item xs={12} md={4}>
-                                                <Box sx={{ textAlign: 'center', p: 2, border: '1px solid rgba(0, 255, 136, 0.2)', borderRadius: 2 }}>
-                                                    <CompareIcon sx={{ color: '#00FF88', fontSize: 40, mb: 1 }} />
-                                                    <Typography variant="h6" sx={{ color: '#00FF88', mb: 1 }}>
-                                                        Radar de Estadísticas
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
+                                                <Box>
+                                                    <Typography variant="h5" sx={{ color: '#00FF88' }}>
+                                                        {poissonData?.goles_esperados?.local}
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: '#888' }}>
-                                                        Compara goles, tiros, precisión, corners, faltas y disciplina entre ambos equipos 
-                                                        en sus enfrentamientos directos.
+                                                        {selectedEquipo1}
                                                     </Typography>
                                                 </Box>
-                                            </Grid>
-                                            
-                                            <Grid item xs={12} md={4}>
-                                                <Box sx={{ textAlign: 'center', p: 2, border: '1px solid rgba(255, 215, 0, 0.2)', borderRadius: 2 }}>
-                                                    <StadiumIcon sx={{ color: '#FFD700', fontSize: 40, mb: 1 }} />
-                                                    <Typography variant="h6" sx={{ color: '#FFD700', mb: 1 }}>
-                                                        Análisis de Localía
+                                                <Box>
+                                                    <Typography variant="h5" sx={{ color: '#FF4444' }}>
+                                                        {poissonData?.goles_esperados?.visitante}
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: '#888' }}>
-                                                        Compara el rendimiento como local vs visitante. 
-                                                        Ayuda a identificar ventajas del factor cancha.
+                                                        {selectedEquipo2}
                                                     </Typography>
                                                 </Box>
-                                            </Grid>
-                                            
-                                            <Grid item xs={12} md={4}>
-                                                <Box sx={{ textAlign: 'center', p: 2, border: '1px solid rgba(255, 68, 68, 0.2)', borderRadius: 2 }}>
-                                                    <PsychologyIcon sx={{ color: '#FF4444', fontSize: 40, mb: 1 }} />
-                                                    <Typography variant="h6" sx={{ color: '#FF4444', mb: 1 }}>
-                                                        Predicciones IA
+                                            </Box>
+                                        </Card>
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <Card
+                                            onMouseEnter={() => setHoveredCard('prediction')}
+                                            onMouseLeave={() => setHoveredCard(null)}
+                                            sx={{
+                                                background: hoveredCard === 'prediction' 
+                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%)'
+                                                    : 'rgba(255, 255, 255, 0.05)',
+                                                backdropFilter: 'blur(10px)',
+                                                border: hoveredCard === 'prediction' 
+                                                    ? '2px solid #FFD700'
+                                                    : '1px solid rgba(255, 255, 255, 0.1)',
+                                                borderRadius: 4,
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                transform: hoveredCard === 'prediction' ? 'translateY(-5px)' : 'translateY(0)',
+                                                textAlign: 'center',
+                                                p: 3
+                                            }}>
+                                            <InsightsIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
+                                            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
+                                                Probabilidades 1X2
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
+                                                <Box>
+                                                    <Typography variant="h5" sx={{ color: '#00FF88' }}>
+                                                        {/* {poissonData?.probabilidades_1x2} */}
                                                     </Typography>
                                                     <Typography variant="body2" sx={{ color: '#888' }}>
-                                                        Utiliza modelos de Poisson y simulación Monte Carlo 
-                                                        para predecir resultados basados en datos históricos.
+                                                        {selectedEquipo1}
                                                     </Typography>
                                                 </Box>
-                                            </Grid>
-                                        </Grid>
-                                    </AccordionDetails>
-                                </Accordion>
+                                                <Box>
+                                                    <Typography variant="h5" sx={{ color: '#00FF88' }}>
+                                                        {/* {poissonData?.probabilidades_1x2} */}
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: '#888' }}>
+                                                        Empate
+                                                    </Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="h5" sx={{ color: '#FF4444' }}>
+                                                        {/* {poissonData?.probabilidades_1x2?.local} */}
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: '#888' }}>
+                                                        {selectedEquipo2}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Card>
+                                    </Grid>
+                                </Grid>
                             </Box>
                         </Fade>
                     )}
