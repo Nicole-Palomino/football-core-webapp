@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.routers import (
     favorites, leagues, matches, seasons, states, stats, summaries, 
-    teams, roles, users, auth, results
+    teams, roles, users, auth, results, analysis, cluster, predictions,
+    poisson, clasification
 )
 
 load_dotenv()
@@ -64,3 +65,8 @@ app.include_router(users.router)
 app.include_router(summaries.router)
 app.include_router(favorites.router)
 app.include_router(results.router)
+app.include_router(analysis.router)
+app.include_router(cluster.router)
+app.include_router(predictions.router)
+app.include_router(poisson.router)
+app.include_router(clasification.router)
