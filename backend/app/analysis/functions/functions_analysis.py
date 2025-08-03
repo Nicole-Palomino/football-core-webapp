@@ -57,6 +57,8 @@ def goles_primer_tiempo_entre_dos(df, equipo1, equipo2):
     eq2_visita = df[df["AwayTeam"] == equipo2]["HTAG"].sum()
     total_eq2 = eq2_local + eq2_visita
 
+    return total_eq1, total_eq2
+
 def ventaja_primer_tiempo_entre_equipos(df, equipo1, equipo2):
     # Filtrar solo partidos entre ambos
     partidos = get_data.filtrar_partidos_sin_importar_local_visita(df, equipo1, equipo2)

@@ -28,6 +28,13 @@ def run_in_executor(func):
         return await loop.run_in_executor(executor, func, *args, **kwargs)
     return wrapper
 
+# normalizar scalars de numpy
+def to_native(x):
+    try:
+        return x.item()  # funciona para np.generic
+    except AttributeError:
+        return x  # ya es nativo
+
 router = APIRouter(
     prefix="/analysis",
     tags=["Análisis"],
@@ -153,6 +160,10 @@ async def get_analisis_completo(
             ((partidos["HomeTeam"] == equipo2) & (partidos["FTHG"] > partidos["FTAG"])) |
             ((partidos["AwayTeam"] == equipo2) & (partidos["FTAG"] > partidos["FTHG"]))
         ).sum())
+
+        # Primer Tiempo
+        total_eq1, total_eq2 = functions_analysis.goles_primer_tiempo_entre_dos(partidos, equipo1, equipo2)
+        ventaja1, ventaja2, empates_ht, total = functions_analysis.ventaja_primer_tiempo_entre_equipos(df, equipo1, equipo2)
         
         return {
             "resumen": {
@@ -166,6 +177,18 @@ async def get_analisis_completo(
                     "local": victorias_local,
                     "visitante": victorias_visitante,
                     "empates": empates
+                }
+            },
+            "primer_tiempo": {
+                "goles_primer_tiempo": {
+                    "local": to_native(total_eq1),
+                    "visitante": to_native(total_eq2)
+                },
+                "ventaja_primer_tiempo": {
+                    "local": to_native(ventaja1),
+                    "visitante": to_native(ventaja2),
+                    "empate_ht": to_native(empates_ht),
+                    "total_ht": to_native(total)
                 }
             },
             "ultimos_partidos": {

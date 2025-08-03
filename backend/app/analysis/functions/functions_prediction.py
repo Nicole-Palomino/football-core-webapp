@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from app.analysis.functions import get_data
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, mean_squared_error
+from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 
 def preparar_dataset_estadistico(df: pd.DataFrame) -> pd.DataFrame:

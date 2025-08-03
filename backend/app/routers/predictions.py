@@ -205,8 +205,7 @@ async def predecir_partido(
                     "rojas_local": round(to_native(predicciones.get("rojas_local", 0)) or 0, 2),
                     "rojas_visitante": round(to_native(predicciones.get("rojas_visitante", 0)) or 0, 2),
                 }
-            },
-            "datos_entrada": datos_partido
+            }
         }
 
     except HTTPException:
