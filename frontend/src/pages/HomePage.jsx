@@ -1,10 +1,10 @@
 import { useAuth } from '../contexts/AuthContexts'
 import { Navigate } from 'react-router-dom'
-import NavbarClient from '../components/NavbarClient'
-import Hero from '../components/Hero'
-import Services from '../components/Services'
-import Banner from '../components/Banner'
-import Footer from '../components/Footer'
+import NavbarClient from '../components/Navbar/NavbarClient'
+import Hero from '../components/Sections/Hero'
+import Services from '../components/Sections/Services'
+import Banner from '../components/Sections/Banner'
+import Footer from '../components/Footer/Footer'
 
 
 const HomePage = () => {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Paper, Tab, Tabs } from '@mui/material'
-import NavbarClient from '../components/NavbarClient'
+import NavbarClient from '../components/Navbar/NavbarClient'
 import { a11yProps, CustomTabPanel } from '../utils/a11yProps'
 import SignIn from './SignIn'
 import SignUp from './SignUp'

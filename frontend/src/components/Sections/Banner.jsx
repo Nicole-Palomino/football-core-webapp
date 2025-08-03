@@ -1,8 +1,8 @@
 import { motion } from "framer-motion"
 import { TbDeviceAnalytics, TbSoccerField } from 'react-icons/tb'
 import { PiSoccerBallFill } from 'react-icons/pi'
-import { FadeUp } from '../utils/transitions'
-import BannerPng from '../assets/data-football.png'
+import { FadeUp } from '../../utils/transitions'
+import BannerPng from '../../assets/data-football.png'
 
 const Banner = () => {
     return (
@@ -40,7 +40,7 @@ const Banner = () => {
                                 viewport={{ once: true }}
                                 className="flex items-center gap-4 p-6 bg-target rounded-2xl text-white hover:bg-navbar hover:text-white duration-300 hover:shadow-2xl">
                                     <TbSoccerField className="text-3xl" />
-                                    <p className="text-lg">1,500+ Partidos</p>
+                                    <p className="text-lg">9,000+ Partidos</p>
                             </motion.div>
 
                             <motion.div

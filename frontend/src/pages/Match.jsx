@@ -3,67 +3,22 @@ import { Box, CircularProgress, Grid, Tab, Tabs, Typography } from '@mui/materia
 import { useAuth } from '../contexts/AuthContexts'
 import { getMatchAll } from '../services/matches'
 import MatchTabs from '../components/MatchTabs'
+import { useQuery } from '@tanstack/react-query'
 
 const Match = () => {
 
-    const [match, setMatch] = useState([])
     const [value, setValue] = useState(0)
-    const [loading, setLoading] = useState(true)
     const { isAuthenticated } = useAuth()
 
-    useEffect(() => {
-        const fetchMatches = async () => {
-            setLoading(true)
+    const seasonId = 12
+    const { data, error, isLoading, isError } = useQuery({ 
+        queryKey: ['match', seasonId], 
+        queryFn: () => getMatchAll(seasonId),
+        staleTime: Infinity,
+        cacheTime: 5 * 60 * 1000
+    })
 
-            try {
-                const matchesData = await getMatchAll(12)
-                setMatch(matchesData || [])
-            } catch (error) {
-                console.error("Error al obtener partidos por temporada:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        if (isAuthenticated) {
-            fetchMatches()
-        }
-    }, [isAuthenticated])
-
-    if (!isAuthenticated) {
-        return (
-            <Box sx={{ textAlign: "center", color: "white", padding: "20px" }}>
-                <Typography variant="h5">Debes iniciar sesión para ver los partidos</Typography>
-            </Box>
-        )
-    }
-
-    const handleChange = (event, newValue) => { setValue(newValue) }
-
-    const partidosPorJugar = useMemo(
-        () => match.filter(p => p.estado.id_estado === 5), 
-        [match]
-    )
-    
-    const partidosFinalizados = useMemo(
-        () => match.filter(p => p.estado.id_estado === 8),
-        [match]
-    )
-
-    const EmptyMessage = ({ text }) => (
-        <Box
-            sx={{
-            color: "white",
-            textAlign: "center",
-            padding: "40px",
-            fontStyle: "italic",
-            fontSize: "18px",
-            }}>
-            {text}
-        </Box>
-    )
-
-    if (loading) {
+    if (isLoading) {
         return (
             <Box
                 sx={{
@@ -81,6 +36,41 @@ const Match = () => {
             </Box>
         );
     }
+
+    if (isError) return <div>Error: {error.message}</div>
+
+    if (!isAuthenticated) {
+        return (
+            <Box sx={{ textAlign: "center", color: "white", padding: "20px" }}>
+                <Typography variant="h5">Debes iniciar sesión para ver los partidos</Typography>
+            </Box>
+        )
+    }
+
+    const handleChange = (event, newValue) => { setValue(newValue) }
+
+    const EmptyMessage = ({ text }) => (
+        <Box
+            sx={{
+            color: "white",
+            textAlign: "center",
+            padding: "40px",
+            fontStyle: "italic",
+            fontSize: "18px",
+            }}>
+            {text}
+        </Box>
+    )
+
+    const partidosPorJugar = useMemo(
+        () => data.filter(p => p.estado.id_estado === 5), 
+        [data]
+    )
+    
+    const partidosFinalizados = useMemo(
+        () => data.filter(p => p.estado.id_estado === 8),
+        [data]
+    )
 
     return (
         <Box sx={{ flexGrow: 1, backgroundColor: "#0e0f0f" }}>

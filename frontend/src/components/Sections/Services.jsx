@@ -1,5 +1,5 @@
-import { SlideLeft } from '../utils/transitions' 
-import { ServicesData } from '../utils/navbarData' 
+import { SlideLeft } from '../../utils/transitions' 
+import { ServicesData } from '../../utils/navbarData' 
 import { motion } from "framer-motion"
 
 const Services = () => {

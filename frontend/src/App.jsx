@@ -13,6 +13,7 @@ import PageProfile from './pages/PageProfile'
 import PageSettings from './pages/PageSettings'
 import Forecasts from './pages/Forecasts'
 import Analysis from './pages/Analysis'
+import Services from './components/Header/Services'
 
 function App() {
 
@@ -23,6 +24,7 @@ function App() {
           <Suspense fallback={<div>Cargando FOOTBALL CORE... </div>}>
             <Routes>
               <Route path='/' element={<HomePage/>}/>
+              <Route path='/services' element={<Services/>}/>
               <Route path='/get-started' element={<PublicRoute><Form /></PublicRoute>} />
 
               <Route path='/dashboard' element={
