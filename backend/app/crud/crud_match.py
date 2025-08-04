@@ -66,7 +66,7 @@ async def get_partidos(
                 models.Partido.id_equipo_visita == equipo_1_id
             )
         )
-    )
+    ).order_by(desc(models.Partido.dia))
 
     result = await db.execute(query)
     return result.scalars().all()
