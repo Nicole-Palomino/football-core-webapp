@@ -23,6 +23,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+# ✅
 @router.get("/users/me/", response_model=schemas.User)
 async def read_users_me(
     current_user: models.User = Depends(get_current_active_user),
@@ -67,6 +68,7 @@ async def login_for_access_token(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+# ✅
 @router.post("/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def register_user(
     user_create: schemas.UserCreate, 
@@ -117,6 +119,7 @@ async def register_user_admin(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
+# ✅
 @router.post("/request-password-reset")
 async def request_password_reset(
     request: schemas.PasswordRecoveryRequest, 
@@ -130,7 +133,7 @@ async def request_password_reset(
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
     
     await crud.set_user_verification_code(db, user)
-    return {"message": "Código de verificación enviado. Revise la consola/su correo."}
+    return {"message": "Código de verificación enviado. Revise la bandeja de entrada de su correo."}
 
 @router.post("/verify-password-code")
 async def verify_password_code(
@@ -156,6 +159,7 @@ async def verify_password_code(
     
     return {"message": "Código verificado exitosamente."}
 
+# ✅
 @router.post("/reset-password")
 async def reset_password(
     reset_data: schemas.PasswordReset, 

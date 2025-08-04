@@ -226,7 +226,7 @@ async def set_user_verification_code(db: AsyncSession, user: models.User):
     Este código expirará en 15 minutos. Si no lo solicitaste, por favor ignora este correo.
 
     Saludos,
-    Tu Equipo de Soporte
+    Equipo de Soporte
     """
     try:
         await send_email(user.correo, subject, body)

@@ -22,7 +22,6 @@ async def send_email(to_email: str, subject: str, body: str):
     msg.attach(MIMEText(body, 'plain'))
 
     try:
-        
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls() 
         server.login(from_email, app_password) 
