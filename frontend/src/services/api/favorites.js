@@ -1,4 +1,4 @@
-import axiosInstance from '../services/axiosConfig'
+import axiosInstance from '../../services/axiosConfig'
 // -------------------------------------- favorite --------------------------------------
 
 // add a favorite match

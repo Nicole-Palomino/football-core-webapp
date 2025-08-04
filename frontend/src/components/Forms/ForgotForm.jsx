@@ -46,8 +46,8 @@ const ForgotForm = ({ onSubmit, loading }) => {
                                 message: "El correo electrónico debe proceder de Gmail, Hotmail o Outlook"
                             }
                         })}
-                        error={!!errors.email}
-                        helperText={errors.email ? errors.email.message : ''} />
+                        error={!!errors.correo}
+                        helperText={errors.correo ? errors.correo.message : ''} />
                 </div>
             </div>
 

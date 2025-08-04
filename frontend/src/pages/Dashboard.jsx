@@ -1,6 +1,6 @@
 import { Box, Grid } from '@mui/material'
 import { Outlet } from 'react-router-dom'
-import NavbarUsers from '../components/NavbarUsers'
+import NavbarUsers from '../components/Navbar/NavbarUsers'
 
 const Dashboard = () => {
     return (

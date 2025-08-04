@@ -17,15 +17,17 @@ const ForgotPassword = () => {
         try {
             await forgotUser(data)
 
+            sessionStorage.setItem('pwd_reset_email', data.correo)
+
             Swal.fire({
                 icon: 'success',
                 title: '¡Código solicitado exitosamente!',
-                text: 'Serás redirigido para cambiar tu contraseña.',
+                text: 'Revisa tu correo para el código.',
                 timer: 2500,
                 showConfirmButton: false,
             })
 
-            navigate(`/reset-password?correo=${encodeURIComponent(data.correo)}`)
+            navigate(`/reset-password`)
         } catch (err) {
             Swal.fire({
                 icon: 'error',

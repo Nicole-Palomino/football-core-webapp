@@ -1,5 +1,4 @@
-import axiosInstance from '../services/axiosConfig'
-import { setToken, getToken } from './auth'
+import axiosInstance from '../axiosConfig'
 
 // -------------------------------------- matches --------------------------------------
 
@@ -16,7 +15,6 @@ export const getMatchAll = async (seasonId) => {
 export const getMatchesTeams = async (teams) => {
     try {
         const response = await axiosInstance.get(`/partidos/h2h/${teams.equipo_1_id}&${teams.equipo_2_id}`)
-        console.log('h2h: ',response)
         return response.data
     } catch (err) {
         throw err

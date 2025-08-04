@@ -18,6 +18,7 @@ import Contact from './components/Header/Contact'
 import AboutUs from './components/Header/AboutUs'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import MatchDetail from './components/Dashboard/Match/MatchDetail'
 
 function App() {
 
@@ -41,6 +42,7 @@ function App() {
                 </FavoritosProvider>
               }>
                 <Route index element={<PrivateRoute><Match /></PrivateRoute>}/>
+                <Route path=':id_partido' element={<PrivateRoute><MatchDetail /></PrivateRoute>}/>
                 <Route path='favorites' element={<PrivateRoute><Favorite /></PrivateRoute>}/>
                 <Route path='analysis' element={<PrivateRoute><Analysis /></PrivateRoute>}/>
                 <Route path='forecasts' element={<PrivateRoute><Forecasts /></PrivateRoute>}/>

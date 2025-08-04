@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Box, CircularProgress, Grid, Tab, Tabs, Typography } from '@mui/material'
 import { useAuth } from '../contexts/AuthContexts'
-import { getMatchAll } from '../services/matches'
-import MatchTabs from '../components/MatchTabs'
+import { getMatchAll } from '../services/api/matches'
+import MatchTabs from '../components/Dashboard/Match/MatchTabs'
 import { useQuery } from '@tanstack/react-query'
 
 const Match = () => {
@@ -11,12 +11,22 @@ const Match = () => {
     const { isAuthenticated } = useAuth()
 
     const seasonId = 12
-    const { data, error, isLoading, isError } = useQuery({ 
+    const { data = [], error, isLoading, isError } = useQuery({ 
         queryKey: ['match', seasonId], 
         queryFn: () => getMatchAll(seasonId),
-        staleTime: Infinity,
+        staleTime: 1000 * 60 * 15,
         cacheTime: 5 * 60 * 1000
     })
+
+    const partidosPorJugar = useMemo(
+        () => data.filter(p => p.estado.id_estado === 5),
+        [data]
+    )
+    
+    const partidosFinalizados = useMemo(
+        () => data.filter(p => p.estado.id_estado === 8),
+        [data]
+    )
 
     if (isLoading) {
         return (
@@ -34,7 +44,7 @@ const Match = () => {
                     Cargando datos...
                 </Typography>
             </Box>
-        );
+        )
     }
 
     if (isError) return <div>Error: {error.message}</div>
@@ -60,16 +70,6 @@ const Match = () => {
             }}>
             {text}
         </Box>
-    )
-
-    const partidosPorJugar = useMemo(
-        () => data.filter(p => p.estado.id_estado === 5), 
-        [data]
-    )
-    
-    const partidosFinalizados = useMemo(
-        () => data.filter(p => p.estado.id_estado === 8),
-        [data]
     )
 
     return (
@@ -119,11 +119,11 @@ const Match = () => {
                         centered
                         variant="fullWidth"
                         sx={{
-                            "& .MuiTabs-indicator": { backgroundColor: "#00FF88" },
+                            "& .MuiTabs-indicator": { backgroundColor: "#368FF4" },
                             "& .MuiTab-root": { color: "white", fontFamily: "cursive" },
                             backgroundColor: "#202121",
                             borderRadius: "10px 10px 0 0",
-                            "& .MuiTab-root.Mui-selected": { color: "#00FF88" },
+                            "& .MuiTab-root.Mui-selected": { color: "#368FF4" },
                         }}>
                             <Tab label="Próximos Partidos" />
                             <Tab label="Partidos Finalizados" />

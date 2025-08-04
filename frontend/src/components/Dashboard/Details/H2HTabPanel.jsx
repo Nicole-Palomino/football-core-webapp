@@ -1,5 +1,4 @@
 import { Box, Grid, Tab, Tabs } from '@mui/material'
-import React from 'react'
 import ListMatch from './ListMatch'
 
 const H2HTabPanel = ({ h2hMatches }) => {

@@ -13,7 +13,11 @@ import {
     CircularProgress,
     Divider,
     IconButton,
-    Badge
+    Badge,
+    Paper,
+    LinearProgress,
+    Button,
+    Tooltip
 } from '@mui/material'
 import {
     Person as PersonIcon,
@@ -24,58 +28,38 @@ import {
     Verified as VerifiedIcon,
     Schedule as ScheduleIcon,
     AccountCircle as AccountIcon,
-    Edit as EditIcon
+    Edit as EditIcon,
+    Settings as SettingsIcon,
+    Favorite as FavoriteIcon,
+    Sports as SportsIcon,
+    TrendingUp as TrendingUpIcon,
+    AccessTime as AccessTimeIcon,
+    Shield as ShieldIcon,
+    Star as StarIcon,
+    AccountBox as AccountBoxIcon,
+    VpnKey as VpnKeyIcon,
+    Logout as LogoutIcon,
+    Dashboard as DashboardIcon
 } from '@mui/icons-material'
 import { getStoredUser } from '../services/auth'
-import { formatFecha, formatFechaHora } from '../services/encryptionService'
+import { formatFechaHora } from '../utils/helpers'
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 
 const PageProfile = () => {
-
-    const [user, setUser] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
     const [hoveredCard, setHoveredCard] = useState(null)
+    const [profileCompletion, setProfileCompletion] = useState(0)
 
-    useEffect(() => {
-        const fetchUserData = () => {
-            setLoading(true)
-            try {
-                const userData = getStoredUser()
-                setUser(userData)
-            } catch (error) {
-                console.error("Error al obtener datos del usuario:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
+    const { data: user, isLoading, isError, error } = useQuery({
+        queryKey: ['user-profile'],
+        queryFn: getStoredUser,
+        staleTime: Infinity,
+        cacheTime: Infinity
+    })  
 
-        fetchUserData()
-    }, [])
-
-    const getRoleColor = (roleName) => {
-        switch (roleName?.toLowerCase()) {
-            case 'admin':
-            case 'administrador':
-                return '#FF4444'
-            case 'user':
-            case 'usuario':
-                return '#00FF88'
-            case 'moderador':
-                return '#FFD700'
-            default:
-                return '#888888'
-        }
-    }
-
-    const getStatusColor = (status) => {
-        return status ? '#00FF88' : '#FF4444'
-    }
-
-    const getInitials = (name) => {
-        if (!name) return 'U'
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    }
-
-    if (loading) {
+    if (isLoading) {
         return (
             <Box
                 sx={{
@@ -119,346 +103,605 @@ const PageProfile = () => {
         )
     }
 
-    if (!user) {
+    if (isError) {
         return (
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100vh",
-                    backgroundColor: "#0e0f0f",
-                    color: "white"
-                }}>
-                <PersonIcon sx={{ fontSize: 100, color: '#333', mb: 3, opacity: 0.5 }} />
-                <Typography variant="h4" sx={{ color: '#666', mb: 2, fontFamily: 'cursive' }}>
-                    Error al cargar perfil
-                </Typography>
-                <Typography variant="body1" sx={{ color: '#888' }}>
-                    No se pudo obtener la información del usuario
-                </Typography>
-            </Box>
+            <Container sx={{ textAlign: 'center', mt: 4, color: 'white' }}>
+                <Typography variant="h6">Error: {error.message}</Typography>
+                <Typography variant="body1">No se pudieron cargar los datos del usuario.</Typography>
+            </Container>
         )
     }
 
-    return (
-        <Box
-            sx={{ 
-                backgroundColor: "#0e0f0f",
-                minHeight: "100vh",
-                padding: { xs: 2, md: 4 },
-                background: `
-                    radial-gradient(circle at 20% 80%, rgba(53, 189, 125, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(4, 214, 116, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
-                    #0e0f0f
-                `
-            }}>
-                <Container maxWidth="lg">
-                    {/* Header */}
-                    <Fade in={true} timeout={1000}>
-                        <Box sx={{ textAlign: 'center', mb: 6 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                                <AccountIcon  
-                                    sx={{ 
-                                        fontSize: 60, 
-                                        color: '#00FF88',
-                                        mr: 2,
-                                        filter: 'drop-shadow(0 0 20px #00FF88)',
-                                        animation: 'pulse 3s infinite'
-                                    }} 
-                                />
+    const getRoleColor = (roleName) => {
+        switch (roleName?.toLowerCase()) {
+            case 'admin':
+            case 'administrador':
+                return { bg: '#FF4444', icon: AdminIcon }
+            case 'user':
+            case 'usuario':
+                return { bg: '#00FF88', icon: PersonIcon }
+            case 'moderador':
+                return { bg: '#FFD700', icon: ShieldIcon }
+            default:
+                return { bg: '#888888', icon: PersonIcon }
+        }
+    }
 
-                                <Typography 
-                                    variant="h2" 
-                                    sx={{ 
-                                        color: 'white',
-                                        fontFamily: 'cursive',
-                                        fontWeight: 'bold',
-                                        background: 'linear-gradient(45deg, #02C268, #00FF88)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        textShadow: '0 0 30px rgba(30, 212, 100, 0.5)'
-                                    }}>
+    const getStatusColor = (status) => {
+        return status ? '#00FF88' : '#FF4444'
+    }
+
+    const getInitials = (name) => {
+        if (!name) return 'U'
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    }
+
+    const calculateDaysActive = (registrationDate) => {
+        const now = new Date()
+        const registration = new Date(registrationDate)
+        const diffTime = Math.abs(now - registration)
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    }
+
+    const handleEditProfile = () => {
+        console.log("Editar perfil")
+    }
+
+    const handleLogout = () => {
+        Swal.fire({
+            title: "¿Cerrar sesión?",
+            text: "Tu sesión será cerrada.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, cerrar",
+            confirmButtonColor: "#368FF4",
+            cancelButtonText: "Cancelar",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: "Cerrando sesión...",
+                    text: "Serás redirigido en un momento.",
+                    icon: "info",
+                    timer: 2000, 
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    didClose: () => {
+                        logout()
+                        navigate('/get-started')
+                    }
+                })
+            }
+        })
+    }
+
+    const roleInfo = getRoleColor(user.rol?.nombre_rol)
+    const daysActive = calculateDaysActive(user.registro)
+
+    return (
+        <Box sx={{ 
+            bgcolor: "#0a0a0a", 
+            minHeight: "100vh",
+            background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+        }}>
+            <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
+                {/* Header con navegación rápida */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        mb: 4,
+                        p: 2,
+                        bgcolor: 'rgba(255,255,255,0.05)',
+                        borderRadius: 3,
+                        border: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <AccountIcon sx={{ color: '#00FF88', fontSize: 40 }} />
+                            <Box>
+                                <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
                                     Mi Perfil
                                 </Typography>
+                                <Typography variant="body2" sx={{ color: '#888' }}>
+                                    Gestiona tu información personal
+                                </Typography>
                             </Box>
-
-                            <Typography 
-                                variant="h6" 
-                                sx={{ 
-                                    color: '#9E9D9D',
-                                    fontStyle: 'italic',
-                                    maxWidth: 600,
-                                    margin: '0 auto'
-                                }}>
-                                Información de tu cuenta y configuración personal
-                            </Typography>
                         </Box>
-                    </Fade>
 
-                    {/* Profile Content */}
-                    <Grid container spacing={4} justifyContent="center">
-                        {/* Main Profile Card */}
-                        <Grid item xs={12} md={8}>
-                            <Zoom in={true} timeout={800}>
-                                <Card
-                                    onMouseEnter={() => setHoveredCard('main')}
-                                    onMouseLeave={() => setHoveredCard(null)}
-                                    sx={{
-                                        background: hoveredCard === 'main' 
-                                            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 255, 136, 0.1) 100%)'
-                                            : 'rgba(255, 255, 255, 0.05)',
-                                        backdropFilter: 'blur(10px)',
-                                        border: hoveredCard === 'main' 
-                                            ? '2px solid #00FF88'
-                                            : '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: 4,
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        transform: hoveredCard === 'main' ? 'translateY(-5px)' : 'translateY(0)',
-                                        // boxShadow: hoveredCard === 'main' 
-                                        //     ? '0 20px 40px rgba(0, 255, 136, 0.2)' 
-                                        //     : '0 8px 32px rgba(0, 0, 0, 0.3)',
-                                        overflow: 'hidden',
-                                        position: 'relative',
-                                        '&::before': {
-                                            content: '""',
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            right: 0,
-                                            height: '4px',
-                                            background: `linear-gradient(90deg, #00FF88, #17FF4D)`,
-                                            opacity: hoveredCard === 'main' ? 1 : 0.7
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Dashboard" arrow>
+                                <IconButton 
+                                    onClick={() => navigate('/dashboard')}
+                                    sx={{ 
+                                        color: '#00FF88',
+                                        bgcolor: 'rgba(0,255,136,0.1)',
+                                        '&:hover': { 
+                                            bgcolor: 'rgba(0,255,136,0.2)',
+                                            transform: 'scale(1.1)'
                                         }
-                                    }}>
-                                        <CardContent sx={{ p: 4 }}>
-                                            {/* Avatar and Basic Info */}
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                                                <Badge
-                                                    overlap="circular"
-                                                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                                    badgeContent={
-                                                        user.is_active ? (
-                                                            <VerifiedIcon 
-                                                                sx={{ 
-                                                                    color: '#00FF88', 
-                                                                    fontSize: 24,
-                                                                    // filter: 'drop-shadow(0 0 5px #00FF88)'
-                                                                }} 
-                                                            />
-                                                        ) : null
-                                                    }>
-                                                        <Avatar 
-                                                            sx={{ 
-                                                                width: 120, 
-                                                                height: 120, 
-                                                                mr: 4,
-                                                                background: 'linear-gradient(45deg, #00FF88, #17FF4D)',
-                                                                fontSize: '2.5rem',
-                                                                fontWeight: 'bold',
-                                                                boxShadow: '0 0 20px rgba(0, 255, 136, 0.5)'
-                                                            }}>
-                                                            {getInitials(user.usuario)}
-                                                        </Avatar>
-                                                </Badge>
+                                    }}
+                                >
+                                    <DashboardIcon />
+                                </IconButton>
+                            </Tooltip>
 
-                                                <Box sx={{ flex: 1 }}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                        <Typography 
-                                                            variant="h3" 
-                                                            sx={{ 
-                                                                color: 'white',
-                                                                fontFamily: 'cursive',
-                                                                fontWeight: 'bold',
-                                                                mr: 2
-                                                            }}>
-                                                            {user.usuario}
-                                                        </Typography>
-                                                        <IconButton 
-                                                            sx={{ 
-                                                                color: '#00FF88',
-                                                                '&:hover': { 
-                                                                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                                                                    transform: 'scale(1.1)'
-                                                                }
-                                                            }}>
-                                                            <EditIcon />
-                                                        </IconButton>
-                                                    </Box>
+                            <Tooltip title="Configuración" arrow>
+                                <IconButton 
+                                    sx={{ 
+                                        color: '#FFD700',
+                                        bgcolor: 'rgba(255,215,0,0.1)',
+                                        '&:hover': { 
+                                            bgcolor: 'rgba(255,215,0,0.2)',
+                                            transform: 'scale(1.1)'
+                                        }
+                                    }}
+                                >
+                                    <SettingsIcon />
+                                </IconButton>
+                            </Tooltip>
 
-                                                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                                        <Chip
-                                                            icon={user.rol?.nombre_rol?.toLowerCase() === 'admin' ? <AdminIcon /> : <PersonIcon />}
-                                                            label={user.rol?.nombre_rol || 'Usuario'}
-                                                            sx={{
-                                                                backgroundColor: getRoleColor(user.rol?.nombre_rol),
-                                                                color: 'black',
-                                                                fontWeight: 'bold',
-                                                                '& .MuiChip-icon': { color: 'black' }
-                                                            }}
-                                                        />
-                                                        
-                                                        <Chip
-                                                            icon={<SecurityIcon />}
-                                                            label={user.is_active ? 'Activo' : 'Inactivo'}
-                                                            sx={{
-                                                                backgroundColor: getStatusColor(user.is_active),
-                                                                color: 'black',
-                                                                fontWeight: 'bold',
-                                                                '& .MuiChip-icon': { color: 'black' }
-                                                            }}
-                                                        />
+                            <Tooltip title="Cerrar Sesión" arrow>
+                                <IconButton 
+                                    onClick={handleLogout}
+                                    sx={{ 
+                                        color: '#FF4444',
+                                        bgcolor: 'rgba(255,68,68,0.1)',
+                                        '&:hover': { 
+                                            bgcolor: 'rgba(255,68,68,0.2)',
+                                            transform: 'scale(1.1)'
+                                        }
+                                    }}
+                                >
+                                    <LogoutIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+                    </Box>
+                </motion.div>
+
+                <Grid container spacing={4}>
+                    {/* Card Principal del Perfil */}
+                    <Grid item xs={12} lg={8}>
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <Card
+                                onMouseEnter={() => setHoveredCard('main')}
+                                onMouseLeave={() => setHoveredCard(null)}
+                                sx={{
+                                    bgcolor: '#1a1a1a',
+                                    border: hoveredCard === 'main' ? '2px solid #00FF88' : '1px solid #333',
+                                    borderRadius: 4,
+                                    transition: 'all 0.3s ease',
+                                    transform: hoveredCard === 'main' ? 'translateY(-5px)' : 'translateY(0)',
+                                    boxShadow: hoveredCard === 'main' 
+                                        ? '0 20px 40px rgba(0,255,136,0.2)' 
+                                        : '0 10px 30px rgba(0,0,0,0.5)',
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    '&::before': {
+                                        content: '""',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: '4px',
+                                        background: 'linear-gradient(90deg, #00FF88, #17FF4D)'
+                                    }
+                                }}
+                            >
+                                <CardContent sx={{ p: 4 }}>
+                                    {/* Header con Avatar y Info Principal */}
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 4, flexWrap: 'wrap', gap: 3 }}>
+                                        <Badge
+                                            overlap="circular"
+                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                            badgeContent={
+                                                user.is_active ? (
+                                                    <Box sx={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '50%',
+                                                        bgcolor: '#00FF88',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '3px solid #1a1a1a'
+                                                    }}>
+                                                        <VerifiedIcon sx={{ color: 'black', fontSize: 18 }} />
                                                     </Box>
-                                                </Box>
+                                                ) : null
+                                            }
+                                        >
+                                            <Avatar sx={{ 
+                                                width: 120, 
+                                                height: 120,
+                                                background: `linear-gradient(45deg, ${roleInfo.bg}, ${roleInfo.bg}90)`,
+                                                fontSize: '2.5rem',
+                                                fontWeight: 'bold',
+                                                boxShadow: `0 0 30px ${roleInfo.bg}40`,
+                                                border: '4px solid rgba(255,255,255,0.1)'
+                                            }}>
+                                                {getInitials(user.usuario)}
+                                            </Avatar>
+                                        </Badge>
+
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                                                <Typography variant="h3" sx={{ 
+                                                    color: 'white',
+                                                    fontWeight: 'bold',
+                                                    mr: 2
+                                                }}>
+                                                    {user.usuario}
+                                                </Typography>
+                                                <Button
+                                                    onClick={handleEditProfile}
+                                                    startIcon={<EditIcon />}
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{
+                                                        color: '#00FF88',
+                                                        borderColor: '#00FF88',
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(0,255,136,0.1)',
+                                                            borderColor: '#00FF88',
+                                                            transform: 'scale(1.05)'
+                                                        }
+                                                    }}
+                                                >
+                                                    Editar
+                                                </Button>
                                             </Box>
 
-                                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mb: 4 }} />
+                                            {/* Chips de Estado y Rol */}
+                                            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                                                <Chip
+                                                    icon={React.createElement(roleInfo.icon)}
+                                                    label={user.rol?.nombre_rol || 'Usuario'}
+                                                    sx={{
+                                                        bgcolor: roleInfo.bg,
+                                                        color: 'black',
+                                                        fontWeight: 'bold',
+                                                        '& .MuiChip-icon': { color: 'black' }
+                                                    }}
+                                                />
+                                                <Chip
+                                                    icon={<SecurityIcon />}
+                                                    label={user.is_active ? 'Cuenta Activa' : 'Cuenta Inactiva'}
+                                                    sx={{
+                                                        bgcolor: getStatusColor(user.is_active),
+                                                        color: 'black',
+                                                        fontWeight: 'bold',
+                                                        '& .MuiChip-icon': { color: 'black' }
+                                                    }}
+                                                />
+                                            </Box>
 
-                                            {/* Detailed Information */}
-                                            <Grid container spacing={3}>
-                                                <Grid item xs={12} md={6}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                                        <EmailIcon sx={{ color: '#00FF88', fontSize: 24, mr: 2 }} />
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ color: '#888', mb: 0.5 }}>
-                                                                Correo Electrónico
-                                                            </Typography>
-                                                            <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                                {user.correo}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </Grid>
+                                            {/* Progreso del Perfil */}
+                                            <Box sx={{ mb: 3 }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                    <Typography variant="body2" sx={{ color: '#888' }}>
+                                                        Completitud del perfil
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: '#00FF88', fontWeight: 'bold' }}>
+                                                        {profileCompletion}%
+                                                    </Typography>
+                                                </Box>
+                                                <LinearProgress
+                                                    variant="determinate"
+                                                    value={profileCompletion}
+                                                    sx={{
+                                                        height: 8,
+                                                        borderRadius: 4,
+                                                        bgcolor: 'rgba(255,255,255,0.1)',
+                                                        '& .MuiLinearProgress-bar': {
+                                                            bgcolor: profileCompletion === 100 ? '#00FF88' : '#FFD700',
+                                                            borderRadius: 4
+                                                        }
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Box>
+                                    </Box>
 
-                                                <Grid item xs={12} md={6}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                                        <CalendarIcon sx={{ color: '#00FF88', fontSize: 24, mr: 2 }} />
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ color: '#888', mb: 0.5 }}>
-                                                                Fecha de Registro
-                                                            </Typography>
-                                                            <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                                {formatFechaHora(user.registro)}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </Grid>
-                                                
-                                                <Grid item xs={12} md={6}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                                        <ScheduleIcon sx={{ color: '#00FF88', fontSize: 24, mr: 2 }} />
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ color: '#888', mb: 0.5 }}>
-                                                                Última Actualización
-                                                            </Typography>
-                                                            <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                                {formatFechaHora(user.updated_at)}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </Grid>
-                                                
-                                                <Grid item xs={12} md={6}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                                        <SecurityIcon sx={{ color: '#00FF88', fontSize: 24, mr: 2 }} />
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ color: '#888', mb: 0.5 }}>
-                                                                Estado de la Cuenta
-                                                            </Typography>
-                                                            <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                                {user.estado?.nombre_estado || 'No especificado'}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </Grid>
-                                            </Grid>
-                                        </CardContent>
-                                </Card>
-                            </Zoom>
-                        </Grid>
+                                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 4 }} />
 
-                        {/* Additional Info Cards */}
-                        <Grid item xs={12} md={4}>
-                            <Grid container spacing={3}>
-                                {/* Stats Card */}
-                                <Grid item xs={12}>
-                                    <Zoom in={true} timeout={1200}>
-                                        <Card
-                                            onMouseEnter={() => setHoveredCard('stats')}
-                                            onMouseLeave={() => setHoveredCard(null)}
-                                            sx={{
-                                                background: hoveredCard === 'stats' 
-                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.05)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: hoveredCard === 'stats' 
-                                                    ? '2px solid #FFD700'
-                                                    : '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: 4,
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                transform: hoveredCard === 'stats' ? 'translateY(-5px)' : 'translateY(0)',
-                                                // boxShadow: hoveredCard === 'stats' 
-                                                //     ? '0 20px 40px rgba(255, 215, 0, 0.2)' 
-                                                //     : '0 8px 32px rgba(0, 0, 0, 0.3)',
-                                                overflow: 'hidden',
-                                                position: 'relative',
-                                                '&::before': {
-                                                    content: '""',
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '4px',
-                                                    background: `linear-gradient(90deg, #FFD700, #FFA500)`,
-                                                    opacity: hoveredCard === 'stats' ? 1 : 0.7
-                                                }
+                                    {/* Información Detallada */}
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                p: 2,
+                                                bgcolor: 'rgba(0,255,136,0.05)',
+                                                borderRadius: 2,
+                                                border: '1px solid rgba(0,255,136,0.2)'
                                             }}>
-                                                <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                                                    <PersonIcon 
-                                                        sx={{ 
-                                                            color: '#FFD700', 
-                                                            fontSize: 48, 
-                                                            mb: 2,
-                                                            filter: 'drop-shadow(0 0 10px #FFD700)'
-                                                        }} 
-                                                    />
-
-                                                    <Typography variant="h6" sx={{ color: 'white', mb: 1, fontFamily: 'cursive' }}>
-                                                        Resumen
+                                                <EmailIcon sx={{ color: '#00FF88', fontSize: 28, mr: 2 }} />
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
+                                                        Correo Electrónico
                                                     </Typography>
-                                                    <Typography variant="body2" sx={{ color: '#888', mb: 2 }}>
-                                                        Actividad de la cuenta
+                                                    <Typography variant="body1" sx={{ 
+                                                        color: 'white', 
+                                                        fontWeight: 'bold',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis'
+                                                    }}>
+                                                        {user.correo}
                                                     </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
 
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
-                                                        <Box>
-                                                            <Typography variant="h6" sx={{ color: '#FFD700', fontWeight: 'bold' }}>
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                p: 2,
+                                                bgcolor: 'rgba(255,215,0,0.05)',
+                                                borderRadius: 2,
+                                                border: '1px solid rgba(255,215,0,0.2)'
+                                            }}>
+                                                <CalendarIcon sx={{ color: '#FFD700', fontSize: 28, mr: 2 }} />
+                                                <Box>
+                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
+                                                        Miembro desde
+                                                    </Typography>
+                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
+                                                        {formatFechaHora(user.registro)}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                p: 2,
+                                                bgcolor: 'rgba(255,107,107,0.05)',
+                                                borderRadius: 2,
+                                                border: '1px solid rgba(255,107,107,0.2)'
+                                            }}>
+                                                <ScheduleIcon sx={{ color: '#FF6B6B', fontSize: 28, mr: 2 }} />
+                                                <Box>
+                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
+                                                        Última actividad
+                                                    </Typography>
+                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
+                                                        {formatFechaHora(user.updated_at)}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={6}>
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                p: 2,
+                                                bgcolor: 'rgba(138,43,226,0.05)',
+                                                borderRadius: 2,
+                                                border: '1px solid rgba(138,43,226,0.2)'
+                                            }}>
+                                                <VpnKeyIcon sx={{ color: '#8A2BE2', fontSize: 28, mr: 2 }} />
+                                                <Box>
+                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
+                                                        ID de Usuario
+                                                    </Typography>
+                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
+                                                        #{user.id_usuario}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </Grid>
+
+                    {/* Cards Laterales */}
+                    <Grid item xs={12} lg={4}>
+                        <Grid container spacing={3}>
+                            {/* Estadísticas Rápidas */}
+                            <Grid item xs={12}>
+                                <motion.div
+                                    initial={{ opacity: 0, x: 30 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.2 }}
+                                >
+                                    <Card
+                                        onMouseEnter={() => setHoveredCard('stats')}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                        sx={{
+                                            bgcolor: '#1a1a1a',
+                                            border: hoveredCard === 'stats' ? '2px solid #FFD700' : '1px solid #333',
+                                            borderRadius: 4,
+                                            transition: 'all 0.3s ease',
+                                            transform: hoveredCard === 'stats' ? 'translateY(-5px)' : 'translateY(0)',
+                                            boxShadow: hoveredCard === 'stats' 
+                                                ? '0 20px 40px rgba(255,215,0,0.2)' 
+                                                : '0 10px 30px rgba(0,0,0,0.5)',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            '&::before': {
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                height: '4px',
+                                                background: 'linear-gradient(90deg, #FFD700, #FFA500)'
+                                            }
+                                        }}
+                                    >
+                                        <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                                            <TrendingUpIcon sx={{ 
+                                                color: '#FFD700', 
+                                                fontSize: 48, 
+                                                mb: 2,
+                                                filter: 'drop-shadow(0 0 10px #FFD700)'
+                                            }} />
+
+                                            <Typography variant="h5" sx={{ color: 'white', mb: 1, fontWeight: 'bold' }}>
+                                                Estadísticas
+                                            </Typography>
+
+                                            <Box sx={{ mt: 3 }}>
+                                                <Grid container spacing={2}>
+                                                    <Grid item xs={6}>
+                                                        <Box sx={{ 
+                                                            p: 2, 
+                                                            bgcolor: 'rgba(0,255,136,0.1)', 
+                                                            borderRadius: 2,
+                                                            border: '1px solid rgba(0,255,136,0.2)'
+                                                        }}>
+                                                            <Typography variant="h4" sx={{ color: '#00FF88', fontWeight: 'bold' }}>
+                                                                {daysActive}
+                                                            </Typography>
+                                                            <Typography variant="caption" sx={{ color: '#888' }}>
+                                                                Días activo
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+
+                                                    <Grid item xs={6}>
+                                                        <Box sx={{ 
+                                                            p: 2, 
+                                                            bgcolor: 'rgba(255,107,107,0.1)', 
+                                                            borderRadius: 2,
+                                                            border: '1px solid rgba(255,107,107,0.2)'
+                                                        }}>
+                                                            <Typography variant="h4" sx={{ color: '#FF6B6B', fontWeight: 'bold' }}>
                                                                 {user.is_active ? '✓' : '✗'}
                                                             </Typography>
-                                                            <Typography variant="body2" sx={{ color: '#888' }}>
+                                                            <Typography variant="caption" sx={{ color: '#888' }}>
                                                                 Estado
                                                             </Typography>
                                                         </Box>
-                                                    </Box>
-                                                </CardContent>
-                                        </Card>
-                                    </Zoom>
-                                </Grid>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            </Grid>
+
+                            {/* Accesos Rápidos */}
+                            <Grid item xs={12}>
+                                <motion.div
+                                    initial={{ opacity: 0, x: 30 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.4 }}
+                                >
+                                    <Card
+                                        onMouseEnter={() => setHoveredCard('quick')}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                        sx={{
+                                            bgcolor: '#1a1a1a',
+                                            border: hoveredCard === 'quick' ? '2px solid #FF6B6B' : '1px solid #333',
+                                            borderRadius: 4,
+                                            transition: 'all 0.3s ease',
+                                            transform: hoveredCard === 'quick' ? 'translateY(-5px)' : 'translateY(0)',
+                                            boxShadow: hoveredCard === 'quick' 
+                                                ? '0 20px 40px rgba(255,107,107,0.2)' 
+                                                : '0 10px 30px rgba(0,0,0,0.5)',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            '&::before': {
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                height: '4px',
+                                                background: 'linear-gradient(90deg, #FF6B6B, #FF4444)'
+                                            }
+                                        }}
+                                    >
+                                        <CardContent sx={{ p: 3 }}>
+                                            <Typography variant="h6" sx={{ color: 'white', mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
+                                                Accesos Rápidos
+                                            </Typography>
+                                            
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={6}>
+                                                    <Button
+                                                        fullWidth
+                                                        startIcon={<FavoriteIcon />}
+                                                        onClick={() => navigate('/favorites')}
+                                                        sx={{
+                                                            color: '#FF1717',
+                                                            bgcolor: 'rgba(255,23,23,0.1)',
+                                                            border: '1px solid rgba(255,23,23,0.3)',
+                                                            '&:hover': {
+                                                                bgcolor: 'rgba(255,23,23,0.2)',
+                                                                transform: 'translateY(-2px)'
+                                                            },
+                                                            py: 1.5
+                                                        }}
+                                                    >
+                                                        Favoritos
+                                                    </Button>
+                                                </Grid>
+                                                
+                                                <Grid item xs={6}>
+                                                    <Button
+                                                        fullWidth
+                                                        startIcon={<SportsIcon />}
+                                                        onClick={() => navigate('/dashboard')}
+                                                        sx={{
+                                                            color: '#00FF88',
+                                                            bgcolor: 'rgba(0,255,136,0.1)',
+                                                            border: '1px solid rgba(0,255,136,0.3)',
+                                                            '&:hover': {
+                                                                bgcolor: 'rgba(0,255,136,0.2)',
+                                                                transform: 'translateY(-2px)'
+                                                            },
+                                                            py: 1.5
+                                                        }}
+                                                    >
+                                                        Partidos
+                                                    </Button>
+                                                </Grid>
+                                                
+                                                <Grid item xs={12}>
+                                                    <Button
+                                                        fullWidth
+                                                        startIcon={<SettingsIcon />}
+                                                        sx={{
+                                                            color: '#FFD700',
+                                                            bgcolor: 'rgba(255,215,0,0.1)',
+                                                            border: '1px solid rgba(255,215,0,0.3)',
+                                                            '&:hover': {
+                                                                bgcolor: 'rgba(255,215,0,0.2)',
+                                                                transform: 'translateY(-2px)'
+                                                            },
+                                                            py: 1.5,
+                                                            // mt: 1
+                                                        }}
+                                                    >
+                                                        Configuración
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
                             </Grid>
                         </Grid>
                     </Grid>
-
-                    {/* CSS Animations */}
-                    <style jsx>{`
-                        @keyframes pulse {
-                            0%, 100% { opacity: 1; transform: scale(1); }
-                            50% { opacity: 0.7; transform: scale(0.95); }
-                        }
-                    `}</style>
-                </Container>
+                </Grid>
+            </Container>
         </Box>
     )
 }

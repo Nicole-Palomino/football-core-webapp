@@ -7,9 +7,9 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle"
 import SettingsIcon from '@mui/icons-material/Settings'
 import Logout from "@mui/icons-material/Logout"
 import { Dialog, DialogPanel } from "@headlessui/react"
-import { decryptData } from '../services/encryptionService'
-import { settings } from '../utils/navbarUtils'
-import { useAuth } from '../contexts/AuthContexts'
+import { decryptData } from '../../services/encryptionService'
+import { settings } from '../../utils/navbarUtils'
+import { useAuth } from '../../contexts/AuthContexts'
 
 const NavbarUsers = () => {
 
@@ -26,8 +26,8 @@ const NavbarUsers = () => {
     const correo = user?.correo
 
     const iconMap = {
-        "Perfil": <AccountCircleIcon sx={{ color: "green" }} />,
-        "Configuración": <SettingsIcon sx={{ color: "green" }} />
+        "Perfil": <AccountCircleIcon sx={{ color: "blue" }} />,
+        "Configuración": <SettingsIcon sx={{ color: "blue" }} />
     }
 
     const { logout } = useAuth()
@@ -41,7 +41,7 @@ const NavbarUsers = () => {
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Sí, cerrar",
-            confirmButtonColor: "#228B22",
+            confirmButtonColor: "#368FF4",
             cancelButtonText: "Cancelar",
         }).then((result) => {
             if (result.isConfirmed) {
@@ -63,7 +63,7 @@ const NavbarUsers = () => {
 
     return (
         <header className="shadow-md bg-navbar">
-            <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8 border-b border-white/20 shadow-xl">
+            <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8 border-b border-blue-700/20 shadow-xl">
                 {/* Logo */}
                 <div className="flex flex-1">
                     <Link to="/dashboard" className="flex items-center space-x-2">
@@ -76,9 +76,9 @@ const NavbarUsers = () => {
 
                 {/* Links principales */}
                 <div className="hidden lg:flex flex-1 justify-center space-x-6">
-                    <Link to="/dashboard/favorites" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">FAVORITOS</Link>
-                    <Link to="/dashboard/analysis" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">ANÁLISIS</Link>
-                    <Link to="/dashboard/forecasts" className="text-lg font-subtitle text-white p-2 hover:bg-green-600 rounded-lg">PREDICCIÓN</Link>
+                    <Link to="/dashboard/favorites" className="text-lg font-subtitle text-white p-2 hover:bg-blue-600 rounded-lg">FAVORITOS</Link>
+                    <Link to="/dashboard/analysis" className="text-lg font-subtitle text-white p-2 hover:bg-blue-600 rounded-lg">ANÁLISIS</Link>
+                    <Link to="/dashboard/forecasts" className="text-lg font-subtitle text-white p-2 hover:bg-blue-600 rounded-lg">PREDICCIÓN</Link>
                 </div>
 
                 {/* Avatar y menú de usuario */}
@@ -86,7 +86,7 @@ const NavbarUsers = () => {
                     <Box sx={{ flexGrow: 0 }} className="hidden lg:flex">
                         <Tooltip title={correo}>
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar sx={{ bgcolor: "#228B22" }}>{firstLetter}</Avatar>
+                                <Avatar sx={{ bgcolor: "#368FF4" }}>{firstLetter}</Avatar>
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -110,7 +110,7 @@ const NavbarUsers = () => {
                                 ))}
                             <Divider />
                             <MenuItem onClick={() => { handleLogout(); handleCloseUserMenu(); }}>
-                                <ListItemIcon><Logout fontSize="small" sx={{ color: "green" }} /></ListItemIcon>
+                                <ListItemIcon><Logout fontSize="small" sx={{ color: "blue" }} /></ListItemIcon>
                                 <ListItem>Cerrar Sesión</ListItem>
                             </MenuItem>
                         </Menu>
@@ -145,7 +145,7 @@ const NavbarUsers = () => {
 
                         {/* Avatar en menú móvil */}
                         <div className="mt-6 flex items-center space-x-3">
-                            <Avatar sx={{ bgcolor: "#228B22" }}>{firstLetter}</Avatar>
+                            <Avatar sx={{ bgcolor: "#368FF4" }}>{firstLetter}</Avatar>
                             <span className="text-lg text-white">{correo}</span>
                         </div>
                         <div className="mt-3 space-y-2">

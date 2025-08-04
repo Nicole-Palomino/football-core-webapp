@@ -1,71 +1,80 @@
-// src/contexts/FavoritosContext.jsx
-import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { getFavorites, addFavorite as apiAddFavorite, deleteFavorite as apiDeleteFavorite } from '../services/favorites';
-import { getStoredUser } from '../services/auth';
+import { createContext, useContext, useCallback, useMemo } from 'react'
+import { getFavorites, addFavorite as apiAddFavorite, deleteFavorite as apiDeleteFavorite } from '../services/api/favorites'
+import { getStoredUser } from '../services/auth'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-const FavoritosContext = createContext();
+const FavoritosContext = createContext()
 
 export const FavoritosProvider = ({ children }) => {
-    const [favoritosIds, setFavoritosIds] = useState([]);
-    const [loadingFavoritos, setLoadingFavoritos] = useState(true);
-    const user = getStoredUser();
-    const id_usuario = user?.id_usuario;
+    const queryClient = useQueryClient()
+    const user = getStoredUser()
+    const id_usuario = user?.id_usuario
 
-    const fetchFavoritos = useCallback(async () => {
-        if (!id_usuario) {
-            setLoadingFavoritos(false);
-            return;
-        }
-        setLoadingFavoritos(true);
-        try {
-            const favoritos = await getFavorites(id_usuario);
-            const ids = favoritos.map(f => f.id_partido);
-            setFavoritosIds(ids);
-        } catch (error) {
-            console.error("Error al cargar favoritos desde el contexto:", error);
-            setFavoritosIds([]); // En caso de error, limpiar favoritos
-        } finally {
-            setLoadingFavoritos(false);
-        }
-    }, [id_usuario]);
+    const {
+        data: favoritos = [],
+        isLoading: loadingFavoritos,
+        isError,
+        error
+    } = useQuery({
+        queryKey: ['favorites', id_usuario],
+        queryFn: async () => {
+            const favoritosData = await getFavorites(id_usuario)
+            return favoritosData || []
+        },
+        enabled: !!id_usuario,
+        staleTime: 1000 * 60 * 5,
+        cacheTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+    })
 
-    useEffect(() => {
-        fetchFavoritos();
-    }, [fetchFavoritos]); // Se ejecutará cuando fetchFavoritos cambie (id_usuario cambia)
+    const addFavoriteMutation = useMutation({
+        mutationFn: ({ partidoId, id_usuario }) => apiAddFavorite(partidoId, id_usuario),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorites', id_usuario] })
+        },
+    })
+
+    const deleteFavoriteMutation = useMutation({
+        mutationFn: ({ partidoId, id_usuario }) => apiDeleteFavorite(partidoId, id_usuario),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorites', id_usuario] })
+        },
+    })
 
     const toggleFavorite = useCallback(async (partidoId) => {
         if (!id_usuario) {
-            console.warn("No hay usuario logueado para añadir/eliminar favoritos.");
-            return false;
+            console.warn("No hay usuario logueado para añadir/eliminar favoritos.")
+            return
         }
-        try {
-            if (favoritosIds.includes(partidoId)) {
-                await apiDeleteFavorite(partidoId, id_usuario);
-                setFavoritosIds(prev => prev.filter(id => id !== partidoId));
-                return 'removed';
-            } else {
-                await apiAddFavorite(partidoId, id_usuario);
-                setFavoritosIds(prev => [...prev, partidoId]);
-                return 'added';
-            }
-        } catch (error) {
-            console.error("Error al alternar favorito:", error);
-            // Si hay un error, el estado local no cambia para reflejar el fallo del backend
-            return 'error';
+        if (favoritos.some(fav => fav.id_partido === partidoId)) {
+            deleteFavoriteMutation.mutate({ partidoId, id_usuario })
+        } else {
+            addFavoriteMutation.mutate({ partidoId, id_usuario })
         }
-    }, [favoritosIds, id_usuario]);
+    }, [favoritos, id_usuario, addFavoriteMutation, deleteFavoriteMutation])
+
+    const value = useMemo(() => ({
+        favoritos,
+        loadingFavoritos,
+        isError,
+        error,
+        toggleFavorite,
+        addFavoriteMutation,
+        deleteFavoriteMutation
+    }), [favoritos, loadingFavoritos, isError, error, toggleFavorite, addFavoriteMutation, deleteFavoriteMutation])
 
     return (
-        <FavoritosContext.Provider value={{ favoritosIds, loadingFavoritos, toggleFavorite, fetchFavoritos }}>
+        <FavoritosContext.Provider value={value}>
             {children}
         </FavoritosContext.Provider>
-    );
-};
+    )
+}
 
 export const useFavoritos = () => {
     const context = useContext(FavoritosContext);
     if (context === undefined) {
-        throw new Error('useFavoritos debe usarse dentro de un FavoritosProvider');
+        throw new Error('useFavoritos debe usarse dentro de un FavoritosProvider')
     }
-    return context;
-};
+    return context
+}

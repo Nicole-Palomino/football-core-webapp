@@ -23,7 +23,7 @@ const MatchAccordion = ({ data }) => {
     return (
         <>
             {Object.entries(partidosPorLiga).map(([liga, ligaData], index) => (
-                <Accordion key={index} defaultExpanded sx={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.4)" }}>
+                <Accordion key={liga} defaultExpanded sx={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.4)" }}>
                     <AccordionSummary
                         expandIcon={<KeyboardArrowUp sx={{ color: "white" }} />}
                         sx={{
@@ -34,8 +34,8 @@ const MatchAccordion = ({ data }) => {
                         }}>
                         <Avatar alt={ligaData.nombre_liga} src={ligaData.logo_liga} 
                             sx={{ 
-                                width: 35, 
-                                height: 35, 
+                                width: 40, 
+                                height: 40, 
                                 marginRight: 3, 
                                 backgroundColor: '#f5f5dc', 
                                 '& img': {

@@ -1,111 +1,125 @@
-import React, { useEffect, useState } from 'react'
-import { deleteFavorite, getFavorites } from '../services/favorites'
-import { Avatar, Box, Card, CardContent, Chip, CircularProgress, Container, Fade, Grid, IconButton, Typography, Zoom } from '@mui/material'
-import { 
-    Favorite as FavoriteIcon, 
-    FavoriteBorder as FavoriteBorderIcon,
-    Star as StarIcon,
-    Schedule as ScheduleIcon,
-    Sports as SportsIcon,
-    EmojiEvents as TrophyIcon
+import { useState } from 'react'
+import { deleteFavorite, getFavorites } from '../services/api/favorites'
+import { Avatar, Box, Chip, CircularProgress, Container, Fade, Grid, IconButton, List, ListItem, Paper, Tooltip, Typography } from '@mui/material'
+import {
+    Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, Schedule as ScheduleIcon,
+    InfoOutlined, Assessment as AssessmentIcon
 } from '@mui/icons-material'
 import { getStoredUser } from '../services/auth'
-import { formatFecha } from '../services/encryptionService'
+import { formatFecha } from '../utils/helpers'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
+import { useFavoritos } from '../hooks/FavoritosContext'
+import { useNavigate } from 'react-router-dom'
 
 const Favorite = () => {
     const user = getStoredUser()
     const id_usuario = user?.id_usuario
+    const queryClient = useQueryClient()
+    const [hoveredItem, setHoveredItem] = useState(null)
+    const navigate = useNavigate()
 
-    const [favoriteMatches, setFavoriteMatches] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [hoveredCard, setHoveredCard] = useState(null)
-    const [deletingIds, setDeletingIds] = useState(new Set())
+    const { favoritos: favoriteMatches, loadingFavoritos: isLoading, isError, error } = useFavoritos()
 
-    useEffect(() => {
-        if (!id_usuario) return
-        const fetchFavorites = async () => {
-            setLoading(true)
+    const deleteFavoriteMutation = useMutation({
+        mutationFn: (matchId) => deleteFavorite(matchId, id_usuario),
+        onMutate: async (matchId) => {
+            await queryClient.cancelQueries(['favorites', id_usuario])
+            const previousFavorites = queryClient.getQueryData(['favorites', id_usuario])
+            queryClient.setQueryData(['favorites', id_usuario], old => old?.filter(m => m.id_partido !== matchId))
+            return { previousFavorites }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorites', id_usuario] })
+        },
+        onError: (err, variables, context) => {
+            queryClient.setQueryData(['favorites', id_usuario], context.previousFavorites)
+            console.error("Error al eliminar favorito. Revertiendo:", err)
+        },
+    })
 
-            try {
-                const response = await getFavorites(id_usuario)
-                setFavoriteMatches(response || [])
-            } catch (error) {
-                console.error("Error al obtener estadísticas", error)
-            } finally {
-                setLoading(false)
+    const handleInfoClick = (team1_id, team2_id, partido_id) => {
+        navigate(`/dashboard/${partido_id}`, {
+            state: {
+                equipo_local: team1_id,
+                equipo_visita: team2_id
             }
-        }
+        })
+    }
 
-        fetchFavorites()
-    }, [id_usuario])
-
-    const toggleFavorite = async (matchId) => {
-        if (!id_usuario) return
-        if (deletingIds.has(matchId)) return
-
-        const prev = [...favoriteMatches]
-        setDeletingIds(s => new Set(s).add(matchId))
-        setFavoriteMatches(favs => favs.filter(m => m.id_partido !== matchId))
-
-        try {
-            await deleteFavorite(matchId, id_usuario)
-        } catch (err) {
-            console.error("Error eliminando favorito:", err)
-            setFavoriteMatches(prev)
-        } finally {
-            setDeletingIds(s => {
-                const copy = new Set(s)
-                copy.delete(matchId)
-                return copy
-            })
-        }
+    const handleRemoveFavorite = (matchId) => {
+        deleteFavoriteMutation.mutate(matchId)
     }
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'Finalizado': return '#FF4444'
-            case 'Por Jugar': return '#00FF88'
-            default: return '#888888'
+            case 'Finalizado':
+            case 'Histórico':
+                return '#FF4444'
+            case 'Por Jugar':
+                return '#368FF4'
+            default:
+                return '#888888'
         }
     }
 
-    if (loading) {
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case 'Finalizado':
+            case 'Histórico':
+                return <AssessmentIcon />
+            case 'Por Jugar':
+                return <InfoOutlined />
+            default:
+                return <ScheduleIcon />
+        }
+    }
+
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'Finalizado':
+                return 'Resumen'
+            case 'Histórico':
+                return 'Resumen'
+            case 'Por Jugar':
+                return 'Información'
+            default:
+                return 'Info'
+        }
+    }
+
+    if (isLoading) {
         return (
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100vh",
-                    backgroundColor: "#0e0f0f",
-                    color: "white"
-                }}>
+            <Box sx={{
+                bgcolor: "#0a0a0a",
+                minHeight: "100vh",
+                background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+            }}>
                 <Box sx={{ position: 'relative', mb: 4 }}>
                     <CircularProgress
-                        size={80} 
-                        sx={{ 
-                            color: '#00FF88',
-                            filter: 'drop-shadow(0 0 20px #00FF88)'
-                        }} 
+                        size={80}
+                        sx={{
+                            color: '#368FF4',
+                            filter: 'drop-shadow(0 0 20px #368FF4)'
+                        }}
                     />
-                    <FavoriteIcon 
-                        sx={{ 
+                    <FavoriteIcon
+                        sx={{
                             position: 'absolute',
                             top: '50%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
                             color: '#FF1717',
                             fontSize: 30
-                        }} 
+                        }}
                     />
                 </Box>
-                <Typography 
-                    variant="h6" 
-                    sx={{ 
-                        color: '#00FF88',
+                <Typography
+                    variant="h6"
+                    sx={{
+                        color: '#368FF4',
                         fontFamily: 'cursive',
-                        textShadow: '0 0 10px #00FF88'
+                        textShadow: '0 0 10px #368FF4'
                     }}>
                     Cargando tus partidos favoritos...
                 </Typography>
@@ -113,275 +127,329 @@ const Favorite = () => {
         )
     }
 
-    return (
-        <Box
-            sx={{ 
-                backgroundColor: "#0e0f0f",
-                minHeight: "100vh",
-                padding: { xs: 2, md: 4 },
-                background: `
-                    radial-gradient(circle at 20% 80%, rgba(53, 189, 125, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(4, 214, 116, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
-                    #0e0f0f
-                `
-            }}>
-                <Container maxWidth="xl">
-                    {/* Header */}
-                    <Fade in={true} timeout={1000}>
-                        <Box sx={{ textAlign: 'center', mb: 6 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                                <FavoriteIcon  
-                                    sx={{ 
-                                        fontSize: 60, 
-                                        color: '#FF1717',
-                                        mr: 2,
-                                        filter: 'drop-shadow(0 0 20px #FF1717)',
-                                        animation: 'pulse 3s infinite'
-                                    }} 
-                                />
+    if (isError) {
+        return (
+            <Box sx={{ color: 'red', textAlign: 'center', p: 4, backgroundColor: '#0e0f0f', minHeight: '100vh' }}>
+                <Typography variant="h5">Error al cargar los favoritos.</Typography>
+                <Typography variant="body1">{error.message}</Typography>
+            </Box>
+        )
+    }
 
-                                <Typography 
-                                    variant="h2" 
-                                    sx={{ 
-                                        color: 'white',
-                                        fontFamily: 'cursive',
-                                        fontWeight: 'bold',
-                                        background: 'linear-gradient(45deg, #02C268, #00FF88)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        textShadow: '0 0 30px rgba(30, 212, 100, 0.5)'
-                                    }}>
-                                        Mis Favoritos
-                                </Typography>
-                            </Box>
-                            <Typography 
-                                variant="h6" 
-                                sx={{ 
-                                    color: '#9E9D9D',
-                                    fontStyle: 'italic',
-                                    maxWidth: 600,
-                                    margin: '0 auto'
+    return (
+        <Box sx={{
+            bgcolor: "#0a0a0a",
+            minHeight: "100vh",
+            background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+        }}>
+            <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+                {/* Header */}
+                <Fade in={true} timeout={1000}>
+                    <Box sx={{ textAlign: 'center', mb: 4 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+                            <FavoriteIcon
+                                sx={{
+                                    fontSize: 50,
+                                    color: '#FF1717',
+                                    mr: 2,
+                                    filter: 'drop-shadow(0 0 15px #FF1717)'
+                                }}
+                            />
+                            <Typography
+                                variant="h3"
+                                sx={{
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    background: 'linear-gradient(45deg, #FF1717, #FF6B6B)',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
                                 }}>
-                                Los partidos que más te emocionan, siempre a tu alcance
+                                Mis Favoritos
                             </Typography>
                         </Box>
-                    </Fade>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: '#888',
+                                fontStyle: 'italic'
+                            }}>
+                            {favoriteMatches.length} {favoriteMatches.length === 1 ? 'partido favorito' : 'partidos favoritos'}
+                        </Typography>
+                    </Box>
+                </Fade>
 
-                    {/* Matches Grid */}
-                    {favoriteMatches.length === 0 ? (
-                        <Fade in={true} timeout={1500}>
-                            <Box 
-                                sx={{ 
-                                    textAlign: 'center', 
-                                    py: 10,
-                                    background: 'rgba(255, 255, 255, 0.02)',
-                                    borderRadius: 4,
-                                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                {/* Matches Grid */}
+                {favoriteMatches.length === 0 ? (
+                    <Fade in={true} timeout={1500}>
+                        <Paper
+                            elevation={8}
+                            sx={{
+                                textAlign: 'center',
+                                py: 8,
+                                px: 4,
+                                bgcolor: 'rgba(255, 255, 255, 0.03)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: 4
+                            }}>
+                            <FavoriteBorderIcon
+                                sx={{
+                                    fontSize: 80,
+                                    color: '#333',
+                                    mb: 3,
+                                    opacity: 0.5
+                                }}
+                            />
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    color: '#666',
+                                    mb: 2,
+                                    fontWeight: 'bold'
                                 }}>
-                                    <FavoriteBorderIcon 
-                                        sx={{ 
-                                            fontSize: 100, 
-                                            color: '#333',
-                                            mb: 3,
-                                            opacity: 0.5
-                                        }} 
-                                    />
-                                    <Typography 
-                                        variant="h4" 
-                                        sx={{ 
-                                            color: '#666',
-                                            mb: 2,
-                                            fontFamily: 'cursive'
-                                        }}>
-                                        No hay favoritos aún
-                                    </Typography>
-                                    <Typography 
-                                        variant="body1" 
-                                        sx={{ color: '#888' }}>
-                                        Agrega partidos a tus favoritos para verlos aquí
-                                    </Typography>
-                            </Box>
-                        </Fade>
-                    ) : (
-                        <Grid container spacing={3} justifyContent="center">
-                            {favoriteMatches.map((match, index) => (
-                                <Grid item xs={12} md={6} lg={4} key={match.id_partido}>
-                                    <Zoom in={true} timeout={500 + index * 200}>
-                                        <Card
-                                            onMouseEnter={() => setHoveredCard(match.id_partido)}
-                                            onMouseLeave={() => setHoveredCard(null)}
+                                No tienes favoritos aún
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{ color: '#888' }}>
+                                Agrega partidos a tus favoritos desde la lista principal para verlos aquí
+                            </Typography>
+                        </Paper>
+                    </Fade>
+                ) : (
+                    <Paper
+                        elevation={12}
+                        sx={{
+                            bgcolor: '#1a1a1a',
+                            border: '1px solid #333',
+                            borderRadius: 3,
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <List sx={{ py: 0 }}>
+                            {favoriteMatches.map((match, index) => {
+                                const partido = match.partido
+                                const status = partido.estado.nombre_estado
+                                const statusColor = getStatusColor(status)
+
+                                return (
+                                    <motion.div
+                                        key={partido.id_partido}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                                    >
+                                        <ListItem
+                                            onMouseEnter={() => setHoveredItem(partido.id_partido)}
+                                            onMouseLeave={() => setHoveredItem(null)}
                                             sx={{
-                                                // width: 1, 
-                                                // maxWidth: 550,
-                                                height: 260,
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                background: hoveredCard === match.id_partido 
-                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 255, 136, 0.1) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.05)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: hoveredCard === match.id_partido 
-                                                    ? '2px solid #00FF88'
-                                                    : '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: 4,
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                transform: hoveredCard === match.id_partido ? 'translateY(-10px) scale(1.02)' : 'translateY(0) scale(1)',
-                                                boxShadow: hoveredCard === match.id_partido 
-                                                    ? '0 20px 40px rgba(0, 255, 136, 0.2)' 
-                                                    : '0 8px 32px rgba(0, 0, 0, 0.3)',
-                                                cursor: 'pointer',
-                                                overflow: 'hidden',
-                                                position: 'relative',
-                                                '&::before': {
-                                                    content: '""',
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '4px',
-                                                    background: `linear-gradient(90deg, #00FF88, #17FF4D)`,
-                                                    opacity: hoveredCard === match.id_partido ? 1 : 0.7
+                                                width: '100%',
+                                                borderBottom: index < favoriteMatches.length - 1 ? "1px solid #333" : 'none',
+                                                py: 2,
+                                                px: 1,
+                                                bgcolor: hoveredItem === partido.id_partido ? 'rgba(54,143,244,0.05)' : 'transparent',
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    bgcolor: 'rgba(54,143,244,0.08)',
+                                                    transform: 'translateX(8px)'
                                                 }
-                                            }}>
-                                                <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                                    {/* Header with status and favorite */}
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <Chip
-                                                                label={match.partido.estado.nombre_estado === 'Histórico' ? 'HISTÓRICO' : match.partido.estado.nombre_estado === 'Por Jugar' ? 'PRÓXIMO' : 'FINALIZADO'}
-                                                                size="small"
-                                                                sx={{
-                                                                    backgroundColor: getStatusColor(match.partido.estado.nombre_estado),
-                                                                    color: 'black',
-                                                                    fontWeight: 'bold',
-                                                                    fontSize: '0.7rem',
-                                                                    animation: match.partido.estado.nombre_estado === 'Por Jugar' ? 'pulse 1.5s infinite' : 'none'
-                                                                }}
-                                                            />
-                                                        </Box>
+                                            }}
+                                        >
+                                            <Grid
+                                                container
+                                                alignItems="center"
+                                                // no hace falta spacing grande si usas justifyContent
+                                                sx={{ width: '100%' }}
+                                                wrap="nowrap"
+                                            >
+                                                {/* Estado */}
+                                                <Grid item xs="auto" sx={{ mr: 1 }}>
+                                                    <Chip
+                                                        label={
+                                                            status === 'Histórico' ? 'HISTÓRICO' :
+                                                                status === 'Por Jugar' ? 'PRÓXIMO' :
+                                                                    'FINALIZADO'
+                                                        }
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: statusColor,
+                                                            color: 'black',
+                                                            fontWeight: 'bold',
+                                                            fontSize: '0.65rem',
+                                                            minWidth: '80px'
+                                                        }}
+                                                    />
+                                                </Grid>
 
-                                                        <IconButton
-                                                            onClick={() => toggleFavorite(match.id_partido)}
-                                                            disabled={deletingIds.has(match.id_partido)}
+                                                {/* Equipos: este debe crecer y ocupar el espacio intermedio */}
+                                                <Grid item xs sx={{ minWidth: 0, mx: 1 }}>
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                        {/* Local */}
+                                                        <Box
                                                             sx={{
-                                                                color: '#FF1717',
-                                                                '&:hover': {
-                                                                    backgroundColor: 'rgba(255, 23, 68, 0.1)',
-                                                                    transform: 'scale(1.2)'
-                                                                },
-                                                                transition: 'all 0.3s'
-                                                            }}>
-                                                            <FavoriteIcon />
-                                                        </IconButton>
-                                                    </Box>
-
-                                                    {/* Teams */}
-                                                    <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                                                                <Avatar 
-                                                                    sx={{ 
-                                                                        mr: 2, 
-                                                                        width: 55, 
-                                                                        height: 55, 
-                                                                        '& img': {
-                                                                            objectFit: 'contain'
-                                                                        } 
-                                                                    }} 
-                                                                    src={match.partido.equipo_local.logo}
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 1,
+                                                                justifyContent: 'space-between'
+                                                            }}
+                                                        >
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+                                                                <Avatar
+                                                                    alt={partido.equipo_local.nombre_equipo}
+                                                                    src={partido.equipo_local.logo}
+                                                                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
                                                                 />
-                                                                
-                                                                <Typography variant="body1" sx={{ 
-                                                                        color: 'white', 
-                                                                        fontWeight: 'bold',
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{
+                                                                        color: 'white',
+                                                                        fontSize: '14px',
                                                                         overflow: 'hidden',
                                                                         textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap'
-                                                                    }}>
-                                                                    {match.partido.equipo_local.nombre_equipo}
+                                                                        whiteSpace: 'nowrap',
+                                                                        flex: 1,
+                                                                        minWidth: 0
+                                                                    }}
+                                                                >
+                                                                    {partido.equipo_local.nombre_equipo}
                                                                 </Typography>
                                                             </Box>
-
-                                                            <Box sx={{ 
-                                                                textAlign: 'center', 
-                                                                mx: 2,
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                alignItems: 'center',
-                                                                flexShrink: 0
-                                                            }}>
-                                                                <Typography variant="body1" sx={{ color: '#888' }}>
-                                                                    VS
-                                                                </Typography>
-                                                            </Box>
-
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end', minWidth: 0 }}>
-                                                                <Typography variant="body1" sx={{ 
-                                                                    color: 'white', 
-                                                                    fontWeight: 'bold', 
-                                                                    mr: 1.5,
-                                                                    overflow: 'hidden',
-                                                                    textOverflow: 'ellipsis',
-                                                                    whiteSpace: 'nowrap'
-                                                                }}>
-                                                                    {match.partido.equipo_visita.nombre_equipo}
-                                                                </Typography>
-                                                                <Avatar 
-                                                                    sx={{ 
-                                                                        mr: 2, 
-                                                                        width: 55, 
-                                                                        height: 55, 
-                                                                        '& img': {
-                                                                            objectFit: 'contain'
-                                                                        } 
-                                                                    }} 
-                                                                    src={match.partido.equipo_visita.logo}
-                                                                />
-                                                            </Box>
-                                                        </Box>
-                                                    </Box>
-
-                                                    {/* Match Info */}
-                                                    <Box sx={{ 
-                                                        display: 'flex', 
-                                                        justifyContent: 'space-between', 
-                                                        alignItems: 'center',
-                                                        pt: 2,
-                                                        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-                                                    }}>
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ color: '#00FF88', fontWeight: 'bold' }}>
-                                                                {match.partido.liga.nombre_liga}
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    color: 'white',
+                                                                    fontWeight: 'bold',
+                                                                    minWidth: '30px',
+                                                                    textAlign: 'center',
+                                                                    textAlign: 'right',
+                                                                }}
+                                                            >
+                                                                {partido.estadisticas?.FTHG ?? '-'}
                                                             </Typography>
                                                         </Box>
 
-                                                        <Box sx={{ textAlign: 'right' }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 0.5 }}>
-                                                                <ScheduleIcon sx={{ fontSize: 16, color: '#888', mr: 0.5 }} />
-                                                                <Typography variant="body2" sx={{ color: 'white' }}>
-                                                                    {formatFecha(match.partido.dia)}
+                                                        {/* Visitante */}
+                                                        <Box
+                                                            sx={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 1,
+                                                                justifyContent: 'space-between'
+                                                            }}
+                                                        >
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+                                                                <Avatar
+                                                                    alt={partido.equipo_visita.nombre_equipo}
+                                                                    src={partido.equipo_visita.logo}
+                                                                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
+                                                                />
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{
+                                                                        color: 'white',
+                                                                        fontSize: '14px',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap',
+                                                                        flex: 1,
+                                                                        minWidth: 0
+                                                                    }}
+                                                                >
+                                                                    {partido.equipo_visita.nombre_equipo}
                                                                 </Typography>
                                                             </Box>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    color: 'white',
+                                                                    fontWeight: 'bold',
+                                                                    minWidth: '30px',
+                                                                    textAlign: 'center',
+                                                                    textAlign: 'right',
+                                                                }}
+                                                            >
+                                                                {partido.estadisticas?.FTAG ?? '-'}
+                                                            </Typography>
                                                         </Box>
                                                     </Box>
-                                                </CardContent>
-                                        </Card>
-                                    </Zoom>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    )}  
-                </Container>
+                                                </Grid>
 
-                {/* CSS Animations */}
-                <style jsx>{`
-                    @keyframes pulse {
-                        0%, 100% { opacity: 1; transform: scale(1); }
-                        50% { opacity: 0.7; transform: scale(0.95); }
-                    }
-                `}</style>
+                                                {/* Fecha / Liga */}
+                                                <Grid item xs="auto" sx={{ mx: 10 }}>
+                                                    <Box sx={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                color: '#368FF4',
+                                                                fontWeight: 'bold',
+                                                                display: 'block',
+                                                                mb: 0.5
+                                                            }}
+                                                        >
+                                                            {partido.liga.nombre_liga}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: 'white', fontSize: '11px' }}>
+                                                            {formatFecha(partido.dia)}
+                                                        </Typography>
+                                                    </Box>
+                                                </Grid>
+
+                                                {/* Acciones */}
+                                                <Grid item xs="auto" sx={{ ml: 'auto' }}>
+                                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                        <Tooltip title={getStatusLabel(status)} arrow>
+                                                            <IconButton
+                                                                onClick={() =>
+                                                                    handleInfoClick(
+                                                                        partido.equipo_local.id_equipo,
+                                                                        partido.equipo_visita.id_equipo,
+                                                                        partido.id_partido
+                                                                    )
+                                                                }
+                                                                sx={{
+                                                                    color: statusColor,
+                                                                    bgcolor: `${statusColor}20`,
+                                                                    '&:hover': {
+                                                                        bgcolor: `${statusColor}30`,
+                                                                        transform: 'scale(1.1)'
+                                                                    },
+                                                                    transition: 'all 0.3s ease'
+                                                                }}
+                                                            >
+                                                                {getStatusIcon(status)}
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Quitar de favoritos" arrow>
+                                                            <IconButton
+                                                                onClick={() => handleRemoveFavorite(partido.id_partido)}
+                                                                disabled={deleteFavoriteMutation.isLoading}
+                                                                sx={{
+                                                                    color: '#FF1717',
+                                                                    '&:hover': {
+                                                                        bgcolor: 'rgba(255, 23, 23, 0.2)',
+                                                                        transform: 'scale(1.1)'
+                                                                    },
+                                                                    transition: 'all 0.3s ease'
+                                                                }}
+                                                            >
+                                                                {deleteFavoriteMutation.isLoading ? (
+                                                                    <CircularProgress size={20} sx={{ color: '#FF1717' }} />
+                                                                ) : (
+                                                                    <FavoriteIcon />
+                                                                )}
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </Box>
+                                                </Grid>
+                                            </Grid>
+                                        </ListItem>
+                                    </motion.div>
+                                )
+                            })}
+                        </List>
+                    </Paper>
+                )}
+            </Container>
         </Box>
     )
 }

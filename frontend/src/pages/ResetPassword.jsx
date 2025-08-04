@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import NavbarClient from '../components/Navbar/NavbarClient'
 import { motion } from 'framer-motion'
 import { Paper } from '@mui/material'
 import ResetForm from '../components/Forms/ResetForm'
+import { resetUser } from '../services/api/usuario'
 
 const ResetPassword = () => {
     const [loading, setLoading] = useState(false)
@@ -12,17 +13,18 @@ const ResetPassword = () => {
         setLoading(true)
 
         try {
-            await forgotUser(data)
+            await resetUser(data)
 
+            sessionStorage.removeItem('pwd_reset_email')
             Swal.fire({
                 icon: 'success',
-                title: '¡Código solicitado exitosamente!',
-                text: 'Serás redirigido para cambiar tu contraseña.',
+                title: '¡Contraseña restablecida!',
+                text: 'Serás redirigido al inicio de sesión.',
                 timer: 2500,
                 showConfirmButton: false,
             })
 
-            navigate(`/reset-password?correo=${encodeURIComponent(data.correo)}`)
+            navigate(`/get-started`)
         } catch (err) {
             Swal.fire({
                 icon: 'error',
@@ -51,7 +53,7 @@ const ResetPassword = () => {
                                 backgroundColor: "#193cb8",
                             },
                         }}>
-                        <div className="relative w-full h-full mt-10" style={{ minHeight: '430px' }}>
+                        <div className="relative w-full h-full mt-10" style={{ minHeight: '450px' }}>
                             <ResetForm onSubmit={onSubmit} loading={loading} />
                         </div>
                     </Paper>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Box, Tabs, Tab } from "@mui/material"
-import { formatFecha } from '../services/encryptionService'
 import MatchAccordion from './MatchAccordion'
+import { formatFecha } from '../../../utils/helpers'
 
 const MatchTabs = ({ match }) => {
     const [value, setValue] = useState(0)
@@ -19,14 +19,14 @@ const MatchTabs = ({ match }) => {
                     scrollButtons="auto"
                     allowScrollButtonsMobile 
                     sx={{
-                        "& .MuiTabs-indicator": { backgroundColor: "#00FF88" },
+                        "& .MuiTabs-indicator": { backgroundColor: "#368FF4" },
                         "& .MuiTab-root": { color: "white", fontFamily: "cursive" },
-                        "& .MuiTab-root.Mui-selected": { color: "#00FF88" },
+                        "& .MuiTab-root.Mui-selected": { color: "#368FF4" },
                         "& .MuiTabs-scrollButtons.Mui-disabled": { opacity: 0.3 },
-                        "& .MuiButtonBase-root.MuiTabs-scrollButtons": { color: "#00FF88" }
+                        "& .MuiButtonBase-root.MuiTabs-scrollButtons": { color: "#368FF4" }
                     }}>
                     {fechasUnicas.map((dia, index) => (
-                        <Tab key={index} label={dia} sx={{ flexShrink: 0 }} /> 
+                        <Tab key={dia} label={dia} sx={{ flexShrink: 0 }} /> 
                     ))}
                 </Tabs>
             </Box>
