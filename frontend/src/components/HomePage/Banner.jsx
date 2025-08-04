@@ -17,7 +17,7 @@ const Banner = () => {
                         transition={{ duration: 0.5, ease: "easeInOut" }}
                         src={BannerPng}
                         alt=""
-                        className="w-[500px] md:max-w-[600px] object-cover drop-shadow"
+                        className="w-[500px] md:max-w-[600px] object-cover heropng"
                     />
                 </div>
 
@@ -40,7 +40,7 @@ const Banner = () => {
                                 viewport={{ once: true }}
                                 className="flex items-center gap-4 p-6 bg-target rounded-2xl text-white hover:bg-navbar hover:text-white duration-300 hover:shadow-2xl">
                                     <TbSoccerField className="text-3xl" />
-                                    <p className="text-lg">9,000+ Partidos</p>
+                                    <p className="text-lg">17,000+ Partidos</p>
                             </motion.div>
 
                             <motion.div

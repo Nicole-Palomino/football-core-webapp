@@ -20,12 +20,10 @@ const SignInForm = ({ onSubmit, loading }) => {
                         autoComplete="off" 
                         sx={{
                             "& label": { color: "white" }, 
-                            "& label.Mui-focused": { color: "green" },
                             "& .MuiOutlinedInput-root": {
                                 color: "white",
                                 "& fieldset": { borderColor: "white" }, 
-                                "&:hover fieldset": { borderColor: "green" }, 
-                                "&.Mui-focused fieldset": { borderColor: "green" }, 
+                                "&:hover fieldset": { borderColor: "#368FF4" }, 
                             },
                             "& .Mui-error": { 
                                 "& label": { color: "#f44336" }, 
@@ -61,12 +59,10 @@ const SignInForm = ({ onSubmit, loading }) => {
                         autoComplete="off" 
                         sx={{
                             "& label": { color: "white" }, 
-                            "& label.Mui-focused": { color: "green" },
                             "& .MuiOutlinedInput-root": {
                                 color: "white",
                                 "& fieldset": { borderColor: "white" }, 
-                                "&:hover fieldset": { borderColor: "green" }, 
-                                "&.Mui-focused fieldset": { borderColor: "green" }, 
+                                "&:hover fieldset": { borderColor: "#368FF4" }, 
                             },
                             "& .Mui-error": { 
                                 "& label": { color: "#f44336" }, 
@@ -98,7 +94,7 @@ const SignInForm = ({ onSubmit, loading }) => {
             <div className="flex items-center">
                 <div className="flex ml-auto">
                     <Link to="/forgot-password"
-                        className="inline-flex text-xs sm:text-lg font-subtitle text_hover text-white">
+                        className="inline-flex text-xs sm:text-lg font-subtitle hover:text-blue-600 text-white">
                             ¿Ha olvidado su contraseña?
                     </Link>
                 </div>
@@ -106,7 +102,7 @@ const SignInForm = ({ onSubmit, loading }) => {
 
             <div className="flex w-full mt-4">
                 <button type="submit" className={`w-full py-3 text-white text-lg cursor-pointer font-subtitle rounded-lg transition-all ${
-                    loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"}`}
+                    loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
                     disabled={loading}>
                         <span className="mr-2 uppercase">{loading ? "Cargando..." : "Iniciar Sesión"}</span>
                 </button>

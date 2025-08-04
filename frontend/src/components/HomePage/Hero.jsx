@@ -42,7 +42,7 @@ const Hero = () => {
                         transition={{ duration: 0.6, delay: 0.4, ease: "easeInOut" }}
                         src={HeroPng} 
                         alt=""
-                        className="w-full max-w-[400px] xl:max-w-[550px] relative drop-shadow-2xl" />
+                        className="w-full max-w-[400px] xl:max-w-[550px] relative heropng" />
                 </div>
             </div>
         </section>

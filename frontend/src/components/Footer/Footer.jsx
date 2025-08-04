@@ -2,6 +2,7 @@ import { motion } from "framer-motion"
 import { FaTiktok } from "react-icons/fa"
 import { useForm, ValidationError } from '@formspree/react'
 import { useEffect, useRef } from 'react'
+import { Link } from "react-router-dom"
 
 const Footer = () => {
 
@@ -73,16 +74,18 @@ const Footer = () => {
                                 <div className="text-dark">
                                     <ul className="space-y-2 text-lg">
                                         <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Inicio
+                                            <Link to="/">
+                                                Inicio
+                                            </Link>
                                         </li>
                                         <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Servicios
+                                            <Link to="/services">Servicios</Link>
                                         </li>
                                         <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Sobre nosotros
+                                            <Link to="/about-us">Sobre nosotros</Link>
                                         </li>
                                         <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Contacto
+                                            <Link to="/contact">Contacto</Link>
                                         </li>
                                     </ul>
                                 </div>

@@ -8,7 +8,7 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import Logout from "@mui/icons-material/Logout"
 import { Dialog, DialogPanel } from "@headlessui/react"
 import { decryptData } from '../services/encryptionService'
-import { settings } from '../utils/navbarData'
+import { settings } from '../utils/navbarUtils'
 import { useAuth } from '../contexts/AuthContexts'
 
 const NavbarUsers = () => {

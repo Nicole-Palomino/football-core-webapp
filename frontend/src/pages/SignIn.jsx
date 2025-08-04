@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContexts'
 import { useNavigate } from 'react-router-dom'
 import { FaUser } from 'react-icons/fa'
-import SignInForm from '../components/SignInForm'
-import { getCurrentUser, loginUser as loginService } from '../services/usuario'
+import SignInForm from '../components/Forms/SignInForm'
+import { getCurrentUser, loginUser as loginService } from '../services/api/usuario'
 import { encryptData } from '../services/encryptionService'
 
 const SignIn = ({ setValue }) => {
@@ -61,7 +61,7 @@ const SignIn = ({ setValue }) => {
 
             <div className="flex justify-center items-center mt-6">
                 <button onClick={() => setValue(1)}
-                    className="inline-flex items-center font-subtitle text-sm text_hover text-white text-center cursor-pointer">
+                    className="inline-flex items-center font-subtitle text-sm hover:text-blue-600 text-white text-center cursor-pointer">
                     <span className="mr-2">
                         <FaUser className='text-white'/>
                     </span>

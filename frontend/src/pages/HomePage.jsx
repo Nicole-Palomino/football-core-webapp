@@ -1,9 +1,9 @@
 import { useAuth } from '../contexts/AuthContexts'
 import { Navigate } from 'react-router-dom'
 import NavbarClient from '../components/Navbar/NavbarClient'
-import Hero from '../components/Sections/Hero'
-import Services from '../components/Sections/Services'
-import Banner from '../components/Sections/Banner'
+import Hero from '../components/HomePage/Hero'
+import Services from '../components/HomePage/Services'
+import Banner from '../components/HomePage/Banner'
 import Footer from '../components/Footer/Footer'
 
 

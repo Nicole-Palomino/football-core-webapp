@@ -68,6 +68,22 @@ body {
   color: var(--color-text-hover);
 }
 
+.t-stroke {
+  color: transparent;
+  -moz-text-stroke-width: 2px;
+  -webkit-text-stroke-width: 2px;
+  -moz-text-stroke-color: #000000;
+  -webkit-text-stroke-color: #ffffff;
+}
+
+.t-shadow {
+  text-shadow: 7px 7px #193cb8;
+}
+
+.heropng {
+  filter: drop-shadow(1px 1px 15px #4f5252);
+}
+
 ::-webkit-scrollbar {
   width: 12px;
   /* Grosor del scrollbar */

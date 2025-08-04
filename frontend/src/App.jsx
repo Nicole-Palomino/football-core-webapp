@@ -14,6 +14,10 @@ import PageSettings from './pages/PageSettings'
 import Forecasts from './pages/Forecasts'
 import Analysis from './pages/Analysis'
 import Services from './components/Header/Services'
+import Contact from './components/Header/Contact'
+import AboutUs from './components/Header/AboutUs'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
 
@@ -25,7 +29,11 @@ function App() {
             <Routes>
               <Route path='/' element={<HomePage/>}/>
               <Route path='/services' element={<Services/>}/>
+              <Route path='/contact' element={<Contact/>}/>
+              <Route path='/about-us' element={<AboutUs/>}/>
               <Route path='/get-started' element={<PublicRoute><Form /></PublicRoute>} />
+              <Route path='/forgot-password' element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+              <Route path='/reset-password' element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
               <Route path='/dashboard' element={
                 <FavoritosProvider>

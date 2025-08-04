@@ -1,12 +1,12 @@
 import { SlideLeft } from '../../utils/transitions' 
-import { ServicesData } from '../../utils/navbarData' 
+import { ServicesData } from '../../utils/navbarUtils' 
 import { motion } from "framer-motion"
 
 const Services = () => {
     return (
         <section className='bg-navbar'>
             <div className="container pb-14 pt-16">
-                <h1 className='text-5xl text-left pb-10 text-white'>
+                <h1 className='text-5xl font-title text-left pb-10 text-white'>
                     Servicios que ofrecemos
                 </h1>
 
@@ -22,7 +22,7 @@ const Services = () => {
                                 <div className="text-7xl mb-4">
                                     <service.icon />
                                 </div>
-                                <h1 className='text-lg text-center px-3'>
+                                <h1 className='text-lg font-subtitle text-center px-3'>
                                     {service.title}
                                 </h1>
                             </motion.div>
