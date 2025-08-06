@@ -1,5 +1,5 @@
 import { Avatar, Box, Chip, Grid, List, ListItem, Paper, Typography, useMediaQuery } from '@mui/material'
-import { formatFecha } from '../../../services/encryptionService'
+import { formatFecha } from '../../../utils/helpers'
 import { CalendarToday, EmojiEvents, SportsSoccer, Timeline } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 
@@ -67,14 +67,14 @@ const ListMatch = ({ matches = [] }) => {
                     sx={{ mb: 2 }}
                 >
                     {[
-                        { label: "De Local", color: "#00FF00", bg: "rgba(0,255,0,0.1)", border: "rgba(0,255,0,0.3)", value: matches.filter(m => getMatchResult(m.estadisticas?.FTHG, m.estadisticas?.FTAG) === 'local').length },
-                        { label: "Empates", color: "#FFD93D", bg: "rgba(255,211,61,0.1)", border: "rgba(255,211,61,0.3)", value: matches.filter(m => getMatchResult(m.estadisticas?.FTHG, m.estadisticas?.FTAG) === 'draw').length },
-                        { label: "De Visitante", color: "#FF6B6B", bg: "rgba(255,107,107,0.1)", border: "rgba(255,107,107,0.3)", value: matches.filter(m => getMatchResult(m.estadisticas?.FTHG, m.estadisticas?.FTAG) === 'away').length }
+                        { label: "De Local", color: "#00FF00", bg: "rgba(0,255,0,0.1)", border: "rgba(0,255,0,0.3)", value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'local').length },
+                        { label: "Empates", color: "#FFD93D", bg: "rgba(255,211,61,0.1)", border: "rgba(255,211,61,0.3)", value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'draw').length },
+                        { label: "De Visitante", color: "#FF6B6B", bg: "rgba(255,107,107,0.1)", border: "rgba(255,107,107,0.3)", value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'away').length }
                     ].map((stat, i) => (
                         <Grid item key={i} xs={12} sm="auto">
                             <Paper sx={{
-                                width: 120, 
-                                height: 80, 
+                                width: 120,
+                                height: 80,
                                 p: 1.5,
                                 bgcolor: stat.bg,
                                 border: `1px solid ${stat.border}`,
@@ -99,7 +99,7 @@ const ListMatch = ({ matches = [] }) => {
             {/* Lista de partidos */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {matches.map((item, index) => {
-                    const result = getMatchResult(item.estadisticas?.FTHG, item.estadisticas?.FTAG)
+                    const result = getMatchResult(item.FTHG, item.FTAG)
                     const resultColor = getResultColor(result)
                     const resultIcon = getResultIcon(result)
 
@@ -145,7 +145,7 @@ const ListMatch = ({ matches = [] }) => {
                                     }}>
                                         <Chip
                                             icon={<CalendarToday />}
-                                            label={formatFecha(item.dia)}
+                                            label={formatFecha(item.Date)}
                                             size="small"
                                             sx={{
                                                 fontSize: '18px',
@@ -190,14 +190,16 @@ const ListMatch = ({ matches = [] }) => {
                                                 border: result === 'local' ? '1px solid rgba(0,255,136,0.3)' : '1px solid transparent'
                                             }}>
                                                 <Avatar
-                                                    alt={item.equipo_local.nombre_equipo}
-                                                    src={item.equipo_local.logo}
                                                     sx={{
                                                         width: isMobile ? 30 : 40,
                                                         height: isMobile ? 30 : 40,
-                                                        '& img': { objectFit: 'contain' }
+                                                        bgcolor: '#1976d2', // color de fondo opcional
+                                                        fontSize: isMobile ? 14 : 18,
+                                                        fontWeight: 'bold',
                                                     }}
-                                                />
+                                                >
+                                                    {item.HomeTeam?.[0] ?? 'E'} {/* Usa la primera letra o 'E' por defecto */}
+                                                </Avatar>
                                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                                     <Typography
                                                         variant={isMobile ? "body2" : "body1"}
@@ -209,7 +211,7 @@ const ListMatch = ({ matches = [] }) => {
                                                             whiteSpace: 'nowrap'
                                                         }}
                                                     >
-                                                        {item.equipo_local.nombre_equipo}
+                                                        {item.HomeTeam}
                                                     </Typography>
                                                     <Typography variant="caption" sx={{ color: '#888' }}>
                                                         Local
@@ -244,7 +246,7 @@ const ListMatch = ({ matches = [] }) => {
                                                             fontSize: isMobile ? '1rem' : '1.25rem'
                                                         }}
                                                     >
-                                                        {item.estadisticas?.FTHG ?? "-"}
+                                                        {item.FTHG ?? "-"}
                                                     </Typography>
                                                     <Typography sx={{ color: '#888', mx: 0.5 }}>-</Typography>
                                                     <Typography
@@ -255,7 +257,7 @@ const ListMatch = ({ matches = [] }) => {
                                                             fontSize: isMobile ? '1rem' : '1.25rem'
                                                         }}
                                                     >
-                                                        {item.estadisticas?.FTAG ?? "-"}
+                                                        {item.FTAG ?? "-"}
                                                     </Typography>
                                                 </Box>
                                             </Box>
@@ -273,14 +275,16 @@ const ListMatch = ({ matches = [] }) => {
                                                 border: result === 'away' ? '1px solid rgba(255,107,107,0.3)' : '1px solid transparent'
                                             }}>
                                                 <Avatar
-                                                    alt={item.equipo_visita.nombre_equipo}
-                                                    src={item.equipo_visita.logo}
                                                     sx={{
                                                         width: isMobile ? 30 : 40,
                                                         height: isMobile ? 30 : 40,
-                                                        '& img': { objectFit: 'contain' }
+                                                        bgcolor: '#d32f2f', // puedes elegir cualquier color de fondo
+                                                        fontSize: isMobile ? 14 : 18,
+                                                        fontWeight: 'bold',
                                                     }}
-                                                />
+                                                >
+                                                    {item.AwayTeam?.[0] ?? 'E'}
+                                                </Avatar>
                                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                                     <Typography
                                                         variant={isMobile ? "body2" : "body1"}
@@ -292,7 +296,7 @@ const ListMatch = ({ matches = [] }) => {
                                                             whiteSpace: 'nowrap'
                                                         }}
                                                     >
-                                                        {item.equipo_visita.nombre_equipo}
+                                                        {item.AwayTeam}
                                                     </Typography>
                                                     <Typography variant="caption" sx={{ color: '#888' }}>
                                                         Visitante

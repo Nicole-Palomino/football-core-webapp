@@ -89,8 +89,7 @@ const MatchList = ({ partidos }) => {
 
                                     <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
                                         <Tooltip title="Info">
-                                            {/* <IconButton onClick={onInfoClick}> */}
-                                            <IconButton onClick={() => onInfoClick(partido.equipo_local.id_equipo, partido.equipo_visita.id_equipo, partido.id_partido)}>
+                                            <IconButton onClick={() => onInfoClick(partido.equipo_local.nombre_equipo, partido.equipo_visita.nombre_equipo, partido.id_partido)}>
                                                 <InfoOutlined sx={{ color: "white" }} />
                                             </IconButton>
                                         </Tooltip>

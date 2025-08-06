@@ -321,7 +321,6 @@ const Favorite = () => {
                                                                     fontWeight: 'bold',
                                                                     minWidth: '30px',
                                                                     textAlign: 'center',
-                                                                    textAlign: 'right',
                                                                 }}
                                                             >
                                                                 {partido.estadisticas?.FTHG ?? '-'}
@@ -365,7 +364,6 @@ const Favorite = () => {
                                                                     fontWeight: 'bold',
                                                                     minWidth: '30px',
                                                                     textAlign: 'center',
-                                                                    textAlign: 'right',
                                                                 }}
                                                             >
                                                                 {partido.estadisticas?.FTAG ?? '-'}

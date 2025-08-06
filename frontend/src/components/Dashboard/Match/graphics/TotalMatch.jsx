@@ -1,6 +1,6 @@
 import { FaFutbol } from 'react-icons/fa'
 
-const TotalMatch = ({ totalMatches }) => {
+const TotalMatch = ({totalMatches}) => {
     return (
         <div className="flex flex-col items-center justify-center bg-target p-5 rounded-lg shadow-lg">
             <p className="mt-2 text-white text-lg font-bold uppercase">Total de Enfrentamientos</p>

@@ -73,6 +73,7 @@ export const registerUser = async ( userData ) => {
     }
 }
 
+// recuperar contraseña
 export const forgotUser = async ( userData ) => {
     try {
         const response = await axiosInstance.post('/request-password-reset', userData, {
@@ -93,6 +94,7 @@ export const forgotUser = async ( userData ) => {
     }
 }
 
+// resetear contraseña
 export const resetUser = async ( userData ) => {
     try {
         const response = await axiosInstance.post('/reset-password', userData, {
@@ -104,6 +106,27 @@ export const resetUser = async ( userData ) => {
         return response.data
     } catch (error) {
         console.error("Error en registerUser:", error);
+
+        if (error.response) {
+            throw new Error(error.response.data?.detail || "Error desconocido.");
+        }
+
+        throw new Error("Error al conectar con el servidor.");
+    }
+}
+
+// actualizar datos del usuario
+export const updateUser = async (userId, userData) => {
+    try {
+        const response = await axiosInstance.put(`/users/${userId}`, userData, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+
+        return response.data
+    } catch (error) {
+        console.error("Error en updateUser:", error);
 
         if (error.response) {
             throw new Error(error.response.data?.detail || "Error desconocido.");
