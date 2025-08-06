@@ -164,9 +164,9 @@ async def calcular_probabilidades_poisson(
                 "visitante": round(goles_pred_visitante or 0, 2)
             },
             "probabilidades_1x2": {
-                "1": round((to_native(resultados.get("1", 0)) / total_simulaciones) * 100, 2),
-                "X": round((to_native(resultados.get("X", 0)) / total_simulaciones) * 100, 2),
-                "2": round((to_native(resultados.get("2", 0)) / total_simulaciones) * 100, 2)
+                "local": round((to_native(resultados.get("1", 0)) / total_simulaciones) * 100, 2),
+                "empate": round((to_native(resultados.get("X", 0)) / total_simulaciones) * 100, 2),
+                "visita": round((to_native(resultados.get("2", 0)) / total_simulaciones) * 100, 2)
             },
             "matriz_scores_exactos": matriz.to_dict() if hasattr(matriz, "to_dict") else {},
             "scores_mas_probables": dict(scores.most_common(10)),

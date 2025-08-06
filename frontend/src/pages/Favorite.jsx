@@ -399,8 +399,8 @@ const Favorite = () => {
                                                             <IconButton
                                                                 onClick={() =>
                                                                     handleInfoClick(
-                                                                        partido.equipo_local.id_equipo,
-                                                                        partido.equipo_visita.id_equipo,
+                                                                        partido.equipo_local.nombre_equipo,
+                                                                        partido.equipo_visita.nombre_equipo,
                                                                         partido.id_partido
                                                                     )
                                                                 }

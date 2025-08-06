@@ -109,7 +109,7 @@ def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
         goleadas_local = df[(df["goles_local"] - df["goles_visitante"]) >= 3].shape[0]
         goleadas_visitante = df[(df["goles_visitante"] - df["goles_local"]) >= 3].shape[0]
 
-        descripcion = f"🤖 **Clúster {cluster_id}** — basado en {cantidad_partidos} partidos analizados.\n\n"
+        descripcion = f"🤖 **Clúster {cluster_id}** \n\n"
 
         # Dominio en el marcador
         if promedio_goles_local > promedio_goles_visitante + 1:

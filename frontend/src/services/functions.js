@@ -105,3 +105,18 @@ export const combinarAnalisisYPrediccion = (analisisCompleto, prediccion) => {
         descripcion_cluster_predicho,
     }
 }
+
+export const getPredictionRandom = async (liga, equipo1, equipo2) => {
+    try {
+        const response = await axiosInstance.get(`/predictions/predecir/${encodeURIComponent(liga)}`, {
+            params: {
+                equipo1,
+                equipo2
+            }
+        })
+        return response.data
+    } catch (err) {
+        console.error("Error getting favorites:", err.response ? err.response.data : err.message)
+        throw err
+    }
+}

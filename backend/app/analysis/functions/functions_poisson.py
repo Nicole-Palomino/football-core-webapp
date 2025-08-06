@@ -43,9 +43,9 @@ def calcular_probabilidades_resultado(goles_local_esp: float, goles_visitante_es
 
     total = prob_1 + prob_X + prob_2
     return {
-        "1": round(prob_1 * 100, 2),
-        "X": round(prob_X * 100, 2),
-        "2": round(prob_2 * 100, 2),
+        "local": round(prob_1 * 100, 2),
+        "empate": round(prob_X * 100, 2),
+        "visita": round(prob_2 * 100, 2),
         "check_total": round(total * 100, 2)
     }
 

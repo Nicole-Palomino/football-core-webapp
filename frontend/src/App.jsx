@@ -19,6 +19,8 @@ import AboutUs from './components/Header/AboutUs'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import MatchDetail from './components/Dashboard/Match/MatchDetail'
+import 'slick-carousel/slick/slick.css'
+import 'slick-carousel/slick/slick-theme.css'
 
 function App() {
 

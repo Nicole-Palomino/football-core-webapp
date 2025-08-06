@@ -22,6 +22,8 @@ const MatchDetail = () => {
     const equipo_local = location.state?.equipo_local
     const equipo_visita = location.state?.equipo_visita
 
+    console.log(equipo_local, equipo_visita)
+
     // 1. Consulta para Match by ID
     const {
         data: matchData,

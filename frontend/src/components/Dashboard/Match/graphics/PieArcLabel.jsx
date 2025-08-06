@@ -1,10 +1,9 @@
-import * as React from 'react';
-import { PieChart, pieArcLabelClasses } from '@mui/x-charts/PieChart';
+import { PieChart, pieArcLabelClasses } from '@mui/x-charts/PieChart'
 
 const PieArcLabel = ({ data, title }) => {
     return (
-        <div className="flex flex-col items-center w-full md:w-1/2">
-            <h3 className="text-center text-white mb-2 uppercase font-bold text-md">
+        <div className="flex flex-col items-center w-full">
+            <h3 className="text-center text-white mb-4 uppercase font-bold text-md">
                 {title}
             </h3>
             <PieChart
@@ -25,8 +24,12 @@ const PieArcLabel = ({ data, title }) => {
                         fill: '#fff', // ✅ Etiquetas dentro del gráfico en blanco
                         fontSize: 20,
                     },
-                    '& .MuiChartsLegend-root .MuiTypography-root': {
-                        color: '#fff', // ✅ Leyenda externa en blanco
+                    '& .MuiChartsLegend-label': {
+                        fill: '#fff',        
+                        color: '#fff',      
+                    },
+                    '& .MuiChartsLegend-root': {
+                        color: '#fff',
                     },
                 }}
             />

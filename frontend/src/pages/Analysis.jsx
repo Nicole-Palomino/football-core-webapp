@@ -27,7 +27,9 @@ import {
     AccordionSummary,
     AccordionDetails,
     Divider,
-    Alert
+    Alert,
+    CardHeader,
+    LinearProgress
 } from '@mui/material'
 import {
     Analytics as AnalyticsIcon,
@@ -41,13 +43,16 @@ import {
     Schedule as ScheduleIcon,
     Stadium as StadiumIcon,
     Insights as InsightsIcon,
-    Psychology as PsychologyIcon
+    Psychology as PsychologyIcon,
+    QueryStats as QueryStatsIcon,
+    DataSaverOff as DataSaverOffIcon,
+    TableChart as TableChartIcon
 } from '@mui/icons-material'
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
-import EnConstruccion from '../components/EnConstruccion'
 import { combinarAnalisisYPrediccion, getAnalyticsCluster, getCompleteAnalysis, getLigues, getPoisson, getPredictionCluster, getTeams } from '../services/functions'
 import { formatFecha } from '../services/encryptionService'
 import { useQuery } from '@tanstack/react-query'
+import CarruselSugerencias from '../components/Dashboard/Match/graphics/CarruselSugerencias'
+import PieChartsOne from '../components/Dashboard/Match/graphics/PieChartsOne'
 
 const Analysis = () => {
 
@@ -63,6 +68,7 @@ const Analysis = () => {
     const [clusterData, setClusterData] = useState(null)
     const [predictionData, setPredictionData] = useState(null)
     const [activeAnalysisType, setActiveAnalysisType] = useState('complete')
+    const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0)
 
     function parseLigas(raw) {
         return Object.entries(raw).map(([key, value]) => ({
@@ -124,9 +130,27 @@ const Analysis = () => {
         setSelectedEquipo1('')
         setSelectedEquipo2('')
         setAnalysisData(null)
+        setClusterData(null)
+        setPoissonData(null)
         if (liga) {
             fetchEquipos(liga)
         }
+    }
+
+    const handleEquipo1Change = (event) => {
+        const equipo = event.target.value
+        setSelectedEquipo1(equipo)
+        setAnalysisData(null)
+        setClusterData(null)
+        setPoissonData(null)
+    }
+
+    const handleEquipo2Change = (event) => {
+        const equipo = event.target.value
+        setSelectedEquipo2(equipo)
+        setAnalysisData(null)
+        setClusterData(null)
+        setPoissonData(null)
     }
 
     const fetchAnalysis = async (liga, equipo1, equipo2) => {
@@ -139,99 +163,17 @@ const Analysis = () => {
 
             const poisson = await getPoisson(liga, equipo1, equipo2)
             setPoissonData(poisson || [])
-            console.log(poisson)
 
             const clusterAnalysis = await getAnalyticsCluster(liga, equipo1, equipo2)
-            console.log(clusterAnalysis)
             const clusterPrediction = await getPredictionCluster(liga, equipo1, equipo2)
-            console.log(clusterPrediction)
             const combinado = combinarAnalisisYPrediccion(clusterAnalysis, clusterPrediction)
             setClusterData(combinado || [])
-
-            console.log(combinado)
         } catch (error) {
             console.error('Error fetching analysis:', error)
         } finally {
             setLoading(false)
         }
     }
-
-    const COLORS = ['#368FF4', '#FF4444', '#FFD700', '#4A90E2']
-
-    const ResultPieChart = ({ data, title }) => (
-        <Card sx={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 4,
-            height: 400
-        }}>
-            <CardContent>
-                <Typography variant="h6" sx={{ color: 'white', textAlign: 'center', mb: 2, fontFamily: 'cursive' }}>
-                    {title}
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                        <Pie
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={120}
-                            paddingAngle={5}
-                            dataKey="value"
-                        >
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                    </PieChart>
-                </ResponsiveContainer>
-            </CardContent>
-        </Card>
-    )
-
-    const RadarChartComponent = ({ data }) => (
-        <Card sx={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 4,
-            height: 400
-        }}>
-            <CardContent>
-                <Typography variant="h6" sx={{ color: 'white', textAlign: 'center', mb: 2, fontFamily: 'cursive' }}>
-                    📊 Comparación Estadística
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart data={data}>
-                        <PolarGrid />
-                        <PolarAngleAxis dataKey="stat" tick={{ fill: 'white', fontSize: 12 }} />
-                        <PolarRadiusAxis tick={{ fill: 'white', fontSize: 10 }} />
-                        <Radar
-                            name={selectedEquipo1}
-                            dataKey={selectedEquipo1}
-                            stroke="#368FF4"
-                            fill="#368FF4"
-                            fillOpacity={0.2}
-                            strokeWidth={2}
-                        />
-                        <Radar
-                            name={selectedEquipo2}
-                            dataKey={selectedEquipo2}
-                            stroke="#FF4444"
-                            fill="#FF4444"
-                            fillOpacity={0.2}
-                            strokeWidth={2}
-                        />
-                        <Legend />
-                    </RadarChart>
-                </ResponsiveContainer>
-            </CardContent>
-        </Card>
-    )
 
     return (
         <Box sx={{
@@ -321,10 +263,7 @@ const Analysis = () => {
                                                     borderColor: 'rgba(255, 255, 255, 0.3)',
                                                 },
                                                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: '#368FF4',
-                                                },
-                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: '#368FF4',
+                                                    borderColor: 'white',
                                                 },
                                                 '& .MuiSvgIcon-root': {
                                                     color: 'white', // ícono del dropdown
@@ -346,7 +285,6 @@ const Analysis = () => {
                                             ))}
                                         </Select>
                                     </FormControl>
-
                                 </Grid>
 
                                 <Grid item xs={12} md={3}>
@@ -356,7 +294,7 @@ const Analysis = () => {
                                         </InputLabel>
                                         <Select
                                             value={selectedEquipo1}
-                                            onChange={(e) => setSelectedEquipo1(e.target.value)}
+                                            onChange={handleEquipo1Change}
                                             label="Equipo Local"
                                             sx={{
                                                 color: 'white',
@@ -364,10 +302,7 @@ const Analysis = () => {
                                                     borderColor: 'rgba(255, 255, 255, 0.3)',
                                                 },
                                                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: '#368FF4',
-                                                },
-                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: '#368FF4',
+                                                    borderColor: 'white',
                                                 },
                                                 '& .MuiSvgIcon-root': {
                                                     color: 'white', // color del ícono de flecha desplegable
@@ -383,70 +318,46 @@ const Analysis = () => {
                                                 },
                                             }}
                                         >
-                                            {equipos.map((equipo) => (
-                                                <MenuItem key={equipo} value={equipo}>
-                                                    {equipo}
-                                                </MenuItem>
-                                            ))}
+                                            {equipos.length === 0 ? (
+                                                <MenuItem disabled>No hay equipos disponibles</MenuItem>
+                                            ) : (
+                                                equipos.map((equipo) => (
+                                                    <MenuItem key={equipo} value={equipo}>
+                                                        {equipo}
+                                                    </MenuItem>
+                                                ))
+                                            )}
                                         </Select>
                                     </FormControl>
-
-
                                 </Grid>
 
                                 <Grid item xs={12} md={3}>
-                                    <FormControl
-                                        fullWidth
-                                        disabled={!selectedLiga}
-                                        variant="outlined"
-                                        sx={{
-                                            minWidth: 200,
-                                            '& .MuiOutlinedInput-root': {
-                                                color: 'white',
-                                                '& fieldset': {
-                                                    borderColor: 'rgba(255, 255, 255, 0.3)', // 🔹 borde normal (blanco transparente)
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#368FF4', // 🔹 borde al hacer hover
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#368FF4', // 🔹 borde al hacer focus
-                                                },
-                                            },
-                                        }}
-                                    >
+                                    <FormControl fullWidth sx={{ minWidth: 200 }} variant="outlined">
                                         <InputLabel sx={{ color: 'white' }} shrink>
                                             Equipo Visitante
                                         </InputLabel>
-
                                         <Select
                                             value={selectedEquipo2}
-                                            onChange={(e) => setSelectedEquipo2(e.target.value)}
+                                            onChange={handleEquipo2Change}
                                             label="Equipo Visitante"
-                                            inputProps={{
-                                                style: {
-                                                    color: 'white',
+                                            sx={{
+                                                color: 'white',
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'white',
+                                                },
+                                                '& .MuiSvgIcon-root': {
+                                                    color: 'white', // color del ícono de flecha desplegable
                                                 },
                                             }}
-                                            IconComponent={(props) => (
-                                                <svg
-                                                    {...props}
-                                                    className="text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            )}
                                             MenuProps={{
                                                 PaperProps: {
+                                                    style: { maxHeight: 200 },
                                                     sx: {
-                                                        bgcolor: '#1f2937',
-                                                        '& .MuiMenuItem-root': {
-                                                            color: 'white',
-                                                        },
+                                                        bgcolor: '#1f2937', // fondo del menú (gris oscuro)
+                                                        color: 'white',     // texto blanco en las opciones
                                                     },
                                                 },
                                             }}
@@ -460,7 +371,6 @@ const Analysis = () => {
                                                 ))}
                                         </Select>
                                     </FormControl>
-
                                 </Grid>
 
                                 <Grid item xs={12} md={3}>
@@ -470,12 +380,13 @@ const Analysis = () => {
                                         onClick={() => fetchAnalysis(selectedLiga, selectedEquipo1, selectedEquipo2)}
                                         disabled={!selectedLiga || !selectedEquipo1 || !selectedEquipo2 || loading}
                                         sx={{
-                                            background: 'linear-gradient(45deg, #368FF4, #17FF4D)',
-                                            color: 'black',
+                                            background: 'linear-gradient(45deg, #368FF4, #1F548F)',
+                                            color: 'white',
                                             fontWeight: 'bold',
+                                            minWidth: 200,
                                             height: 56,
                                             '&:hover': {
-                                                background: 'linear-gradient(45deg, #17FF4D, #368FF4)',
+                                                background: 'linear-gradient(45deg, #1F548F, #368FF4)',
                                                 transform: 'translateY(-2px)'
                                             },
                                             '&:disabled': {
@@ -496,7 +407,7 @@ const Analysis = () => {
                 {/* Analysis Results */}
                 {analysisData && (
                     <Fade in={true} timeout={1200}>
-                        <Box sx={{ width: "100%", maxWidth: "100vw", px: 2 }}>
+                        <Box sx={{ width: "100%", px: 2, mx: "auto", maxWidth: "1400px" }}>
                             {/* Match Summary */}
                             <Typography
                                 variant="h4"
@@ -505,7 +416,7 @@ const Analysis = () => {
                                     mb: 4,
                                     textAlign: 'center',
                                     fontFamily: 'cursive',
-                                    background: 'linear-gradient(45deg, #368FF4, #17FF4D)',
+                                    background: 'linear-gradient(45deg, #368FF4, #1F548F)',
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent'
@@ -513,15 +424,15 @@ const Analysis = () => {
                                 {selectedEquipo1} vs {selectedEquipo2}
                             </Typography>
 
-                            <Grid container spacing={3} sx={{ mb: 4 }}>
-                                <Grid item xs={12} md={4}>
+                            <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
+                                {/* Total de Enfrentamientos */}
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
                                     <Card
                                         onMouseEnter={() => setHoveredCard('summary')}
                                         onMouseLeave={() => setHoveredCard(null)}
                                         sx={{
-                                            // height: 245,
                                             background: hoveredCard === 'summary'
-                                                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 255, 136, 0.1) 100%)'
+                                                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(54, 143, 244, 0.1) 100%)'
                                                 : 'rgba(255, 255, 255, 0.05)',
                                             backdropFilter: 'blur(10px)',
                                             border: hoveredCard === 'summary'
@@ -546,241 +457,223 @@ const Analysis = () => {
                                     </Card>
                                 </Grid>
 
-                                <Grid item xs={12} md={4}>
-                                    <ResultPieChart
-                                        data={[
-                                            { name: selectedEquipo1, value: analysisData.resumen.victorias_por_equipo[selectedEquipo1] },
-                                            { name: selectedEquipo2, value: analysisData.resumen.victorias_por_equipo[selectedEquipo2] },
-                                            { name: 'Empates', value: analysisData.resumen.victorias_por_equipo.empates }
-                                        ]}
-                                        title="🏆 Resultados por Equipo"
+                                {/* Advanced Statistics */}
+                                <Card
+                                    sx={{
+                                        width: '100%',
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        backdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        borderRadius: 4,
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            height: '4px',
+                                            background: `linear-gradient(90deg, #FFD700, #FFA500)`
+                                        }
+                                    }}>
+                                    <CardContent sx={{ p: 4 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                                            <AssessmentIcon sx={{ color: '#FFD700', mr: 2, fontSize: 30 }} />
+                                            <Typography variant="h5" sx={{ color: 'white', fontFamily: 'cursive' }}>
+                                                📊 Métricas Avanzadas por Equipo
+                                            </Typography>
+                                        </Box>
+                                        <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                                            <Table>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Equipo</TableCell>
+                                                        <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Goles Local/Prom</TableCell>
+                                                        <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Goles Visita/Prom</TableCell>
+                                                        <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Posesión Ofensiva</TableCell>
+                                                        <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Eficiencia Ofensiva</TableCell>
+                                                        <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Indisciplina</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+
+                                                <TableBody>
+                                                    {analysisData.estadisticas_avanzadas.map((stat, index) => (
+                                                        <TableRow
+                                                            key={index}
+                                                            sx={{
+                                                                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                                                                backgroundColor: index % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'transparent'
+                                                            }}>
+                                                            <TableCell sx={{
+                                                                color: stat.Equipo === selectedEquipo1 ? '#368FF4' : '#FF4444',
+                                                                fontWeight: 'bold',
+                                                                fontSize: '1.1rem',
+                                                            }}>
+                                                                {stat.Equipo}
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
+                                                                {stat['Goles_local_prom']}
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
+                                                                {stat['Goles_visita_prom']}
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
+                                                                {stat['Posesión_ofensiva']}
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
+                                                                {(stat['Eficiencia_ofensiva'] * 100).toFixed(1)}%
+                                                            </TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
+                                                                {stat['Indisciplina']}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Insights and Explanations */}
+                                <Accordion
+                                    sx={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        backdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        borderRadius: 2,
+                                        '&:before': { display: 'none' }
+                                    }}>
+                                    <AccordionSummary
+                                        expandIcon={<ExpandMoreIcon sx={{ color: '#368FF4' }} />}
+                                        sx={{
+                                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                                            '&:hover': { backgroundColor: 'rgba(0, 255, 136, 0.15)' }
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <InsightsIcon sx={{ color: '#368FF4', mr: 2 }} />
+                                            <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
+                                                🧠 ¿Qué significan estas métricas?
+                                            </Typography>
+                                        </Box>
+                                    </AccordionSummary>
+                                    <AccordionDetails sx={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+                                        <Typography variant="body1" sx={{ color: '#888', mb: 2 }}>
+                                            Estas métricas se utilizan para analizar y comparar el rendimiento y estilo de juego de los equipos:
+                                        </Typography>
+
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12} md={6}>
+                                                <Alert
+                                                    icon={<TrendingUpIcon />}
+                                                    severity="info"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                                        border: '1px solid rgba(33, 150, 243, 0.3)',
+                                                        color: 'white',
+                                                        mb: 2
+                                                    }}
+                                                >
+                                                    <strong>Posesión Ofensiva:</strong> (Tiros + Tiros al arco + Corners) / Partidos.
+                                                    Indica el nivel de participación ofensiva del equipo.
+                                                </Alert>
+
+                                                <Alert
+                                                    icon={<AssessmentIcon />}
+                                                    severity="success"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                                        border: '1px solid rgba(76, 175, 80, 0.3)',
+                                                        color: 'white',
+                                                        mb: 2
+                                                    }}
+                                                >
+                                                    <strong>Eficiencia Ofensiva:</strong> Goles / Tiros al arco.
+                                                    Mide la capacidad de convertir oportunidades en goles.
+                                                </Alert>
+                                            </Grid>
+
+                                            <Grid item xs={12} md={6}>
+                                                <Alert
+                                                    icon={<StadiumIcon />}
+                                                    severity="warning"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                                        border: '1px solid rgba(255, 152, 0, 0.3)',
+                                                        color: 'white',
+                                                        mb: 2
+                                                    }}
+                                                >
+                                                    <strong>Goles Local/Visita:</strong> Producción goleadora según la localía.
+                                                    Evalúa el rendimiento en casa vs fuera de casa.
+                                                </Alert>
+
+                                                <Alert
+                                                    icon={<SportsIcon />}
+                                                    severity="error"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                                        border: '1px solid rgba(244, 67, 54, 0.3)',
+                                                        color: 'white'
+                                                    }}
+                                                >
+                                                    <strong>Indisciplina:</strong> (Amarillas + Rojas) / Partidos.
+                                                    Nivel promedio de sanciones por partido.
+                                                </Alert>
+                                            </Grid>
+                                        </Grid>
+                                    </AccordionDetails>
+                                </Accordion>
+
+                                {/* Análisis de rachas */}
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                    <CarruselSugerencias
+                                        title="Enfrentamientos Directos"
+                                        datos={analysisData.enfrentamientos_directos_sugerencias}
                                     />
                                 </Grid>
 
-                                <Grid item xs={12} md={4}>
-                                    <ResultPieChart
-                                        data={[
-                                            { name: 'Local', value: analysisData.resumen.victorias_por_localia.local },
-                                            { name: 'Visitante', value: analysisData.resumen.victorias_por_localia.visitante },
-                                            { name: 'Empates', value: analysisData.resumen.victorias_por_localia.empates }
-                                        ]}
-                                        title="🏠 Resultados por Localía"
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                    <CarruselSugerencias
+                                        title="Racha del Equipo local"
+                                        datos={analysisData.racha_equipo_1}
                                     />
                                 </Grid>
 
-                                {/* <Grid item xs={12} md={4}>
-                                        <Card
-                                            onMouseEnter={() => setHoveredCard('probability')}
-                                            onMouseLeave={() => setHoveredCard(null)}
-                                            sx={{
-                                                background: hoveredCard === 'probability' 
-                                                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 68, 68, 0.1) 100%)'
-                                                    : 'rgba(255, 255, 255, 0.05)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: hoveredCard === 'probability' 
-                                                    ? '2px solid #FF4444'
-                                                    : '1px solid rgba(255, 255, 255, 0.1)',
-                                                borderRadius: 4,
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                transform: hoveredCard === 'probability' ? 'translateY(-5px)' : 'translateY(0)',
-                                                textAlign: 'center',
-                                                p: 3
-                                            }}>
-                                            <PsychologyIcon sx={{ fontSize: 48, color: '#FF4444', mb: 2 }} />
-                                            <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
-                                                Mayor Probabilidad
-                                            </Typography>
-                                            <Typography variant="h4" sx={{ color: '#FF4444', mb: 1 }}>
-                                                {Math.max(
-                                                    analysisData.resumen.victorias_por_equipo.victoria_equipo1,
-                                                    analysisData.resumen.probabilidades.empate,
-                                                    analysisData.resumen.probabilidades.victoria_equipo2
-                                                ).toFixed(1)}%
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ color: '#888' }}>
-                                                {analysisData.resumen.probabilidades.victoria_equipo1 > analysisData.resumen.probabilidades.victoria_equipo2 
-                                                    ? `Victoria ${selectedEquipo1}`
-                                                    : analysisData.resumen.probabilidades.victoria_equipo2 > analysisData.resumen.probabilidades.empate
-                                                    ? `Victoria ${selectedEquipo2}`
-                                                    : 'Empate'
-                                                }
-                                            </Typography>
-                                        </Card>
-                                    </Grid> */}
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                    <CarruselSugerencias
+                                        title="Racha del Equipo Visitante"
+                                        datos={analysisData.racha_equipo_2}
+                                    />
+                                </Grid>
+
+                                {/* Resultados por localía y equipo */}
+                                <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <PieChartsOne
+                                        Data={[
+                                            { id: 0, label: selectedEquipo1, value: analysisData.resumen.victorias_por_equipo.local },
+                                            { id: 1, label: selectedEquipo2, value: analysisData.resumen.victorias_por_equipo.visitante },
+                                            { id: 2, label: 'Empates', value: analysisData.resumen.victorias_por_equipo.empates }
+                                        ]}
+                                        title='⚽ Resultados por Equipo'
+                                    />
+                                </Grid>
+
+                                <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <PieChartsOne
+                                        Data={[
+                                            { label: 'Local', value: analysisData.resumen.victorias_por_localia.local },
+                                            { label: 'Visitante', value: analysisData.resumen.victorias_por_localia.visitante },
+                                            { label: 'Empates', value: analysisData.resumen.victorias_por_localia.empates }
+                                        ]}
+                                        title='🏠 Resultados por Localía'
+                                    />
+                                </Grid>
                             </Grid>
 
-                            {/* Advanced Statistics */}
-                            <Card
-                                sx={{
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    backdropFilter: 'blur(10px)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: 4,
-                                    mb: 4,
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                    '&::before': {
-                                        content: '""',
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: '4px',
-                                        background: `linear-gradient(90deg, #FFD700, #FFA500)`
-                                    }
-                                }}>
-                                <CardContent sx={{ p: 4 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                        <AssessmentIcon sx={{ color: '#FFD700', mr: 2, fontSize: 30 }} />
-                                        <Typography variant="h5" sx={{ color: 'white', fontFamily: 'cursive' }}>
-                                            📊 Métricas Avanzadas por Equipo
-                                        </Typography>
-                                    </Box>
-                                    <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Equipo</TableCell>
-                                                    <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Goles Local/Prom</TableCell>
-                                                    <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Goles Visita/Prom</TableCell>
-                                                    <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Posesión Ofensiva</TableCell>
-                                                    <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Eficiencia Ofensiva</TableCell>
-                                                    <TableCell sx={{ color: '#FFD700', fontWeight: 'bold', fontSize: '1rem' }}>Indisciplina</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-
-                                            <TableBody>
-                                                {analysisData.estadisticas_avanzadas.map((stat, index) => (
-                                                    <TableRow
-                                                        key={index}
-                                                        sx={{
-                                                            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
-                                                            backgroundColor: index % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'transparent'
-                                                        }}>
-                                                        <TableCell sx={{
-                                                            color: stat.Equipo === selectedEquipo1 ? '#368FF4' : '#FF4444',
-                                                            fontWeight: 'bold',
-                                                            fontSize: '1.1rem',
-                                                        }}>
-                                                            {stat.Equipo}
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
-                                                            {stat['Goles local/prom']}
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
-                                                            {stat['Goles visita/prom']}
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
-                                                            {stat['Posesión ofensiva']}
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
-                                                            {(stat['Eficiencia ofensiva'] * 100).toFixed(1)}%
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', fontSize: '1rem', textAlign: 'center' }}>
-                                                            {stat['Indisciplina']}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </CardContent>
-                            </Card>
-
-                            {/* Insights and Explanations */}
-                            <Accordion
-                                sx={{
-                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                    backdropFilter: 'blur(10px)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: 2,
-                                    mb: 2,
-                                    '&:before': { display: 'none' }
-                                }}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon sx={{ color: '#368FF4' }} />}
-                                    sx={{
-                                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                                        '&:hover': { backgroundColor: 'rgba(0, 255, 136, 0.15)' }
-                                    }}
-                                >
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <InsightsIcon sx={{ color: '#368FF4', mr: 2 }} />
-                                        <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
-                                            🧠 ¿Qué significan estas métricas?
-                                        </Typography>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
-                                    <Typography variant="body1" sx={{ color: '#888', mb: 2 }}>
-                                        Estas métricas se utilizan para analizar y comparar el rendimiento y estilo de juego de los equipos:
-                                    </Typography>
-
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} md={6}>
-                                            <Alert
-                                                icon={<TrendingUpIcon />}
-                                                severity="info"
-                                                sx={{
-                                                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                                    border: '1px solid rgba(33, 150, 243, 0.3)',
-                                                    color: 'white',
-                                                    mb: 2
-                                                }}
-                                            >
-                                                <strong>Posesión Ofensiva:</strong> (Tiros + Tiros al arco + Corners) / Partidos.
-                                                Indica el nivel de participación ofensiva del equipo.
-                                            </Alert>
-
-                                            <Alert
-                                                icon={<AssessmentIcon />}
-                                                severity="success"
-                                                sx={{
-                                                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                                                    border: '1px solid rgba(76, 175, 80, 0.3)',
-                                                    color: 'white',
-                                                    mb: 2
-                                                }}
-                                            >
-                                                <strong>Eficiencia Ofensiva:</strong> Goles / Tiros al arco.
-                                                Mide la capacidad de convertir oportunidades en goles.
-                                            </Alert>
-                                        </Grid>
-
-                                        <Grid item xs={12} md={6}>
-                                            <Alert
-                                                icon={<StadiumIcon />}
-                                                severity="warning"
-                                                sx={{
-                                                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                                                    border: '1px solid rgba(255, 152, 0, 0.3)',
-                                                    color: 'white',
-                                                    mb: 2
-                                                }}
-                                            >
-                                                <strong>Goles Local/Visita:</strong> Producción goleadora según la localía.
-                                                Evalúa el rendimiento en casa vs fuera de casa.
-                                            </Alert>
-
-                                            <Alert
-                                                icon={<SportsIcon />}
-                                                severity="error"
-                                                sx={{
-                                                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                                                    border: '1px solid rgba(244, 67, 54, 0.3)',
-                                                    color: 'white'
-                                                }}
-                                            >
-                                                <strong>Indisciplina:</strong> (Amarillas + Rojas) / Partidos.
-                                                Nivel promedio de sanciones por partido.
-                                            </Alert>
-                                        </Grid>
-                                    </Grid>
-                                </AccordionDetails>
-                            </Accordion>
-
                             {/* Recent Matches */}
-                            <Grid container spacing={3} sx={{ mb: 4 }}>
+                            <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
                                 <Grid item xs={12} md={6}>
                                     <Card
                                         sx={{
@@ -905,70 +798,114 @@ const Analysis = () => {
                                 </Grid>
                             </Grid>
 
-                            {/* direct encounters */}
-                            <Grid container spacing={3} sx={{ mb: 4 }}>
-                                {/* <Grid item xs={12} md={12}> */}
-                                <Card
-                                    sx={{
-                                        width: "100%", display: "block",
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        backdropFilter: 'blur(10px)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: 4,
-                                        overflow: 'hidden',
-                                        position: 'relative',
-                                        '&::before': {
-                                            content: '""',
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            right: 0,
-                                            height: '4px',
-                                            background: `linear-gradient(90deg, #3643F7, #1726FF)`
-                                        }
-                                    }}>
-                                    <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                                            <SportsIcon sx={{ color: '#368FF4', mr: 2 }} />
-                                            <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
-                                                🟦 Últimos 5 partidos de {selectedEquipo1}
-                                            </Typography>
-                                        </Box>
+                            {/* Goles en primer tiempo */}
+                            <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
+                                {/* Pie Chart */}
+                                <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <PieChartsOne
+                                        Data={[
+                                            { id: 0, label: selectedEquipo1, value: analysisData.primer_tiempo.goles_primer_tiempo.local },
+                                            { id: 1, label: selectedEquipo2, value: analysisData.primer_tiempo.goles_primer_tiempo.visitante },
+                                        ]}
+                                        title='⚽ Goles en el Primer Tiempo'
+                                    />
+                                </Grid>
 
-                                        <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
-                                            <Table size="small">
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Fecha</TableCell>
-                                                        <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Local</TableCell>
-                                                        <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Visitante</TableCell>
-                                                        <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Resultado</TableCell>
-                                                    </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {analysisData.enfrentamientos_directos.map((partido, index) => {
-                                                        return (
-                                                            <TableRow key={index}
-                                                                sx={{
-                                                                    '&:hover': {
-                                                                        backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                                                                    },
-                                                                }}>
-                                                                <TableCell sx={{ color: 'white', textAlign: 'center' }}>{formatFecha(partido.Date)}</TableCell>
-                                                                <TableCell sx={{ color: 'white', textAlign: 'center' }}>{partido.HomeTeam}</TableCell>
-                                                                <TableCell sx={{ color: 'white', textAlign: 'center' }}>{partido.AwayTeam}</TableCell>
-                                                                <TableCell sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
-                                                                    {partido.FTHG} - {partido.FTAG}
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )
-                                                    })}
-                                                </TableBody>
-                                            </Table>
-                                        </TableContainer>
-                                    </CardContent>
-                                </Card>
-                                {/* </Grid> */}
+                                {/* Texto */}
+                                <Grid
+                                    item
+                                    xs={12}
+                                    md={6}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'flex-start',
+                                        backgroundColor: '#202121',
+                                        borderRadius: 5,
+                                        padding: 3,
+                                        height: '100%', // se estira con el otro grid
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <Typography variant="h6" align="center" sx={{ fontWeight: 'bold', color: 'white', mb: 2 }}>
+                                        📊 Ventaja en el Primer Tiempo
+                                    </Typography>
+
+                                    <Typography variant="body1" sx={{ color: 'white', mb: 1 }}>
+                                        🏠 <strong>{selectedEquipo1}</strong>: se fue al descanso ganando en <strong>{analysisData.primer_tiempo.ventaja_primer_tiempo.local}</strong> de <strong>{analysisData.primer_tiempo.ventaja_primer_tiempo.total_ht}</strong> partidos.
+                                    </Typography>
+
+                                    <Typography variant="body1" sx={{ color: 'white', mb: 1 }}>
+                                        🟡 Ambos equipos empataron al descanso en <strong>{analysisData.primer_tiempo.ventaja_primer_tiempo.empate_ht}</strong> de <strong>{analysisData.primer_tiempo.ventaja_primer_tiempo.total_ht}</strong> partidos.
+                                    </Typography>
+
+                                    <Typography variant="body1" sx={{ color: 'white' }}>
+                                        ✈️ <strong>{selectedEquipo2}</strong>: se fue al descanso ganando en <strong>{analysisData.primer_tiempo.ventaja_primer_tiempo.visitante}</strong> de <strong>{analysisData.primer_tiempo.ventaja_primer_tiempo.total_ht}</strong> partidos.
+                                    </Typography>
+                                </Grid>
+                            </Grid>
+
+                            {/* direct encounters */}
+                            <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                    <Accordion
+                                        sx={{
+                                            width: '100%',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            borderRadius: 2,
+                                            '&:before': { display: 'none' }
+                                        }}>
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon sx={{ color: '#368FF4' }} />}
+                                            sx={{
+                                                backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                                                '&:hover': { backgroundColor: 'rgba(0, 255, 136, 0.15)' }
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <InsightsIcon sx={{ color: '#368FF4', mr: 2 }} />
+                                                <Typography variant="h6" sx={{ color: 'white', fontFamily: 'cursive' }}>
+                                                    🟦 Todos los enfrentamientos entre {selectedEquipo1} - {selectedEquipo2}
+                                                </Typography>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails sx={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+                                            <TableContainer component={Paper} sx={{ backgroundColor: 'transparent' }}>
+                                                <Table size="small">
+                                                    <TableHead>
+                                                        <TableRow>
+                                                            <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Fecha</TableCell>
+                                                            <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Local</TableCell>
+                                                            <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Visitante</TableCell>
+                                                            <TableCell sx={{ color: '#888', fontWeight: 'bold', textAlign: 'center' }}>Resultado</TableCell>
+                                                        </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {analysisData.enfrentamientos_directos.map((partido, index) => {
+                                                            return (
+                                                                <TableRow key={index}
+                                                                    sx={{
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                                                                        },
+                                                                    }}>
+                                                                    <TableCell sx={{ color: 'white', textAlign: 'center' }}>{formatFecha(partido.Date)}</TableCell>
+                                                                    <TableCell sx={{ color: 'white', textAlign: 'center' }}>{partido.HomeTeam}</TableCell>
+                                                                    <TableCell sx={{ color: 'white', textAlign: 'center' }}>{partido.AwayTeam}</TableCell>
+                                                                    <TableCell sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                                                                        {partido.FTHG} - {partido.FTAG}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            )
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        </AccordionDetails>
+                                    </Accordion>
+                                </Grid>
                             </Grid>
 
                             <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', mb: 2 }} />
@@ -1000,26 +937,39 @@ const Analysis = () => {
                                 Análisis probabilístico con modelo de Poisson que incluye goles esperados, probabilidades 1X2, matriz de resultados y métricas clave del partido.
                             </Typography>
 
-                            <Grid container spacing={3} sx={{ mb: 4, mt: 4 }}>
-                                <Grid item xs={12} md={4}>
+                            <Grid
+                                container
+                                spacing={3}
+                                sx={{
+                                    mb: 4,
+                                    mt: 4,
+                                    justifyContent: 'center',
+                                    width: '100%'
+                                }}
+                            >
+                                <Grid
+                                    item
+                                    xs={12}
+                                    md={6}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: { md: 400, xs: 'auto' }
+                                    }}
+                                >
                                     <Card
-                                        onMouseEnter={() => setHoveredCard('prediction')}
-                                        onMouseLeave={() => setHoveredCard(null)}
                                         sx={{
-                                            background: hoveredCard === 'prediction'
-                                                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%)'
-                                                : 'rgba(255, 255, 255, 0.05)',
+                                            background: '#202121',
                                             backdropFilter: 'blur(10px)',
-                                            border: hoveredCard === 'prediction'
-                                                ? '2px solid #FFD700'
-                                                : '1px solid rgba(255, 255, 255, 0.1)',
+                                            border: '2px solid #368FF4',
                                             borderRadius: 4,
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            transform: hoveredCard === 'prediction' ? 'translateY(-5px)' : 'translateY(0)',
                                             textAlign: 'center',
-                                            p: 3
-                                        }}>
-                                        <InsightsIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
+                                            p: 3,
+                                            height: '100%',
+                                            flex: 1
+                                        }}
+                                    >
+                                        <QueryStatsIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
                                         <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
                                             Goles Esperados
                                         </Typography>
@@ -1044,32 +994,36 @@ const Analysis = () => {
                                     </Card>
                                 </Grid>
 
-                                <Grid item xs={12} md={6}>
+                                <Grid
+                                    item
+                                    xs={12}
+                                    md={6}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: { md: 400, xs: 'auto' }
+                                    }}
+                                >
                                     <Card
-                                        onMouseEnter={() => setHoveredCard('prediction')}
-                                        onMouseLeave={() => setHoveredCard(null)}
                                         sx={{
-                                            background: hoveredCard === 'prediction'
-                                                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%)'
-                                                : 'rgba(255, 255, 255, 0.05)',
+                                            background: '#202121',
                                             backdropFilter: 'blur(10px)',
-                                            border: hoveredCard === 'prediction'
-                                                ? '2px solid #FFD700'
-                                                : '1px solid rgba(255, 255, 255, 0.1)',
+                                            border: '2px solid #368FF4',
                                             borderRadius: 4,
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            transform: hoveredCard === 'prediction' ? 'translateY(-5px)' : 'translateY(0)',
                                             textAlign: 'center',
-                                            p: 3
-                                        }}>
-                                        <InsightsIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
+                                            p: 3,
+                                            height: '100%',
+                                            flex: 1
+                                        }}
+                                    >
+                                        <DataSaverOffIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
                                         <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
                                             Probabilidades 1X2
                                         </Typography>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <Box>
                                                 <Typography variant="h5" sx={{ color: '#368FF4' }}>
-                                                    {/* {poissonData?.probabilidades_1x2} */}
+                                                    {poissonData?.probabilidades_1x2.local}%
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: '#888' }}>
                                                     {selectedEquipo1}
@@ -1077,7 +1031,7 @@ const Analysis = () => {
                                             </Box>
                                             <Box>
                                                 <Typography variant="h5" sx={{ color: '#368FF4' }}>
-                                                    {/* {poissonData?.probabilidades_1x2} */}
+                                                    {poissonData?.probabilidades_1x2.empate}%
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: '#888' }}>
                                                     Empate
@@ -1085,7 +1039,7 @@ const Analysis = () => {
                                             </Box>
                                             <Box>
                                                 <Typography variant="h5" sx={{ color: '#FF4444' }}>
-                                                    {/* {poissonData?.probabilidades_1x2?.local} */}
+                                                    {poissonData?.probabilidades_1x2?.visita}%
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ color: '#888' }}>
                                                     {selectedEquipo2}
@@ -1093,6 +1047,253 @@ const Analysis = () => {
                                             </Box>
                                         </Box>
                                     </Card>
+                                </Grid>
+
+                                <Grid
+                                    item
+                                    xs={12}
+                                    md={6}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: { md: 400, xs: 'auto' }
+                                    }}
+                                >
+                                    <Card
+                                        sx={{
+                                            background: '#202121',
+                                            backdropFilter: 'blur(10px)',
+                                            border: '2px solid #368FF4',
+                                            borderRadius: 4,
+                                            textAlign: 'center',
+                                            p: 3,
+                                            height: '100%',
+                                            flex: 1,
+                                            overflowX: 'auto'
+                                        }}
+                                    >
+                                        <TableChartIcon sx={{ fontSize: 48, color: '#FFD700', mb: 2 }} />
+                                        <Typography variant="h6" sx={{ color: 'white', mb: 2, fontFamily: 'cursive' }}>
+                                            Matriz de Resultados Exactos
+                                        </Typography>
+                                        {poissonData?.matriz_scores_exactos && (
+                                            <Box component="table" sx={{ borderCollapse: 'collapse', width: '100%' }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th style={{ color: '#888', padding: '4px', fontSize: 20 }}>Local \ Visita</th>
+                                                        {Object.keys(poissonData.matriz_scores_exactos[0]).map((col) => (
+                                                            <th key={col} style={{ color: '#888', padding: '4px', fontSize: 20 }}>{col}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {Object.entries(poissonData.matriz_scores_exactos).map(([golesLocal, row]) => (
+                                                        <tr key={golesLocal}>
+                                                            <td style={{ color: '#368FF4', padding: '4px', fontSize: 20 }}>{golesLocal}</td>
+                                                            {Object.entries(row).map(([golesVisita, prob]) => (
+                                                                <td key={golesVisita} style={{ color: 'white', padding: '4px', fontSize: 20 }}>
+                                                                    {prob.toFixed(1)}%
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </Box>
+                                        )}
+                                    </Card>
+                                </Grid>
+                            </Grid>
+
+                            <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', mb: 2 }} />
+
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    color: 'white',
+                                    mb: 4,
+                                    textAlign: 'center',
+                                    fontFamily: 'cursive',
+                                    background: 'linear-gradient(45deg, #368FF4, #17FF4D)',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
+                                }}>
+                                🎯 Predicción del Partido basada en Clustering K-Means
+                            </Typography>
+
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    color: '#9E9D9D',
+                                    fontStyle: 'italic',
+                                    maxWidth: 700,
+                                    margin: '0 auto',
+                                    textAlign: 'center'
+                                }}>
+                                Descubre el resultado más probable, el rendimiento esperado y otros indicadores clave generados a partir del análisis estadístico con agrupamiento K-Means.
+                            </Typography>
+
+                            <Grid
+                                container
+                                spacing={3}
+                                sx={{
+                                    mb: 4,
+                                    mt: 4,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                    <Card
+                                        sx={{
+                                            background: '#202121',
+                                            color: 'white',
+                                            p: 3
+                                        }}>
+                                        <h2 className="text-xl font-bold">Resumen del Partido</h2>
+                                        <CardContent>
+                                            <p className="text-md whitespace-pre-line">{clusterData?.descripcion_cluster_predicho}</p>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+
+                                <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Card
+                                        sx={{
+                                            background: '#202121',
+                                            color: 'white',
+                                            p: 3
+                                        }}>
+                                        <PieChartsOne
+                                            Data={[
+                                                { id: 0, label: selectedEquipo1, value: clusterData?.prediccion?.predicciones?.prob_victoria_local },
+                                                { id: 1, label: 'empate', value: clusterData?.prediccion?.predicciones?.prob_empate },
+                                                { id: 2, label: selectedEquipo2, value: clusterData?.prediccion?.predicciones?.prob_victoria_visitante },
+                                            ]}
+                                            title='Probabilidad de Ganar FT'
+                                        />
+                                    </Card>
+                                </Grid>
+
+                                <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Card
+                                        sx={{
+                                            background: '#202121',
+                                            color: 'white',
+                                            p: 3
+                                        }}>
+                                        <PieChartsOne
+                                            Data={[
+                                                { id: 0, label: selectedEquipo1, value: clusterData?.prediccion.predicciones.prob_ht_local_gana },
+                                                { id: 1, label: 'empate', value: clusterData?.prediccion.predicciones.prob_ht_empate },
+                                                { id: 2, label: selectedEquipo2, value: clusterData?.prediccion.predicciones.prob_ht_visitante_gana },
+                                            ]}
+                                            title='Probabilidad de Ganar HT'
+                                        />
+                                    </Card>
+                                </Grid>
+
+                                <Grid
+                                    item
+                                    xs={12}
+                                    md={6}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: { md: 400, xs: 'auto' }
+                                    }}
+                                >
+                                    <Grid className="grid grid-cols-2 gap-4">
+                                        <Card
+                                            sx={{
+                                                background: '#202121',
+                                                color: 'white',
+                                                p: 3
+                                            }}>
+                                            <CardContent>
+                                                <h4 className="font-semibold">Goles Esperados FT</h4>
+                                                <p>Local: {clusterData?.prediccion.predicciones.goles_esperados_local}</p>
+                                                <p>Visitante: {clusterData?.prediccion.predicciones.goles_esperados_visitante}</p>
+                                            </CardContent>
+                                        </Card>
+
+                                        <Card
+                                            sx={{
+                                                background: '#202121',
+                                                color: 'white',
+                                                p: 3
+                                            }}>
+                                            <CardContent>
+                                                <h4 className="font-semibold">Goles Esperados HT</h4>
+                                                <p>Local: {clusterData?.prediccion.predicciones.goles_ht_local}</p>
+                                                <p>Visitante: {clusterData?.prediccion.predicciones.goles_ht_visitante}</p>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+
+                                    <Grid className="grid grid-cols-2 gap-4 mt-5">
+                                        <Card
+                                            sx={{
+                                                background: '#202121',
+                                                color: 'white',
+                                                p: 3
+                                            }}>
+                                            <div className="flex justify-center items-center">
+                                                <div className="w-full bg-gray-200 rounded-full dark:bg-gray-700">
+                                                    <div className="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style={{ width: `${Math.round(clusterData?.prediccion.predicciones.ambos_marcan * 100)}%` }}>
+                                                        {Math.round(clusterData?.prediccion.predicciones.ambos_marcan * 100)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-center mt-4">
+                                                Probabilidad de ambos marcan: {Math.round(clusterData?.prediccion.predicciones.ambos_marcan * 100)}%
+                                            </p>
+                                        </Card>
+
+                                        <Card
+                                            sx={{
+                                                background: '#202121',
+                                                color: 'white',
+                                                p: 3
+                                            }}>
+                                            <CardContent>
+                                                <h4 className="font-semibold">Tiros al Arco</h4>
+                                                <p>Local: {clusterData?.prediccion.predicciones.tiros_arco_local}</p>
+                                                <p>Visitante: {clusterData?.prediccion.predicciones.tiros_arco_visitante}</p>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+
+                                    <Grid className="grid grid-cols-2 gap-4 mt-5 mb-4">
+                                        <Card
+                                            sx={{
+                                                background: '#202121',
+                                                color: 'white',
+                                                p: 3
+                                            }}>
+                                            <CardContent>
+                                                <h4 className="font-semibold">Disciplinas Local</h4>
+                                                <p>Amarillas: {clusterData?.prediccion.predicciones.amarillas_local}</p>
+                                                <p>Rojas: {clusterData?.prediccion.predicciones.rojas_local}</p>
+                                            </CardContent>
+                                        </Card>
+
+                                        <Card
+                                            sx={{
+                                                background: '#202121',
+                                                color: 'white',
+                                                p: 3
+                                            }}>
+                                            <CardContent>
+                                                <h4 className="font-semibold">Disciplinas Visitante</h4>
+                                                <p>Amarillas: {clusterData?.prediccion.predicciones.amarillas_visitante}</p>
+                                                <p>Rojas: {clusterData?.prediccion.predicciones.rojas_visitante}</p>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+
+                                    <Alert severity="info" variant="outlined" sx={{ color: '#fff' }}>
+                                        Estas predicciones han sido generadas usando agrupamiento K-Means basado en estadísticas históricas.
+                                    </Alert>
                                 </Grid>
                             </Grid>
                         </Box>
