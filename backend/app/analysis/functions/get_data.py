@@ -221,13 +221,14 @@ def filtrar_partidos_sin_importar_local_visita(df: pd.DataFrame, equipo1: str, e
         equipo2 (str): Nombre del segundo equipo
 
     Returns:
-        pd.DataFrame: Partidos entre equipo1 y equipo2
+        pd.DataFrame: Partidos entre equipo1 y equipo2 ordenados por fecha descendente
     """
     partidos = df[
         ((df["HomeTeam"] == equipo1) & (df["AwayTeam"] == equipo2)) |
         ((df["HomeTeam"] == equipo2) & (df["AwayTeam"] == equipo1))
     ]
 
+    partidos = partidos.sort_values(by="Date", ascending=False)
     return partidos
 
 def obtener_ultima_temporada(nombre_liga):

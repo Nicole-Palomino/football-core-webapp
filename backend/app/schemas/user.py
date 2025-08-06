@@ -24,16 +24,15 @@ class UserCreate(UserBase):
     """Esquema para dar de alta un nuevo Usuario."""
     contrasena: str = Field(..., min_length=8)
 
-class UserCreateAdmin(UserBase):
-    contrasena: str
-    id_estado: int
-    id_rol: int
-
 class UserUpdate(BaseModel): # UserUpdate puede tener campos opcionales
     """Esquema para actualizar un Usuario existente."""
     usuario: Optional[str] = Field(None, min_length=3, max_length=50)
     correo: Optional[EmailStr] = None
-    contrasena: Optional[str] = Field(None, min_length=8)
+
+class UserUpdateAdmin(BaseModel): # UserUpdate puede tener campos opcionales
+    """Esquema para actualizar un Usuario existente."""
+    usuario: Optional[str] = Field(None, min_length=3, max_length=50)
+    correo: Optional[EmailStr] = None
     is_active: Optional[bool] = None
     id_estado: Optional[int] = None
     id_rol: Optional[int] = None
@@ -44,6 +43,7 @@ class User(UserBase):
     is_active: bool
     registro: datetime
     updated_at: datetime
+    contrasena: str
     
     # Campos de recuperación de contraseña (opcional en la respuesta)
     codigo_verificacion: Optional[int] = None

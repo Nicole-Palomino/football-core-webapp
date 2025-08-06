@@ -96,7 +96,7 @@ async def register_user(
 # ✅
 @router.post("/register-admin", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def register_user_admin(
-    user_create: schemas.user.UserCreateAdmin, 
+    user_create: schemas.user.UserCreate, 
     db: AsyncSession = Depends(get_db),
     current_user: schemas.User = Depends(get_current_admin_user)
 ):

@@ -110,8 +110,8 @@ async def get_enfrentamientos(
 @router.get("/analisis-completo/{liga}")
 async def get_analisis_completo(
     liga: str,
-    equipo1: str = Query(..., description="Nombre del primer equipo"),
-    equipo2: str = Query(..., description="Nombre del segundo equipo")
+    equipo1: str,
+    equipo2: str
 ):
     """Obtiene el análisis completo entre dos equipos (similar a show_analysis.py)"""
     try:
@@ -169,8 +169,8 @@ async def get_analisis_completo(
             "resumen": {
                 "total_enfrentamientos": len(partidos),
                 "victorias_por_equipo": {
-                    equipo1: victorias_equipo1,
-                    equipo2: victorias_equipo2,
+                    "local": victorias_equipo1,
+                    "visitante": victorias_equipo2,
                     "empates": empates
                 },
                 "victorias_por_localia": {
@@ -191,6 +191,9 @@ async def get_analisis_completo(
                     "total_ht": to_native(total)
                 }
             },
+            "enfrentamientos_directos_sugerencias": functions_analysis.generar_sugerencias_enfrentamientos_directos(partidos, equipo1, equipo2),
+            "racha_equipo_1": functions_analysis.generar_sugerencias_racha_equipo(partidos_eq1, equipo1),
+            "racha_equipo_2": functions_analysis.generar_sugerencias_racha_equipo(partidos_eq2, equipo2),
             "ultimos_partidos": {
                 equipo1: partidos_eq1.head(5).to_dict('records'),
                 equipo2: partidos_eq2.head(5).to_dict('records')

@@ -8,8 +8,9 @@ from app.core.security import get_password_hash
 from app.utils.email_sender import send_email
 from app.crud import crud_role, crud_state
 
-DEFAULT_ESTADO = 1  # Activo
+DEFAULT_ESTADO = 10  # Usuario Free
 DEFAULT_ROL = 3     # Usuario normal
+DEFAULT_ADMIN_ROL = 2 # Administrador
 
 async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
     """
@@ -101,26 +102,28 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
     
     return user_with_relations
 
-async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreateAdmin):
+async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreate):
     """
     Crea un nuevo Usuario administrador de forma asíncrona, permitiendo definir manualmente el rol y estado.
     """
+    id_estado = DEFAULT_ESTADO
+    id_rol = DEFAULT_ADMIN_ROL
     # Verificar la existencia de rol y estado proporcionados
-    role = await crud_role.get_role(db, user.id_rol)
+    role = await crud_role.get_role(db, id_rol)
     if not role:
-        raise ValueError(f"Rol con ID {user.id_rol} no encontrado.")
+        raise ValueError(f"Rol con ID {id_rol} no encontrado.")
     
-    estado = await crud_state.get_estado(db, user.id_estado)
+    estado = await crud_state.get_estado(db, id_estado)
     if not estado:
-        raise ValueError(f"Estado con ID {user.id_estado} no encontrado.")
+        raise ValueError(f"Estado con ID {id_estado} no encontrado.")
 
     hashed_contrasena = get_password_hash(user.contrasena)
     db_user = models.User(
         usuario=user.usuario,
         correo=user.correo,
         contrasena=hashed_contrasena,
-        id_estado=user.id_estado,
-        id_rol=user.id_rol,
+        id_estado=id_estado,
+        id_rol=id_rol,
         registro=datetime.utcnow()
     )
     
@@ -142,6 +145,37 @@ async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreateAdmin
     return user_with_relations
 
 async def update_user(db: AsyncSession, user_id: int, user: schemas.UserUpdate):
+    """
+    Actualiza un usuario existente de forma asíncrona.
+    Maneja el hash de la contraseña si se proporciona “contrasena”.
+    """
+    db_user = await get_user(db, user_id)
+    if not db_user:
+        return None
+    
+    update_data = user.model_dump(exclude_unset=True)
+    
+    if "usuario" in update_data:
+        existing = await db.execute(select(models.User).where(models.User.usuario == update_data["usuario"], models.User.id_usuario != user_id))
+        if existing.scalar():
+            raise ValueError("Ya existe un usuario con ese nombre de usuario.")
+
+    if "correo" in update_data:
+        existing = await db.execute(select(models.User).where(models.User.correo == update_data["correo"], models.User.id_usuario != user_id))
+        if existing.scalar():
+            raise ValueError("Ya existe un usuario con ese correo.")
+
+    for key, value in update_data.items():
+        if key == "is_active" and value is not None:
+            setattr(db_user, key, int(value)) # Convertir bool en int para is_active
+        else:
+            setattr(db_user, key, value)
+        
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
+
+async def update_admin(db: AsyncSession, user_id: int, user: schemas.UserUpdate):
     """
     Actualiza un usuario existente de forma asíncrona.
     Maneja el hash de la contraseña si se proporciona “contrasena”.
