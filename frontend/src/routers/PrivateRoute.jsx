@@ -16,11 +16,11 @@ const PrivateRoute = ({ children }) => {
     const { authToken, loading } = useAuth()
 
     if (loading) {
-        return <div>Cargando ...</div>
+        return null
     }
 
     if (!authToken || !isTokenValid(authToken)) {
-        return <Navigate to="/get-started" />
+        return <Navigate to="/get-started" replace />
     }
 
     return children

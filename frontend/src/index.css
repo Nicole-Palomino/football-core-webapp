@@ -25,7 +25,7 @@
   --container-padding-2xl: 6rem;
 }
 
-html,
+/* html,
 body {
   margin: 0;
   padding: 0;
@@ -34,29 +34,29 @@ body {
   overflow: hidden;
   font-family: var(--font-subtitle);
   background-color: var(--color-background);
-}
+} */
 
-.container {
+/* .container { */
   /* Centrar el contenedor */
-  margin-left: auto;
-  margin-right: auto;
-  width: 100%; /* Asegura que el contenedor ocupe todo el ancho disponible */
-  max-width: 1280px; /* Un ejemplo de max-width si quieres un ancho fijo como Tailwind */
+  /* margin-left: auto; */
+  /* margin-right: auto; */
+  /* width: 100%; Asegura que el contenedor ocupe todo el ancho disponible */
+  /* max-width: 1280px; Un ejemplo de max-width si quieres un ancho fijo como Tailwind */
 
   /* Padding por defecto */
-  padding-left: var(--container-padding-default);
-  padding-right: var(--container-padding-default);
-}
+  /* padding-left: var(--container-padding-default); */
+  /* padding-right: var(--container-padding-default); */
+/* } */
 
-.bg-navbar {
-  background-color: var(--color-navbar);
-}
+/* .bg-navbar { */
+  /* background-color: var(--color-navbar); */
+/* } */
 
-.bg-target {
-  background-color: var(--color-target);
-}
+/* .bg-target { */
+  /* background-color: var(--color-target); */
+/* } */
 
-.bg-background {
+/* .bg-background {
   background-color: var(--color-background);
 }
 
@@ -82,52 +82,52 @@ body {
 
 .heropng {
   filter: drop-shadow(1px 1px 15px #4f5252);
-}
+} */
 
-::-webkit-scrollbar {
-  width: 12px;
+/* ::-webkit-scrollbar { */
+  /* width: 12px; */
   /* Grosor del scrollbar */
-  height: 12px;
+  /* height: 12px; */
   /* Grosor horizontal */
-}
+/* } */
 
-::-webkit-scrollbar-thumb {
-  background-color: var(--color-navbar);
+/* ::-webkit-scrollbar-thumb { */
+  /* background-color: var(--color-navbar); */
   /* Rojo */
-  border-radius: 10px;
+  /* border-radius: 10px; */
   /* Bordes redondeados */
-}
+/* } */
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* ::-webkit-scrollbar-track { */
+  /* background: transparent; */
   /* Fondo del scrollbar */
-}
+/* } */
 
 /* Puntos de interrupción (breakpoints) para el padding */
-@media (min-width: 640px) { /* sm breakpoint */
-  .container {
-    padding-left: var(--container-padding-sm);
-    padding-right: var(--container-padding-sm);
-  }
-}
+/* @media (min-width: 640px) { sm breakpoint */
+  /* .container { */
+    /* padding-left: var(--container-padding-sm); */
+    /* padding-right: var(--container-padding-sm); */
+  /* } */
+/* } */
 
-@media (min-width: 1024px) { /* lg breakpoint */
-  .container {
-    padding-left: var(--container-padding-lg);
-    padding-right: var(--container-padding-lg);
-  }
-}
+/* @media (min-width: 1024px) { lg breakpoint */
+  /* .container { */
+    /* padding-left: var(--container-padding-lg); */
+    /* padding-right: var(--container-padding-lg); */
+  /* } */
+/* } */
 
-@media (min-width: 1280px) { /* xl breakpoint */
-  .container {
-    padding-left: var(--container-padding-xl);
-    padding-right: var(--container-padding-xl);
-  }
-}
+/* @media (min-width: 1280px) { xl breakpoint */
+  /* .container { */
+    /* padding-left: var(--container-padding-xl); */
+    /* padding-right: var(--container-padding-xl); */
+  /* } */
+/* } */
 
-@media (min-width: 1536px) { /* 2xl breakpoint */
-  .container {
-    padding-left: var(--container-padding-2xl);
-    padding-right: var(--container-padding-2xl);
-  }
-}
+/* @media (min-width: 1536px) { 2xl breakpoint */
+  /* .container { */
+    /* padding-left: var(--container-padding-2xl); */
+    /* padding-right: var(--container-padding-2xl); */
+  /* } */
+/* } */

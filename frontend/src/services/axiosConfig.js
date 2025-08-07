@@ -2,11 +2,10 @@ import axios from "axios"
 import { getToken } from "./auth"
 
 // const API_URL_PRODUCTION = "https://web-production-e51c4.up.railway.app"
-const API_URL_PRODUCTION = "http://127.0.0.1:8000"
+const API_URL = "http://127.0.0.1:8000"
 
 const axiosInstance = axios.create({
-    baseURL: API_URL_PRODUCTION,
-    withCredentials: true,
+    baseURL: API_URL,
     headers: {
         "Content-Type": "application/json",
     },

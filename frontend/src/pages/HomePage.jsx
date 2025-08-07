@@ -1,21 +1,27 @@
+import { lazy } from 'react'
 import { useAuth } from '../contexts/AuthContexts'
 import { Navigate } from 'react-router-dom'
-import NavbarClient from '../components/Navbar/NavbarClient'
-import Hero from '../components/HomePage/Hero'
-import Services from '../components/HomePage/Services'
-import Banner from '../components/HomePage/Banner'
-import Footer from '../components/Footer/Footer'
+import { useTheme } from '@mui/material'
 
+const NavbarClient = lazy(() => import('../components/Navbar/NavbarClient'))
+const Hero = lazy(() => import('../components/HomePage/Hero'))
+const Services = lazy(() => import('../components/HomePage/Services'))
+const Banner = lazy(() => import('../components/HomePage/Banner'))
+const Footer = lazy(() => import('../components/Footer/Footer'))
 
 const HomePage = () => {
     const { isAuthenticated } = useAuth()
+    const theme = useTheme()
 
     if (isAuthenticated) {
         return <Navigate to="/dashboard" replace />
     }
 
     return (
-        <div className="w-full h-screen bg-background overflow-x-auto scrollbar-thin scrollbar-thumb-blue-900 scrollbar-track-transparent">
+        <div
+            style={{ backgroundColor: theme.palette.background.default }}
+            className="w-full h-screen overflow-x-auto scrollbar-thin scrollbar-thumb-blue-900 scrollbar-track-transparent"
+        >
             <NavbarClient />
             <Hero />
             <Services />

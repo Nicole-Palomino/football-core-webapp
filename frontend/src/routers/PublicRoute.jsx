@@ -6,7 +6,7 @@ const PublicRoute = ({ children }) => {
 
     // Si el usuario está autenticado, redirige al dashboard
     if (isAuthenticated) {
-        return <Navigate to="/dashboard" />
+        return <Navigate to="/dashboard" replace />
     }
 
     // Si no está autenticado, renderiza la ruta pública
