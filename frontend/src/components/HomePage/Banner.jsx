@@ -3,11 +3,29 @@ import { TbDeviceAnalytics, TbSoccerField } from 'react-icons/tb'
 import { PiSoccerBallFill } from 'react-icons/pi'
 import { FadeUp } from '../../utils/transitions'
 import BannerPng from '../../assets/data-football.png'
+import { useMediaQuery, useTheme } from "@mui/material"
 
 const Banner = () => {
+    const theme = useTheme()
+
+    // Detectar breakpoints
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+    const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"))
+
     return (
-        <section>
-            <div className="container py-14 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-8 space-y-6 md:space-y-0">
+        <section
+            style={{
+                padding: isMobile ? "1rem" : "2rem", // padding dinámico
+                backgroundColor: theme.palette.background.default
+            }}
+        >
+            <div
+                className="container grid grid-cols-1 md:grid-cols-2 gap-8"
+                style={{
+                    maxWidth: "1200px",
+                    margin: "0 auto",
+                }}
+            >
                 {/* Imagen del banner */}
                 <div className="flex justify-center items-center">
                     <motion.img
@@ -16,11 +34,17 @@ const Banner = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5, ease: "easeInOut" }}
                         src={BannerPng}
-                        alt=""
-                        className="w-[500px] md:max-w-[600px] object-cover heropng"
+                        alt="Estadísticas de fútbol"
+                        style={{
+                            width: isMobile ? "300px" : isTablet ? "450px" : "500px",
+                            maxWidth: "100%",
+                            objectFit: "cover"
+                        }}
+                        className="drop-shadow-lg dark:drop-shadow-[1px_1px_15px_#368FF4]"
                     />
                 </div>
-
+                
+                {/* Texto y tarjetas */}
                 <div className="flex flex-col justify-center">
                     <div className="text-center md:text-left space-y-12">
                         <motion.h1
@@ -28,40 +52,56 @@ const Banner = () => {
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="text-2xl md:text-3xl font-bold font-subtitle text-white !leading-snug">
-                                Descubre las estadísticas y predicciones de tus equipos favoritos. ¡Haz que tus decisiones sean ganadoras!
+                            style={{
+                                color: theme.palette.text.primary,
+                                fontSize: isMobile ? "1.25rem" : "1.75rem",
+                                fontFamily: theme.typography.fontFamily,
+                                fontWeight: "bold",
+                                lineHeight: 1.3
+                            }}
+                        >
+                            Descubre las estadísticas y predicciones de tus equipos favoritos. ¡Haz que tus decisiones sean ganadoras!
                         </motion.h1>
 
                         <div className="flex flex-col gap-6">
-                            <motion.div
-                                variants={FadeUp(0.2)}
-                                initial="initial"
-                                whileInView={"animate"}
-                                viewport={{ once: true }}
-                                className="flex items-center gap-4 p-6 bg-target rounded-2xl text-white hover:bg-navbar hover:text-white duration-300 hover:shadow-2xl">
-                                    <TbSoccerField className="text-3xl" />
-                                    <p className="text-lg">17,000+ Partidos</p>
-                            </motion.div>
-
-                            <motion.div
-                                variants={FadeUp(0.4)}
-                                initial="initial"
-                                whileInView={"animate"}
-                                viewport={{ once: true }}
-                                className="flex items-center gap-4 p-6 bg-target rounded-2xl text-white hover:bg-navbar hover:text-white duration-300 hover:shadow-2xl">
-                                    <TbDeviceAnalytics className="text-3xl" />
-                                    <p className="text-lg">Estadísticas detalladas</p>
-                            </motion.div>
-
-                            <motion.div
-                                variants={FadeUp(0.6)}
-                                initial="initial"
-                                whileInView={"animate"}
-                                viewport={{ once: true }}
-                                className="flex items-center gap-4 p-6 bg-target rounded-2xl text-white hover:bg-navbar hover:text-white duration-300 hover:shadow-2xl">
-                                    <PiSoccerBallFill className="text-3xl" />
-                                    <p className="text-lg">Pronósticos</p>
-                            </motion.div>
+                            {[
+                                { icon: <TbSoccerField className="text-3xl" />, text: "17,000+ Partidos" },
+                                { icon: <TbDeviceAnalytics className="text-3xl" />, text: "Estadísticas detalladas" },
+                                { icon: <PiSoccerBallFill className="text-3xl" />, text: "Pronósticos" }
+                            ].map((item, i) => (
+                                <motion.div
+                                    key={i}
+                                    variants={FadeUp(0.2 * (i + 1))}
+                                    initial="initial"
+                                    whileInView="animate"
+                                    viewport={{ once: true }}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "1rem",
+                                        padding: "1.5rem",
+                                        borderRadius: theme.shape.borderRadius,
+                                        backgroundColor: theme.custom.azulHover,
+                                        color: theme.palette.primary.contrastText,
+                                        transition: "background 0.3s, box-shadow 0.3s",
+                                        cursor: "pointer"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = theme.custom.azulHover;
+                                        e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.2)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = theme.palette.primary.main;
+                                        e.currentTarget.style.boxShadow = "none";
+                                    }}
+                                >
+                                    {item.icon}
+                                    <p style={{
+                                        fontSize: isMobile ? "1rem" : "1.125rem",
+                                        margin: 0
+                                    }}>{item.text}</p>
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
                 </div>

@@ -6,11 +6,13 @@ import { useForm } from '@formspree/react'
 import { useEffect, useRef } from 'react'
 import Swal from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
+import { useTheme } from '@mui/material'
 
 const Contact = () => {
     const formRef = useRef(null)
     const prevSucceededRef = useRef(false)
     const [state, handleSubmit] = useForm("xeqynqwa")
+    const theme = useTheme()
 
     useEffect(() => {
         if (state.succeeded && !prevSucceededRef.current) {
@@ -40,11 +42,18 @@ const Contact = () => {
                     className="text-center mb-16 mt-10"
                 >
                     <motion.h2
-                        className="text-4xl md:text-5xl lg:text-6xl font-bold t-stroke t-shadow mb-6"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        className="text-xl sm:text-3xl md:text-5xl font-title uppercase font-bold mb-6"
+                        initial="hidden"
+                        whileInView="visible"
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
+                        style={{
+                            color: 'transparent',
+                            WebkitTextStrokeWidth: '2px',
+                            WebkitTextStrokeColor: theme.palette.text.primary, // antes #000 o #fff
+                            MozTextStrokeWidth: '2px',
+                            MozTextStrokeColor: theme.palette.text.primary,
+                            textShadow: `7px 7px ${theme.custom.azul}`, // antes #193cb8
+                        }}
                     >
                         ¿Listo para Conectar?
                     </motion.h2>

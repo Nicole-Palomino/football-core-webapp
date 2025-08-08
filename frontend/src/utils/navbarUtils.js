@@ -202,34 +202,35 @@ export const tabs = [
     { id: 'values', label: 'Valores', icon: HeartIcon }
 ]
 
+// ✅
 export const ServicesData = [
     {
         id: 1,
-        title: "Análisis comparativo de equipos",
+        title: "Análisis Poisson",
         link: "#",
-        icon: GiSoccerKick,
-        delay: 0.4,
+        icon: ChartBarIcon,
+        delay: 0.1,
     },
     {
         id: 2,
-        title: "Pronóstico del partido",
+        title: "Clustering K-Means",
         link: "#",
-        icon: GiSoccerField,
-        delay: 0.3,
+        icon: CpuChipIcon,
+        delay: 0.2,
     },
     {
         id: 3,
         title: "Resúmenes estadísticos personalizados",
         link: "#",
-        icon: TbDeviceAnalytics,
-        delay: 0.2,
+        icon: DocumentArrowDownIcon,
+        delay: 0.3,
     },
     {
         id: 4,
-        title: "Soporte técnico",
+        title: "Predicciones RF",
         link: "#",
-        icon: BiSupport,
-        delay: 0.5,
+        icon: SparklesIcon,
+        delay: 0.4,
     },
 ]
 

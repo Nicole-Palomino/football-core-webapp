@@ -35,6 +35,7 @@ export const lightTheme = createTheme({
         },
         text: {
             primary: '#000000',
+            secondary: '#5D626B'
         },
         divider: {
             primary: '#e0e0e0'
@@ -91,6 +92,7 @@ export const darkTheme = createTheme({
         },
         text: {
             primary: '#ffffff',
+            secondary: '#99a1af'
         },
         divider: {
             primary: '#2c2c2c'

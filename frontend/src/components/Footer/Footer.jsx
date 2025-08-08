@@ -3,20 +3,23 @@ import { FaTiktok } from "react-icons/fa"
 import { useForm, ValidationError } from '@formspree/react'
 import { useEffect, useRef } from 'react'
 import { Link } from "react-router-dom"
+import { Box, Button, Container, TextField, Typography, useMediaQuery, useTheme } from "@mui/material"
 
 const Footer = () => {
 
     const [state, handleSubmit] = useForm("xeqynqwa")
     const emailRef = useRef(null)
+    const theme = useTheme()
+    const isMdUp = useMediaQuery(theme.breakpoints.up("md"))
 
     useEffect(() => {
         if (state.succeeded) {
             Swal.fire({
-            icon: "success",
-            title: "¡Gracias!",
-            text: "Te has suscrito con éxito.",
-            confirmButtonColor: "#228B22",
-            confirmButtonText: "Aceptar",
+                icon: "success",
+                title: "¡Gracias!",
+                text: "Te has suscrito con éxito.",
+                confirmButtonColor: "#228B22",
+                confirmButtonText: "Aceptar",
             })
 
             // Limpia el campo del email
@@ -28,110 +31,177 @@ const Footer = () => {
 
 
     return (
-        <footer className='py-28 bg-navbar fixed-bottom'>
+        <Box
+            component="footer"
+            sx={{
+                py: theme.spacing(8),
+                backgroundColor: theme.palette.primary.dark,
+                color: theme.palette.primary.contrastText,
+                mt: theme.spacing(6),
+            }}
+        >
             <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                className="container">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-14 md:gap-4">
-                        <div className="space-y-4 max-w-[300px]">
-                            <div className='flex items-center space-x-2'>
-                                <h1 className="text-3xl text-white">
-                                    <span className='text-blue-500'>F</span>OOT<span className='text-blue-500'>B</span>ALL <span className='text-blue-500'>C</span>ORE
-                                </h1>
-                            </div>
-                            <p className="text-white font-subtitle">
-                                FOOTBALL CORE: La plataforma esencial para el aficionado al fútbol que busca analizar 
-                                y comprender el deporte desde un enfoque estadístico. Accede a datos históricos, 
-                                pronósticos y resúmenes personalizados para profundizar en el rendimiento de tus 
-                                equipos favoritos.
-                            </p>
-                        </div>
+            >
+                <Container maxWidth="lg">
+                    <Box
+                        display="grid"
+                        gridTemplateColumns={{
+                            xs: "1fr",
+                            md: "1fr 1fr",
+                            lg: "1fr 1fr 1fr",
+                        }}
+                        gap={isMdUp ? theme.spacing(6) : theme.spacing(4)}
+                    >
+                        {/* Logo + descripción */}
+                        <Box maxWidth={300}>
+                            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+                                <Box component="span" sx={{ color: theme.palette.primary.light }}>F</Box>
+                                OOT
+                                <Box component="span" sx={{ color: theme.palette.primary.light }}>B</Box>
+                                ALL{" "}
+                                <Box component="span" sx={{ color: theme.palette.primary.light }}>C</Box>
+                                ORE
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    mt: theme.spacing(2),
+                                    fontFamily: theme.typography.fontFamily,
+                                }}
+                            >
+                                FOOTBALL CORE: La plataforma esencial para el aficionado al fútbol que busca analizar y comprender el deporte desde un enfoque estadístico. Accede a datos históricos, pronósticos y resúmenes personalizados para profundizar en el rendimiento de tus equipos favoritos.
+                            </Typography>
+                        </Box>
 
-                        <div className="grid grid-cols-2 gap-10">
-                            <div className="space-y-4">
-                                <h1 className="text-2xl font-subtitle text-white">SERVICIOS</h1>
-                                <div className="text-dark">
-                                    <ul className="space-y-2 text-lg">
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Análisis comparativo
-                                        </li>
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Pronóstico del partido
-                                        </li>
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Resúmenes estadísticos 
-                                        </li>
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            Soporte técnico
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                        {/* Servicios y Enlaces */}
+                        <Box
+                            display="grid"
+                            gridTemplateColumns="1fr 1fr"
+                            gap={theme.spacing(4)}
+                        >
+                            <Box>
+                                <Typography variant="h6">SERVICIOS</Typography>
+                                <Box component="ul" sx={{ mt: 2, p: 0, listStyle: "none" }}>
+                                    {["Análisis comparativo", "Pronóstico del partido", "Resúmenes estadísticos", "Soporte técnico"].map((item, index) => (
+                                        <Box
+                                            key={index}
+                                            component="li"
+                                            sx={{
+                                                cursor: "pointer",
+                                                "&:hover": { color: theme.palette.primary.light },
+                                                transition: "color 0.2s ease",
+                                                mb: 1,
+                                            }}
+                                        >
+                                            {item}
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Box>
 
-                            <div className="space-y-4">
-                                <h1 className="text-2xl font-subtitle text-white">Enlaces</h1>
-                                <div className="text-dark">
-                                    <ul className="space-y-2 text-lg">
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            <Link to="/">
-                                                Inicio
-                                            </Link>
-                                        </li>
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            <Link to="/services">Servicios</Link>
-                                        </li>
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            <Link to="/about-us">Sobre nosotros</Link>
-                                        </li>
-                                        <li className="cursor-pointer text-white font-subtitle hover:text-blue-500 duration-200">
-                                            <Link to="/contact">Contacto</Link>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                            <Box>
+                                <Typography variant="h6">ENLACES</Typography>
+                                <Box component="ul" sx={{ mt: 2, p: 0, listStyle: "none" }}>
+                                    {[
+                                        { text: "Inicio", to: "/" },
+                                        { text: "Servicios", to: "/services" },
+                                        { text: "Sobre nosotros", to: "/about-us" },
+                                        { text: "Contacto", to: "/contact" },
+                                    ].map((link, index) => (
+                                        <Box
+                                            key={index}
+                                            component="li"
+                                            sx={{
+                                                cursor: "pointer",
+                                                "& a": {
+                                                    textDecoration: "none",
+                                                    color: theme.palette.primary.contrastText,
+                                                    "&:hover": { color: theme.palette.primary.light },
+                                                },
+                                                mb: 1,
+                                            }}
+                                        >
+                                            <Link to={link.to}>{link.text}</Link>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Box>
+                        </Box>
 
-                        <div className="space-y-4 max-w-[300px]">
-                            <h1 className="text-2xl font-subtitle text-white">Suscríbete</h1>
-                                <form onSubmit={handleSubmit}>
-                                    <div className="flex items-center">
-                                            <input
-                                                ref={emailRef}
-                                                type="email"
-                                                name='email'
-                                                placeholder="Ingresa tu correo electrónico"
-                                                required
-                                                className="p-3 rounded-s-xl font-subtitle bg-white w-full py-4 focus:ring-0 focus:outline-none placeholder:text-dark" />
-                                            <ValidationError 
-                                                prefix="Email" 
-                                                field="email"
-                                                errors={state.errors} />
-                                            <button type='submit' disabled={state.submitting} className="bg-blue-500 text-white font-subtitle py-4 px-6 rounded-e-xl cursor-pointer">
-                                                Ir
-                                            </button>
-                                    </div>
-                                </form>
+                        {/* Suscripción */}
+                        <Box maxWidth={300}>
+                            <Typography variant="h6">SUSCRÍBETE</Typography>
+                            <Box
+                                component="form"
+                                onSubmit={handleSubmit}
+                                sx={{
+                                    display: "flex",
+                                    mt: theme.spacing(2),
+                                }}
+                            >
+                                <TextField
+                                    inputRef={emailRef}
+                                    type="email"
+                                    name="email"
+                                    placeholder="Ingresa tu correo electrónico"
+                                    required
+                                    fullWidth
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: theme.palette.background.paper,
+                                        borderTopLeftRadius: theme.shape.borderRadius,
+                                        borderBottomLeftRadius: theme.shape.borderRadius,
+                                    }}
+                                />
+                                <ValidationError
+                                    prefix="Email"
+                                    field="email"
+                                    errors={state.errors}
+                                />
+                                <Button
+                                    type="submit"
+                                    disabled={state.submitting}
+                                    sx={{
+                                        backgroundColor: theme.palette.primary.main,
+                                        color: theme.palette.primary.contrastText,
+                                        borderTopRightRadius: theme.shape.borderRadius,
+                                        borderBottomRightRadius: theme.shape.borderRadius,
+                                        "&:hover": {
+                                            backgroundColor: theme.palette.primary.dark,
+                                        },
+                                    }}
+                                >
+                                    Ir
+                                </Button>
+                            </Box>
 
-                            {/* social icons */}
-                            <div className="flex space-x-6 py-3">
-                                <a href="https://www.tiktok.com/@fooball_core" target='_blank' rel="noopener noreferrer" className="relative group">
-                                    <FaTiktok className="cursor-pointer hover:text-blue-500 text-white text-lg hover:scale-105 duration-200" />
-                                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 rounded bg-black text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                        Visítanos en Tik Tok
-                                    </span>
+                            {/* Redes sociales */}
+                            <Box display="flex" gap={2} mt={2}>
+                                <a
+                                    href="https://www.tiktok.com/@fooball_core"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ display: "inline-flex", alignItems: "center" }}
+                                >
+                                    <FaTiktok
+                                        style={{
+                                            cursor: "pointer",
+                                            color: theme.palette.primary.contrastText,
+                                            fontSize: 20,
+                                            transition: "color 0.2s ease, transform 0.2s ease",
+                                        }}
+                                        onMouseOver={(e) => (e.target.style.color = theme.palette.primary.light)}
+                                        onMouseOut={(e) => (e.target.style.color = theme.palette.primary.contrastText)}
+                                    />
                                 </a>
-                                {/* <a href="https://thecodingjourney.com/" target='_blank'>
-                                    <TbWorldWww className="cursor-pointer hover:text-blue-500 text-white text-lg hover:scale-105 duration-200" />
-                                </a>
-                                <a href="https://www.facebook.com/" target='_blank'>
-                                    <CiFacebook className="cursor-pointer hover:text-blue-500 text-white text-lg hover:scale-105 duration-200" />
-                                </a> */}
-                            </div>
-                        </div>
-                    </div>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Container>
             </motion.div>
-        </footer>
+        </Box>
     )
 }
 

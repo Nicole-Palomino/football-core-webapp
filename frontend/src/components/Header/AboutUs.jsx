@@ -3,9 +3,35 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { stats, tabs, team, timeline, values } from '../../utils/navbarUtils';
 import NavbarClient from '../Navbar/NavbarClient';
+import { useTheme } from '@mui/material';
+import { letterAnimation } from '../../utils/transitions';
 
 const AboutUs = () => {
     const [activeTab, setActiveTab] = useState('mission')
+    const theme = useTheme()
+    const title = "Sobre Nosotros"
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    }
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 50 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut"
+            }
+        }
+    }
 
     return (
         <section className="relative w-full h-screen overflow-x-auto scrollbar-thin scrollbar-thumb-blue-900 scrollbar-track-transparent">
@@ -13,24 +39,39 @@ const AboutUs = () => {
 
             <div className="max-w-7xl mx-auto relative z-10 p-5">
                 {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-20 mt-10"
+                <div
+                    className="text-center mb-16 mt-10"
                 >
                     <motion.h2
-                        className="text-4xl md:text-5xl lg:text-6xl font-bold t-stroke t-shadow mb-6"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        className="text-xl sm:text-3xl md:text-5xl font-title uppercase font-bold mb-6"
+                        initial="hidden"
+                        whileInView="visible"
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
+                        style={{
+                            color: 'transparent',
+                            WebkitTextStrokeWidth: '2px',
+                            WebkitTextStrokeColor: theme.palette.text.primary, // antes #000 o #fff
+                            MozTextStrokeWidth: '2px',
+                            MozTextStrokeColor: theme.palette.text.primary,
+                            textShadow: `7px 7px ${theme.custom.azul}`, // antes #193cb8
+                        }}
                     >
-                        Sobre Nosotros
+                        {title.split('').map((char, i) => (
+                            <motion.span
+                                key={i}
+                                custom={i}
+                                variants={letterAnimation(0.05)}
+                                style={{ color: theme.palette.text.primary }}
+                            >
+                                {char === ' ' ? '\u00A0' : char}
+                            </motion.span>
+                        ))}
                     </motion.h2>
                     <motion.p
-                        className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed"
+                        className="text-xl max-w-3xl mx-auto leading-relaxed"
+                        style={{
+                            color: theme.palette.text.primary
+                        }}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -39,15 +80,18 @@ const AboutUs = () => {
                         Somos un equipo apasionado por la ciencia de datos, desarrollo de aplicaciones y análisis deportivo
                         que creemos en el poder de la inteligencia artificial para revolucionar el análisis futbolístico.
                     </motion.p>
-                </motion.div>
+                </div>
 
                 {/* Stats Section */}
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial="hidden"
+                    whileInView="visible"
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
+                    variants={containerVariants}
                     className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-20"
+                    style={{
+                        backgroundColor: theme.palette.background.default
+                    }}
                 >
                     {stats.map((stat, index) => (
                         <motion.div
@@ -57,13 +101,18 @@ const AboutUs = () => {
                             viewport={{ once: true }}
                             transition={{ duration: 0.6, delay: index * 0.1 }}
                             whileHover={{ scale: 1.05 }}
-                            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 text-center group hover:border-gray-600/50 transition-all duration-300"
+                            style={{
+                                backgroundColor: theme.palette.background.paper,
+                                border: `1px solid ${theme.palette.divider.primary}`,
+                                boxShadow: `0 0 10px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)'}`
+                            }}
+                            className="relative rounded-2xl p-8 h-full overflow-hidden transition-all duration-500 group-hover:shadow-2xl"
                         >
                             <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
                                 <stat.icon className="w-6 h-6 text-white" />
                             </div>
-                            <div className="text-3xl font-bold text-white mb-2">{stat.number}</div>
-                            <div className="text-gray-400 text-sm">{stat.label}</div>
+                            <div className="text-3xl font-bold mb-2 text-center" style={{ color: theme.palette.primary.dark }}>{stat.number}</div>
+                            <div className="text-sm text-center" style={{ color: theme.palette.text.secondary }}>{stat.label}</div>
                         </motion.div>
                     ))}
                 </motion.div>
@@ -74,11 +123,21 @@ const AboutUs = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="mb-20"
+                    className="mb-20 px-4 sm:px-0"
                 >
                     {/* Tab Navigation */}
                     <div className="flex justify-center mb-8">
-                        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-2 flex space-x-2">
+                        <div
+                            className="border rounded-2xl p-2 flex flex-wrap gap-2 w-full sm:w-auto sm:inline-flex"
+                            style={{
+                                backgroundColor: theme.palette.background.paper,
+                                border: `1px solid ${theme.palette.divider.primary}`,
+                                boxShadow: `0 0 10px ${theme.palette.mode === 'dark'
+                                    ? 'rgba(0,0,0,0.5)'
+                                    : 'rgba(0,0,0,0.1)'
+                                    }`
+                            }}
+                        >
                             {tabs.map((tab) => (
                                 <motion.button
                                     key={tab.id}
@@ -106,10 +165,17 @@ const AboutUs = () => {
                         className="max-w-4xl mx-auto"
                     >
                         {activeTab === 'mission' && (
-                            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 text-center">
-                                <SparklesIcon className="w-16 h-16 text-blue-400 mx-auto mb-6" />
-                                <h3 className="text-3xl font-bold text-white mb-6">Nuestra Misión</h3>
-                                <p className="text-xl text-gray-300 leading-relaxed">
+                            <div
+                                className="rounded-3xl p-8 text-center"
+                                style={{
+                                    backgroundColor: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider.primary}`,
+                                    boxShadow: `0 0 10px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)'}`
+                                }}
+                            >
+                                <SparklesIcon className="w-16 h-16 mx-auto mb-6" style={{ color: theme.custom.azulHover }} />
+                                <h3 className="text-3xl font-bold mb-6" style={{ color: theme.palette.text.primary }}>Nuestra Misión</h3>
+                                <p className="text-xl leading-relaxed" style={{ color: theme.palette.text.secondary }}>
                                     Democratizar el análisis futbolístico avanzado, poniendo el poder del análisis de datos
                                     y los algoritmos de machine learning al alcance de analistas, periodistas y
                                     fanáticos apasionados en todo el mundo.
@@ -118,10 +184,17 @@ const AboutUs = () => {
                         )}
 
                         {activeTab === 'vision' && (
-                            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 text-center">
-                                <EyeIcon className="w-16 h-16 text-purple-400 mx-auto mb-6" />
-                                <h3 className="text-3xl font-bold text-white mb-6">Nuestra Visión</h3>
-                                <p className="text-xl text-gray-300 leading-relaxed">
+                            <div
+                                className="rounded-3xl p-8 text-center"
+                                style={{
+                                    backgroundColor: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider.primary}`,
+                                    boxShadow: `0 0 10px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)'}`
+                                }}
+                            >
+                                <EyeIcon className="w-16 h-16 mx-auto mb-6" style={{ color: theme.custom.azulHover }} />
+                                <h3 className="text-3xl font-bold mb-6" style={{ color: theme.palette.text.primary }}>Nuestra Visión</h3>
+                                <p className="text-xl leading-relaxed" style={{ color: theme.palette.text.secondary }}>
                                     Ser la plataforma líder mundial en análisis deportivo inteligente, transformando la manera
                                     en que se entiende, analiza y disfruta el fútbol mediante tecnología de vanguardia y
                                     insights precisos basados en datos.
@@ -139,13 +212,18 @@ const AboutUs = () => {
                                         viewport={{ once: true }}
                                         transition={{ duration: 0.6, delay: index * 0.1 }}
                                         whileHover={{ scale: 1.03 }}
-                                        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 group hover:border-gray-600/50 transition-all duration-300"
+                                        className="rounded-3xl p-8 text-center"
+                                        style={{
+                                            backgroundColor: theme.palette.background.paper,
+                                            border: `1px solid ${theme.palette.divider.primary}`,
+                                            boxShadow: `0 0 10px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)'}`
+                                        }}
                                     >
                                         <div className={`w-12 h-12 bg-gradient-to-br ${value.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                                             <value.icon className="w-6 h-6 text-white" />
                                         </div>
-                                        <h4 className="text-xl font-bold text-white mb-3">{value.title}</h4>
-                                        <p className="text-gray-400 leading-relaxed">{value.description}</p>
+                                        <h4 className="text-3xl font-bold mb-6 text-left" style={{ color: theme.palette.text.primary }}>{value.title}</h4>
+                                        <p className="text-xl leading-relaxed text-left" style={{ color: theme.palette.text.secondary }}>{value.description}</p>
                                     </motion.div>
                                 ))}
                             </div>
@@ -161,10 +239,10 @@ const AboutUs = () => {
                     transition={{ duration: 0.6 }}
                     className="mb-20"
                 >
-                    <h3 className="text-3xl font-bold text-white text-center mb-12">Nuestra Historia</h3>
+                    <h3 className="text-3xl font-bold text-center mb-12" style={{ color: theme.palette.text.primary }}>Nuestra Historia</h3>
                     <div className="relative">
                         {/* Timeline Line */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-blue-500 via-purple-500 to-cyan-500 rounded-full"></div>
+                        <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-blue-500 via-purple-500 to-cyan-500 rounded-full hidden sm:block"></div>
 
                         <div className="space-y-12">
                             {timeline.map((item, index) => (
@@ -174,29 +252,45 @@ const AboutUs = () => {
                                     whileInView={{ opacity: 1, x: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: index * 0.1 }}
-                                    className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
+                                    className={`flex flex-col sm:flex-row items-center ${index % 2 !== 0 ? 'sm:flex-row-reverse' : ''
+                                        }`}
                                 >
-                                    <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                                        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 group hover:border-gray-600/50 transition-all duration-300">
-                                            <div className="text-2xl font-bold text-blue-400 mb-2">{item.year}</div>
-                                            <h4 className="text-xl font-bold text-white mb-3">{item.title}</h4>
-                                            <p className="text-gray-400">{item.description}</p>
+                                    {/* Texto */}
+                                    <div
+                                        className={`w-full sm:w-1/2 ${index % 2 === 0 ? 'sm:pr-8 sm:text-right' : 'sm:pl-8 sm:text-left'
+                                            } text-center sm:text-inherit`}
+                                    >
+                                        <div
+                                            className="relative rounded-2xl p-8 h-full overflow-hidden transition-all duration-500 group-hover:shadow-2xl"
+                                            style={{
+                                                backgroundColor: theme.palette.background.paper,
+                                                border: `1px solid ${theme.palette.divider.primary}`,
+                                                boxShadow: `0 0 10px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)'}`
+                                            }}
+                                        >
+                                            <div className="text-2xl font-bold mb-2" style={{ color: theme.custom.azulHover }}>{item.year}</div>
+                                            <h4 className="text-xl font-bol mb-3" style={{ color: theme.palette.text.primary }}>{item.title}</h4>
+                                            <p style={{ color: theme.palette.text.secondary }}>{item.description}</p>
                                         </div>
                                     </div>
 
-                                    {/* Timeline Node */}
-                                    <div className="relative z-10">
-                                        <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center shadow-lg`}>
+                                    {/* Nodo */}
+                                    <div className="relative z-10 my-6 sm:my-0">
+                                        <div
+                                            className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center shadow-lg`}
+                                        >
                                             <item.icon className="w-8 h-8 text-white" />
                                         </div>
                                     </div>
 
-                                    <div className="w-1/2"></div>
+                                    {/* Columna vacía solo en desktop */}
+                                    <div className="hidden sm:block sm:w-1/2"></div>
                                 </motion.div>
                             ))}
                         </div>
                     </div>
                 </motion.div>
+
 
                 {/* Team Section */}
                 <motion.div
@@ -205,7 +299,7 @@ const AboutUs = () => {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h3 className="text-3xl font-bold text-white text-center mb-12">Nuestro Equipo</h3>
+                    <h3 className="text-3xl font-bold text-center mb-12" style={{ color: theme.palette.text.primary }}>Nuestro Equipo</h3>
                     <div className="mx-auto max-w-5xl mb-16">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {team.slice(0, 3).map((member, index) => (
@@ -216,19 +310,24 @@ const AboutUs = () => {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: index * 0.1 }}
                                     whileHover={{ scale: 1.05, rotateY: 5 }}
-                                    className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 text-center group hover:border-gray-600/50 transition-all duration-300"
+                                    className="rounded-3xl p-8 text-center"
+                                    style={{
+                                        backgroundColor: theme.palette.background.paper,
+                                        border: `1px solid ${theme.palette.divider.primary}`,
+                                        boxShadow: `0 0 10px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)'}`
+                                    }}
                                 >
                                     <div className="text-6xl mb-4">{member.image}</div>
-                                    <h4 className="text-xl font-bold text-white mb-1">{member.name}</h4>
+                                    <h4 className="text-xl font-bold mb-1" style={{ color: theme.palette.text.primary }}>{member.name}</h4>
                                     <div className={`text-sm font-medium bg-gradient-to-r ${member.color} bg-clip-text text-transparent mb-3`}>
                                         {member.role}
                                     </div>
-                                    <p className="text-gray-400 text-sm mb-4 leading-relaxed">{member.description}</p>
+                                    <p className="text-sm mb-4 leading-relaxed" style={{ color: theme.palette.text.secondary }}>{member.description}</p>
                                     <div className="flex flex-wrap gap-2 justify-center">
                                         {member.skills.map((skill, skillIndex) => (
                                             <span
                                                 key={skillIndex}
-                                                className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded-lg"
+                                                className="px-2 py-1 bg-gray-700/50 text-white text-xs rounded-lg"
                                             >
                                                 {skill}
                                             </span>
