@@ -7,6 +7,7 @@ const azulOscuro = '#256eb5'
 const rojo = '#e53935'
 const amarillo = '#ffeb3b'
 const naranja = '#ffa726'
+const white = '#ffffff'
 
 export const lightTheme = createTheme({
     palette: {
@@ -15,10 +16,10 @@ export const lightTheme = createTheme({
             main: azulPrincipal,
             light: azulClaro,
             dark: azulOscuro,
-            contrastText: '#ffffff',
+            contrastText: white,
         },
         secondary: {
-            main: '#ffffff',
+            main: white,
         },
         error: {
             main: rojo
@@ -31,7 +32,7 @@ export const lightTheme = createTheme({
         },
         background: {
             default: '#f5f5f5',
-            paper: '#ffffff',
+            paper: white,
         },
         text: {
             primary: '#000000',
@@ -62,6 +63,7 @@ export const lightTheme = createTheme({
         rojo: rojo,
         amarillo: amarillo,
         naranja: naranja,
+        blanco: white
     },
 })
 
@@ -91,7 +93,7 @@ export const darkTheme = createTheme({
             paper: '#1e1e1e',
         },
         text: {
-            primary: '#ffffff',
+            primary: white,
             secondary: '#99a1af'
         },
         divider: {
@@ -110,5 +112,6 @@ export const darkTheme = createTheme({
         rojo: rojo,
         amarillo: amarillo,
         naranja: naranja,
+        blanco: white
     },
 })

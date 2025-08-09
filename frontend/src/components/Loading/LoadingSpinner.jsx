@@ -1,4 +1,4 @@
-import { CircularProgress, Typography, useTheme } from '@mui/material'
+import { Box, CircularProgress, Typography, useTheme } from '@mui/material'
 
 const LoadingSpinner = () => {
     const theme = useTheme()
@@ -14,8 +14,8 @@ const LoadingSpinner = () => {
                 width: "100%",
             }}
         >
-            <CircularProgress size={80} sx={{ color: '#228B22' }} />
-            <Typography mt={2} variant="h6" sx={{ color: '#228B22' }}>
+            <CircularProgress size={80} sx={{ color: theme.palette.primary.main }} />
+            <Typography mt={2} variant="h6" sx={{ color: theme.palette.primary.main }}>
                 Cargando datos...
             </Typography>
         </Box>

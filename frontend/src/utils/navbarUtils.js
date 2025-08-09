@@ -1,12 +1,10 @@
-import { BiSupport } from "react-icons/bi"
-import { GiSoccerField, GiSoccerKick } from "react-icons/gi"
-import { TbDeviceAnalytics } from "react-icons/tb"
 import {
     ChartBarIcon, CpuChipIcon, DocumentArrowDownIcon, SparklesIcon, ChatBubbleLeftRightIcon, EnvelopeIcon, 
     MapPinIcon, PhoneIcon, EyeIcon, RocketLaunchIcon, AcademicCapIcon, BoltIcon, GlobeAltIcon, HeartIcon, 
     LightBulbIcon, ShieldCheckIcon, TrophyIcon, UserGroupIcon
 } from '@heroicons/react/24/outline'
 
+// ✅
 export const services = [
     {
         id: 1,
@@ -61,6 +59,7 @@ export const services = [
     }
 ]
 
+// ✅
 export const contactInfo = [
     {
         icon: EnvelopeIcon,
@@ -91,6 +90,7 @@ export const contactInfo = [
     }
 ]
 
+// ✅
 export const stats = [
     {
         icon: ChartBarIcon,
@@ -118,6 +118,7 @@ export const stats = [
     }
 ]
 
+// ✅
 export const team = [
     {
         name: "Nicole Palomino",
@@ -145,6 +146,7 @@ export const team = [
     }
 ]
 
+// ✅
 export const timeline = [
     {
         year: "2023",
@@ -169,6 +171,7 @@ export const timeline = [
     }
 ]
 
+// ✅
 export const values = [
     {
         icon: ShieldCheckIcon,
@@ -196,6 +199,7 @@ export const values = [
     }
 ]
 
+// ✅
 export const tabs = [
     { id: 'mission', label: 'Misión', icon: SparklesIcon },
     { id: 'vision', label: 'Visión', icon: EyeIcon },
@@ -234,6 +238,7 @@ export const ServicesData = [
     },
 ]
 
+// ✅
 export const settings = [
     { name: "Perfil", path: "/dashboard/profile" },
     { name: "Configuración", path: "/dashboard/settings" }

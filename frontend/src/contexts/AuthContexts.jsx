@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { jwtDecode } from "jwt-decode"
 import { getToken, setToken, removeToken, setStoredUser, getStoredUser, removeStoredUser } from "../services/auth"
+import axiosInstance from '../services/axiosConfig'
 
 const AuthContext = createContext()
 
@@ -20,28 +21,40 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+    const fetchUserFromAPI = async (token) => {
+        try {
+            const { data } = await axiosInstance.get("/users/me/", {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setUser(data)
+            setStoredUser(data)
+            setIsAuthenticated(true)
+        } catch (error) {
+            console.error("Error obteniendo usuario:", error)
+            logout()
+        }
+    }
+
     useEffect(() => {
         const token = getToken()
+        const storedUser = getStoredUser()
+
         if (token && isTokenValid(token)) {
             setAuthToken(token)
-            setIsAuthenticated(true)
-            setUser(getStoredUser())
+            if (storedUser) {
+                setUser(storedUser) // Carga rápida desde localStorage
+            }
+            fetchUserFromAPI(token) // Actualiza datos desde backend
         } else {
-            removeToken()
-            removeStoredUser()
-            setIsAuthenticated(false)
-            setUser(null)
+            logout()
         }
         setLoading(false)
     }, [])
 
-    const login = (token) => {
-        const decodedUser = jwtDecode(token)
+    const login = async (token) => {
         setToken(token)
         setAuthToken(token)
-        setStoredUser(decodedUser)
-        setUser(decodedUser)
-        setIsAuthenticated(true)
+        await fetchUserFromAPI(token)
     }
 
     const logout = () => {

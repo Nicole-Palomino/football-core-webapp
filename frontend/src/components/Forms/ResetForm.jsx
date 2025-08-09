@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { TextField } from '@mui/material'
+import { TextField, useTheme } from '@mui/material'
 
 const ResetForm = ({ onSubmit, loading }) => {
 
     const { register, handleSubmit, formState: { errors }, setValue } = useForm()
-    
+    const theme = useTheme()
+
     useEffect(() => {
         const email = sessionStorage.getItem('pwd_reset_email') || ''
         if (email) {
@@ -16,8 +17,8 @@ const ResetForm = ({ onSubmit, loading }) => {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto px-4 sm:px-6 md:px-8">
             <div className="flex flex-col mb-5">
-                <h1 className='text-center text-white font-bold text-3xl mb-2'>¿Olvidaste tu contraseña?</h1>
-                <h1 className='text-center text-white text-lg mb-8'>Ingresa tu Correo Electrónico para enviar el código de recuperación</h1>
+                <h1 className='text-center font-bold text-3xl mb-2' style={{ color: theme.palette.primary.main }}>¿Olvidaste tu contraseña?</h1>
+                <h1 className='text-center text-lg mb-8' style={{ color: theme.palette.text.primary }}>Ingresa tu Correo Electrónico para enviar el código de recuperación</h1>
                 <div className="flex flex-col mb-5">
                     <div className="relative">
                         {/* Input de email */}
@@ -29,18 +30,18 @@ const ResetForm = ({ onSubmit, loading }) => {
                             type='email'
                             autoComplete="off"
                             sx={{
-                                "& label": { color: "white" },
+                                "& label": { color: theme.palette.text.primary },
                                 "& .MuiOutlinedInput-root": {
-                                    color: "white",
-                                    "& fieldset": { borderColor: "white" },
-                                    "&:hover fieldset": { borderColor: "#368FF4" },
+                                    color: theme.palette.text.primary,
+                                    "& fieldset": { borderColor: theme.palette.text.primary },
+                                    "&:hover fieldset": { borderColor: theme.palette.primary.main },
                                 },
                                 "& .Mui-error": {
-                                    "& label": { color: "#f44336" },
-                                    "& label.Mui-focused": { color: "#f44336" },
-                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" }
+                                    "& label": { color: theme.custom.rojo },
+                                    "& label.Mui-focused": { color: theme.custom.rojo },
+                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo }
                                 },
                             }}
                             {...register("correo", {
@@ -69,18 +70,18 @@ const ResetForm = ({ onSubmit, loading }) => {
                             type='number'
                             autoComplete="off"
                             sx={{
-                                "& label": { color: "white" },
+                                "& label": { color: theme.palette.text.primary },
                                 "& .MuiOutlinedInput-root": {
-                                    color: "white",
-                                    "& fieldset": { borderColor: "white" },
-                                    "&:hover fieldset": { borderColor: "#368FF4" },
+                                    color: theme.palette.text.primary,
+                                    "& fieldset": { borderColor: theme.palette.text.primary },
+                                    "&:hover fieldset": { borderColor: theme.palette.primary.main },
                                 },
                                 "& .Mui-error": {
-                                    "& label": { color: "#f44336" },
-                                    "& label.Mui-focused": { color: "#f44336" },
-                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" }
+                                    "& label": { color: theme.custom.rojo },
+                                    "& label.Mui-focused": { color: theme.custom.rojo },
+                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo }
                                 },
                             }}
                             {...register("codigo_verificacion", {
@@ -93,7 +94,7 @@ const ResetForm = ({ onSubmit, loading }) => {
                             helperText={errors.codigo_verificacion ? errors.codigo_verificacion.message : ''} />
                     </div>
                 </div>
-                
+
                 <div className="flex flex-col">
                     <div className="relative">
                         {/* Input password */}
@@ -104,18 +105,18 @@ const ResetForm = ({ onSubmit, loading }) => {
                             type="password"
                             autoComplete="off"
                             sx={{
-                                "& label": { color: "white" },
+                                "& label": { color: theme.palette.text.primary },
                                 "& .MuiOutlinedInput-root": {
-                                    color: "white",
-                                    "& fieldset": { borderColor: "white" },
-                                    "&:hover fieldset": { borderColor: "#368FF4" },
+                                    color: theme.palette.text.primary,
+                                    "& fieldset": { borderColor: theme.palette.text.primary },
+                                    "&:hover fieldset": { borderColor: theme.palette.primary.main },
                                 },
                                 "& .Mui-error": {
-                                    "& label": { color: "#f44336" },
-                                    "& label.Mui-focused": { color: "#f44336" },
-                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" }
+                                    "& label": { color: theme.custom.rojo },
+                                    "& label.Mui-focused": { color: theme.custom.rojo },
+                                    "& .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo }
                                 },
                             }}
                             {...register("nueva_contrasena", {
@@ -139,9 +140,26 @@ const ResetForm = ({ onSubmit, loading }) => {
             </div>
 
             <div className="flex w-full mt-4">
-                <button type="submit" className={`w-full py-3 text-white text-lg cursor-pointer font-subtitle rounded-lg transition-all ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
-                    disabled={loading}>
-                    <span className="mr-2 uppercase">{loading ? "Cargando..." : "Cambiar contraseña"}</span>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 text-white text-lg cursor-pointer font-subtitle rounded-lg transition-all"
+                    style={{
+                        backgroundColor: loading
+                            ? theme.palette.action.disabledBackground
+                            : theme.custom.azul,
+                        cursor: loading ? "not-allowed" : "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!loading) e.currentTarget.style.backgroundColor = theme.custom.azulHover
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!loading) e.currentTarget.style.backgroundColor = theme.custom.azul
+                    }}
+                >
+                    <span className="mr-2 uppercase">
+                        {loading ? "Cargando..." : "Cambiar contraseña"}
+                    </span>
                 </button>
             </div>
         </form>

@@ -1,4 +1,4 @@
-import { EyeIcon, RocketLaunchIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { stats, tabs, team, timeline, values } from '../../utils/navbarUtils';
@@ -17,18 +17,6 @@ const AboutUs = () => {
             opacity: 1,
             transition: {
                 staggerChildren: 0.1
-            }
-        }
-    }
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 50 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.6,
-                ease: "easeOut"
             }
         }
     }

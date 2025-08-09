@@ -4,32 +4,34 @@ import { motion } from 'framer-motion'
 import { Paper } from '@mui/material'
 import ResetForm from '../components/Forms/ResetForm'
 import { resetUser } from '../services/api/usuario'
+import { useNavigate } from 'react-router-dom'
 
 const ResetPassword = () => {
     const [loading, setLoading] = useState(false)
     const paperStyle = { margin: 'auto' }
+    const navigate = useNavigate()
 
     const onSubmit = async (data) => {
         setLoading(true)
 
         try {
-            await resetUser(data)
+            const res = await resetUser(data)
 
-            sessionStorage.removeItem('pwd_reset_email')
             Swal.fire({
                 icon: 'success',
-                title: '¡Contraseña restablecida!',
+                title: res.message || '¡Contraseña restablecida!',
                 text: 'Serás redirigido al inicio de sesión.',
                 timer: 2500,
                 showConfirmButton: false,
             })
-
+            
+            sessionStorage.removeItem('pwd_reset_email')
             navigate(`/get-started`)
         } catch (err) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: err.response?.data?.detail,
+                text: err.response?.data?.detail || err.message,
             })
         } finally {
             setLoading(false)
@@ -45,13 +47,9 @@ const ResetPassword = () => {
                     transition={{ duration: 0.6, delay: 0.4, ease: "easeInOut" }}>
                     <Paper elevation={20} style={paperStyle}
                         sx={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
                             backdropFilter: "blur(10px)",
                             width: "100%",
                             maxWidth: "500px",
-                            "& .MuiTabs-indicator": {
-                                backgroundColor: "#193cb8",
-                            },
                         }}>
                         <div className="relative w-full h-full mt-10" style={{ minHeight: '450px' }}>
                             <ResetForm onSubmit={onSubmit} loading={loading} />

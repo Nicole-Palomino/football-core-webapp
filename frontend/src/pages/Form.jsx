@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Paper, Tab, Tabs } from '@mui/material'
+import { Paper, Tab, Tabs, useTheme } from '@mui/material'
 import NavbarClient from '../components/Navbar/NavbarClient'
 import { a11yProps, CustomTabPanel } from '../utils/a11yProps'
 
@@ -9,12 +9,16 @@ const SignUp = lazy(() => import('./SignUp'))
 
 const Form = () => {
     const [value, setValue] = useState(0)
+    const theme = useTheme()
 
     const handleChange = (event, newValue) => {
         setValue(newValue)
     }
 
-    const paperStyle = { margin: 'auto' }
+    const paperStyle = { 
+        margin: 'auto',
+        backgroundColor: theme.palette.background.paper
+    }
 
     return (
         <section className='w-full min-h-screen bg-background'>
@@ -25,13 +29,9 @@ const Form = () => {
                     transition={{ duration: 0.6, delay: 0.4, ease: "easeInOut" }}>
                     <Paper elevation={20} style={paperStyle}
                         sx={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
                             backdropFilter: "blur(10px)",
                             width: "100%",
                             maxWidth: "500px",
-                            "& .MuiTabs-indicator": {
-                                backgroundColor: "#193cb8",
-                            },
                         }}>
                         <Tabs
                             value={value}
@@ -40,9 +40,9 @@ const Form = () => {
                             centered
                             variant="fullWidth"
                             sx={{
-                                "& .MuiTabs-indicator": { backgroundColor: "#193cb8" },
-                                "& .MuiTab-root": { color: "white", fontFamily: 'cursive' },
-                                "& .MuiTab-root.Mui-selected": { color: "#fff" },
+                                "& .MuiTabs-indicator": { backgroundColor: theme.palette.primary.dark },
+                                "& .MuiTab-root": { color: theme.palette.text.primary, fontFamily: 'cursive' },
+                                "& .MuiTab-root.Mui-selected": { color: theme.palette.text.primary },
                             }}>
                             <Tab label="Iniciar Sesión" {...a11yProps(0)} />
                             <Tab label="Registrarse" {...a11yProps(1)} />
@@ -51,8 +51,8 @@ const Form = () => {
                         <CustomTabPanel value={value} index={0} className="w-full" style={{ minHeight: '430px' }}>
                             <div className="relative w-full h-full">
                                 <Suspense fallback={
-                                    <div className="absolute inset-0 flex items-center justify-center w-full h-full bg-gray-900/60">
-                                        <div className="text-center text-white">
+                                    <div className="absolute inset-0 flex items-center justify-center w-full h-full" style={{ backgroundColor: theme.palette.background.paper }}>
+                                        <div className="text-center" style={{ color: theme.palette.text.primary}}>
                                             <div className="spinner-border" role="status">
                                                 <span className="visually-hidden">Loading...</span>
                                             </div>
@@ -67,8 +67,8 @@ const Form = () => {
                         <CustomTabPanel value={value} index={1} className="w-full" style={{ minHeight: '430px' }}>
                             <div className="relative w-full h-full">
                                 <Suspense fallback={
-                                    <div className="absolute inset-0 flex items-center justify-center w-full h-full bg-gray-900/60">
-                                        <div className="text-center text-white">
+                                    <div className="absolute inset-0 flex items-center justify-center w-full h-full" style={{ backgroundColor: theme.palette.background.paper }}>
+                                        <div className="text-center" style={{ color: theme.palette.text.primary}}>
                                             <div className="spinner-border" role="status">
                                                 <span className="visually-hidden">Loading...</span>
                                             </div>

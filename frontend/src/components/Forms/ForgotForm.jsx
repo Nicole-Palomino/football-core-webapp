@@ -1,17 +1,20 @@
-import { TextField } from '@mui/material'
+import { TextField, useTheme } from '@mui/material'
 import { IoArrowBackCircle } from "react-icons/io5"
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 
 const ForgotForm = ({ onSubmit, loading }) => {
 
     const { register, handleSubmit, formState: { errors } } = useForm()
+    const theme = useTheme()
+    const [hover, setHover] = useState(false)
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto px-4 sm:px-6 md:px-8">
             <div className="flex flex-col mb-5">
-                <h1 className='text-center text-white font-bold text-3xl mb-2'>¿Olvidaste tu contraseña?</h1>
-                <h1 className='text-center text-white text-lg mb-8'>Ingresa tu Correo Electrónico para enviar el código de recuperación</h1>
+                <h1 className='text-center font-bold text-3xl mb-2' style={{ color: theme.palette.primary.main }}>¿Olvidaste tu contraseña?</h1>
+                <h1 className='text-center text-lg mb-8' style={{ color: theme.palette.text.primary }}>Ingresa tu Correo Electrónico para enviar el código de recuperación</h1>
                 <div className="relative">
                     {/* Input de email */}
                     <TextField
@@ -22,18 +25,18 @@ const ForgotForm = ({ onSubmit, loading }) => {
                         type='email'
                         autoComplete="off"
                         sx={{
-                            "& label": { color: "white" },
+                            "& label": { color: theme.palette.text.primary },
                             "& .MuiOutlinedInput-root": {
-                                color: "white",
-                                "& fieldset": { borderColor: "white" },
-                                "&:hover fieldset": { borderColor: "#368FF4" },
+                                color: theme.palette.text.primary,
+                                "& fieldset": { borderColor: theme.palette.text.primary },
+                                "&:hover fieldset": { borderColor: theme.palette.primary.main },
                             },
                             "& .Mui-error": {
-                                "& label": { color: "#f44336" },
-                                "& label.Mui-focused": { color: "#f44336" },
-                                "& .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" },
-                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#f44336" }
+                                "& label": { color: theme.custom.rojo },
+                                "& label.Mui-focused": { color: theme.custom.rojo },
+                                "& .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo }
                             },
                         }}
                         {...register("correo", {
@@ -52,8 +55,25 @@ const ForgotForm = ({ onSubmit, loading }) => {
             </div>
 
             <div className="flex w-full mt-4">
-                <button type="submit" className={`w-full py-3 text-white text-lg cursor-pointer font-subtitle rounded-lg transition-all ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
-                    disabled={loading}>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-3 text-white text-lg cursor-pointer font-subtitle rounded-lg transition-all ${loading
+                            ? "cursor-not-allowed"
+                            : ""
+                        }`}
+                    style={{
+                        backgroundColor: loading
+                            ? theme.palette.action.disabledBackground
+                            : theme.custom.azul,
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!loading) e.currentTarget.style.backgroundColor = theme.custom.azulHover
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!loading) e.currentTarget.style.backgroundColor = theme.custom.azul
+                    }}
+                >
                     <span className="mr-2 uppercase">{loading ? "Cargando..." : "Solicitar código de recuperación"}</span>
                 </button>
             </div>
@@ -61,9 +81,14 @@ const ForgotForm = ({ onSubmit, loading }) => {
             <div className="flex justify-center items-center mt-6">
                 <Link to="/get-started">
                     <button
-                        className="inline-flex items-center font-subtitle text-lg hover:text-blue-600 text-white text-center cursor-pointer">
+                        onMouseEnter={() => setHover(true)}
+                        onMouseLeave={() => setHover(false)}
+                        className="inline-flex items-center font-subtitle text-lg text-center cursor-pointer"
+                        style={{
+                            color: hover ? theme.palette.primary.main : theme.palette.text.primary,
+                        }}>
                         <span className="mr-2">
-                            <IoArrowBackCircle className='text-white' />
+                            <IoArrowBackCircle style={{ color: theme.palette.text.primary }} />
                         </span>
                         <span>Regresar</span>
                     </button>

@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Box, Tabs, Tab } from "@mui/material"
 import MatchAccordion from './MatchAccordion'
 import { formatFecha } from '../../../utils/helpers'
 
 const MatchTabs = ({ match }) => {
+    // const { partidosPorJugar, partidosFinalizados } = useMatches()
     const [value, setValue] = useState(0)
     const handleChange = (event, newValue) => { setValue(newValue) }
 
@@ -42,4 +43,4 @@ const MatchTabs = ({ match }) => {
     )
 }
 
-export default MatchTabs
+export default React.memo(MatchTabs)

@@ -5,12 +5,15 @@ import { FaUser } from 'react-icons/fa'
 import SignInForm from '../components/Forms/SignInForm'
 import { getCurrentUser, loginUser as loginService } from '../services/api/usuario'
 import { encryptData } from '../services/encryptionService'
+import { useTheme } from '@mui/material'
 
 const SignIn = ({ setValue }) => {
 
     const { login } = useAuth()
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
+    const theme = useTheme()
+    const [hover, setHover] = useState(false)
 
     const onSubmit = async (data) => {
         setLoading(true)
@@ -19,7 +22,7 @@ const SignIn = ({ setValue }) => {
             const response = await loginService(data)
             console.log(response)
             localStorage.setItem("token", response.access_token)
-            
+
             const user = await getCurrentUser()
             localStorage.setItem("user", encryptData(user))
 
@@ -47,11 +50,13 @@ const SignIn = ({ setValue }) => {
 
     return (
         <div className='flex flex-col'>
-            <div className="font-bold font-subtitle text-white text-center self-center text-xl sm:text-3xl uppercase">
+            <div className="font-bold font-subtitle text-center self-center text-xl sm:text-3xl uppercase"
+                style={{ color: theme.palette.primary.main }}>
                 bienvenido de nuevo
             </div>
 
-            <div className="font-bold font-subtitle text-white text-center self-center text-md md:text-md">
+            <div className="font-bold font-subtitle text-center self-center text-md md:text-md"
+                style={{ color: theme.palette.text.primary }}>
                 Nos alegra verte otra vez. ¡Accede a tu cuenta!
             </div>
 
@@ -61,9 +66,14 @@ const SignIn = ({ setValue }) => {
 
             <div className="flex justify-center items-center mt-6">
                 <button onClick={() => setValue(1)}
-                    className="inline-flex items-center font-subtitle text-sm hover:text-blue-600 text-white text-center cursor-pointer">
+                    onMouseEnter={() => setHover(true)}
+                    onMouseLeave={() => setHover(false)}
+                    className="inline-flex items-center font-subtitle text-sm text-center cursor-pointer"
+                    style={{
+                        color: hover ? theme.palette.primary.main : theme.palette.text.primary,
+                    }}>
                     <span className="mr-2">
-                        <FaUser className='text-white'/>
+                        <FaUser style={{ color: hover ? theme.palette.primary.main : theme.palette.text.primary }} />
                     </span>
                     <span>No tienes cuenta?</span>
                 </button>

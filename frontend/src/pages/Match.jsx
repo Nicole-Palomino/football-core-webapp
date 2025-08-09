@@ -1,82 +1,33 @@
-import { useMemo, useState } from 'react'
-import { Box, CircularProgress, Grid, Tab, Tabs, Typography } from '@mui/material'
+import { useState } from 'react'
+import { Box, Grid, Tab, Tabs, Typography, useTheme } from '@mui/material'
 import { useAuth } from '../contexts/AuthContexts'
-import { getMatchAll } from '../services/api/matches'
 import MatchTabs from '../components/Dashboard/Match/MatchTabs'
-import { useQuery } from '@tanstack/react-query'
+import LoadingSpinner from '../components/Loading/LoadingSpinner'
+import { useMatches } from '../contexts/MatchesContext'
+import { EmptyMessage } from '../utils/helpers'
 
 const Match = () => {
 
     const [value, setValue] = useState(0)
     const { isAuthenticated } = useAuth()
+    const theme = useTheme()
 
-    const seasonId = 12
-    const { data = [], error, isLoading, isError } = useQuery({ 
-        queryKey: ['match', seasonId], 
-        queryFn: () => getMatchAll(seasonId),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
+    const { partidosPorJugar, partidosFinalizados, isLoading, isError, error } = useMatches()
 
-    const partidosPorJugar = useMemo(
-        () => data.filter(p => p.estado.id_estado === 5),
-        [data]
-    )
-    
-    const partidosFinalizados = useMemo(
-        () => data.filter(p => p.estado.id_estado === 8),
-        [data]
-    )
-
-    if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100vh",
-                    width: "100%",
-                }}>
-                <CircularProgress size={80} sx={{ color: '#228B22' }} />
-                <Typography mt={2} variant="h6" sx={{ color: '#228B22' }}>
-                    Cargando datos...
-                </Typography>
-            </Box>
-        )
-    }
-
+    if (isLoading) return <LoadingSpinner />
     if (isError) return <div>Error: {error.message}</div>
 
     if (!isAuthenticated) {
-        return (
-            <Box sx={{ textAlign: "center", color: "white", padding: "20px" }}>
-                <Typography variant="h5">Debes iniciar sesión para ver los partidos</Typography>
-            </Box>
-        )
+        return <EmptyMessage text="Inicia sesión para ver partidos" />
     }
 
     const handleChange = (event, newValue) => { setValue(newValue) }
 
-    const EmptyMessage = ({ text }) => (
-        <Box
-            sx={{
-            color: "white",
-            textAlign: "center",
-            padding: "40px",
-            fontStyle: "italic",
-            fontSize: "18px",
-            }}>
-            {text}
-        </Box>
-    )
-
     return (
-        <Box sx={{ flexGrow: 1, backgroundColor: "#0e0f0f" }}>
+        <Box sx={{ flexGrow: 1, backgroundColor: theme.palette.primary.dark }}>
             <Grid container
                 sx={{
-                    backgroundColor: "#0e0f0f",
+                    backgroundColor: theme.palette.background.default,
                     minHeight: "100vh",
                     paddingTop: "20px",
                     justifyContent: "center",
@@ -97,34 +48,30 @@ const Match = () => {
                         maxHeight: "100%",
                         height: "100%",
                         overflow: "hidden",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
+                        backgroundColor: theme.palette.background.paper,
+                        borderRadius: "20px",
                     }}>
                     <Box
                         sx={{
                             width: "100%",
                             maxWidth: "800px",
-                            backgroundColor: "#0e0f0f",
                             height: "100%",
                             minHeight: "100%",
-                            minWidth: "800px",
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
-                            borderRadius: "10px",
-                            display: "flex",
-                            flexDirection: "column",
-                            overflow: "hidden",
+                            minWidth: { xs: "100%", md: "800px" }
                         }}>
                         {/* Tabs */}
                         <Tabs
-                        value={value}
-                        onChange={handleChange}
-                        centered
-                        variant="fullWidth"
-                        sx={{
-                            "& .MuiTabs-indicator": { backgroundColor: "#368FF4" },
-                            "& .MuiTab-root": { color: "white", fontFamily: "cursive" },
-                            backgroundColor: "#202121",
-                            borderRadius: "10px 10px 0 0",
-                            "& .MuiTab-root.Mui-selected": { color: "#368FF4" },
-                        }}>
+                            value={value}
+                            onChange={handleChange}
+                            centered
+                            variant="fullWidth"
+                            sx={{
+                                "& .MuiTabs-indicator": { backgroundColor: theme.palette.primary.dark },
+                                "& .MuiTab-root": { color: theme.palette.text.primary, fontFamily: 'cursive' },
+                                borderRadius: "10px 10px 0 0",
+                                "& .MuiTab-root.Mui-selected": { color: theme.palette.text.primary },
+                            }}>
                             <Tab label="Próximos Partidos" />
                             <Tab label="Partidos Finalizados" />
                         </Tabs>
@@ -137,15 +84,15 @@ const Match = () => {
                                     <EmptyMessage text="No hay partidos por jugar." />
                                 )
                             ) : partidosFinalizados.length > 0 ? (
-                                    <MatchTabs match={partidosFinalizados} />
+                                <MatchTabs match={partidosFinalizados} />
                             ) : (
-                                    <EmptyMessage text="No hay partidos finalizados." />
+                                <EmptyMessage text="No hay partidos finalizados." />
                             )}
                         </Box>
                     </Box>
                 </Grid>
 
-                <Grid item xs={12}md sx={{ display: { xs: "none", md: "block" } }} className="text-white"></Grid>
+                <Grid item xs={12} md sx={{ display: { xs: "none", md: "block" } }} className="text-white"></Grid>
             </Grid>
         </Box>
     )

@@ -98,15 +98,19 @@ export const forgotUser = async ( userData ) => {
 export const resetUser = async ( userData ) => {
     try {
         const response = await axiosInstance.post('/reset-password', userData, {
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
         })
 
-        return response.data
+        // Si status está entre 200 y 299, devolver data directamente
+        if (response.status >= 200 && response.status < 300) {
+            return response.data
+        }
+
+        throw new Error(response.data?.detail || "Error desconocido.")
     } catch (error) {
         console.error("Error en registerUser:", error);
 
+        // Axios trae el status aquí cuando es 4xx o 5xx
         if (error.response) {
             throw new Error(error.response.data?.detail || "Error desconocido.");
         }

@@ -1,6 +1,6 @@
 import NavbarClient from '../components/Navbar/NavbarClient'
 import { motion } from 'framer-motion'
-import { Paper } from '@mui/material'
+import { Paper, useTheme } from '@mui/material'
 import ForgotForm from '../components/Forms/ForgotForm'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -48,13 +48,9 @@ const ForgotPassword = () => {
                     transition={{ duration: 0.6, delay: 0.4, ease: "easeInOut" }}>
                     <Paper elevation={20} style={paperStyle}
                         sx={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
                             backdropFilter: "blur(10px)",
                             width: "100%",
                             maxWidth: "500px",
-                            "& .MuiTabs-indicator": {
-                                backgroundColor: "#193cb8",
-                            },
                         }}>
                         <div className="relative w-full h-full mt-10" style={{ minHeight: '430px' }}>
                             <ForgotForm onSubmit={onSubmit} loading={loading} />
