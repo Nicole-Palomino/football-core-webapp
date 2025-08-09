@@ -6,7 +6,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession # Utilizar AsyncSession para operaciones db asíncronas
-from sqlalchemy import select # Importar select para consultas asíncronas
 
 from app import schemas
 from app.crud import crud_user

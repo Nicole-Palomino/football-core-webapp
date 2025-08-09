@@ -67,6 +67,6 @@ class PasswordVerification(BaseModel):
 
 class PasswordReset(BaseModel):
     """Esquema para restablecer la contraseña tras la verificación."""
-    correo: EmailStr
     codigo_verificacion: int = Field(..., ge=100000, le=999999)
+    correo: EmailStr
     nueva_contrasena: str = Field(..., min_length=8)
