@@ -1,9 +1,13 @@
+import { Box, useTheme } from '@mui/material'
 import { PieChart, pieArcLabelClasses } from '@mui/x-charts/PieChart'
 
 const PieArcLabel = ({ data, title }) => {
+
+    const theme = useTheme()
+
     return (
-        <div className="flex flex-col items-center w-full">
-            <h3 className="text-center text-white mb-4 uppercase font-bold text-md">
+        <Box sx={{ maxWidth: 400, width: '100%', aspectRatio: '1 / 1', mx: 'auto', }}>
+            <h3 className="text-center mb-4 uppercase font-bold text-md" style={{ color: theme.palette.text.primary }}>
                 {title}
             </h3>
             <PieChart
@@ -15,25 +19,26 @@ const PieArcLabel = ({ data, title }) => {
                         arcLabelRadius: '60%',
                     },
                 ]}
-                width={300}
-                height={300}
+                width={400}
+                height={400}
                 legend={{ hidden: false }}
                 sx={{
+                    padding: {xs: 2, md: 1},
                     [`& .${pieArcLabelClasses.root}`]: {
                         fontWeight: 'bold',
-                        fill: '#fff', // ✅ Etiquetas dentro del gráfico en blanco
-                        fontSize: 20,
+                        fill: theme.palette.primary.contrastText,
+                        fontSize: 22,
                     },
                     '& .MuiChartsLegend-label': {
-                        fill: '#fff',        
-                        color: '#fff',      
+                        fill: theme.palette.text.primary,
+                        color: theme.palette.primary.primary,
                     },
                     '& .MuiChartsLegend-root': {
-                        color: '#fff',
+                        color: theme.palette.text.primary,
                     },
                 }}
             />
-        </div>
+        </Box>
     );
 };
 

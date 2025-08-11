@@ -1,16 +1,59 @@
+import { EmojiEvents as TrophyIcon, } from '@mui/icons-material'
+import { Box, Typography, useTheme } from '@mui/material'
 import { FaFutbol } from 'react-icons/fa'
 
-const TotalMatch = ({totalMatches}) => {
+const TotalMatch = ({ totalMatches }) => {
+    const theme = useTheme()
     return (
-        <div className="flex flex-col items-center justify-center bg-target p-5 rounded-lg shadow-lg">
-            <p className="mt-2 text-white text-lg font-bold uppercase">Total de Enfrentamientos</p>
-            <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-blue-600 text-white">
-                {/* Icono de Cancha */}
-                <FaFutbol className="absolute w-12 h-12 opacity-30" />
-                {/* Número en el centro */}
-                <span className="text-2xl font-extrabold font-subtitle">{totalMatches}</span>
-            </div>
-        </div>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',  // centra horizontalmente
+                justifyContent: 'center', // centra verticalmente si hay altura fija
+                textAlign: 'center',
+                p: 2
+            }}
+        >
+            <TrophyIcon
+                style={{
+                    color: '#FFD700',
+                    marginBottom: theme.spacing(1),
+                    width: 'auto',
+                }}
+                // Tamaño dinámico con breakpoints
+                sx={{
+                    fontSize: { xs: 50, md: 60 }, 
+                }}
+            />
+            <Typography
+                variant="h6"
+                sx={{
+                    color: theme.palette.text.primary,
+                    mb: 2,
+                    fontFamily: 'cursive'
+                }}
+            >
+                Historial de Enfrentamientos
+            </Typography>
+            <Typography
+                variant="h3"
+                sx={{
+                    color: theme.palette.primary.dark,
+                    mb: 1
+                }}
+            >
+                {totalMatches}
+            </Typography>
+            <Typography
+                variant="body2"
+                sx={{
+                    color: theme.palette.text.primary
+                }}
+            >
+                Partidos totales
+            </Typography>
+        </Box>
     )
 }
 

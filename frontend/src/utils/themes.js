@@ -6,6 +6,7 @@ const azulClaro = '#5aaeff'
 const azulOscuro = '#256eb5'
 const rojo = '#e53935'
 const amarillo = '#ffeb3b'
+const morado = '#8E26DE'
 const naranja = '#ffa726'
 const white = '#ffffff'
 
@@ -64,7 +65,8 @@ export const lightTheme = createTheme({
         rojo: rojo,
         amarillo: amarillo,
         naranja: naranja,
-        blanco: white
+        blanco: white,
+        morado: morado
     },
 })
 
@@ -114,6 +116,7 @@ export const darkTheme = createTheme({
         rojo: rojo,
         amarillo: amarillo,
         naranja: naranja,
-        blanco: white
+        blanco: white,
+        morado: morado
     },
 })

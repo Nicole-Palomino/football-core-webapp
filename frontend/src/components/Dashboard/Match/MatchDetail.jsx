@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getMatcheByID } from '../../../services/api/matches'
-import { Avatar, Box, Chip, CircularProgress, Container, Grid, IconButton, Paper, Tab, Tabs, Tooltip, Typography, useTheme } from '@mui/material'
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Avatar, Box, Card, CardContent, Chip, Container, Grid, IconButton, Paper, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Tooltip, Typography, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { HorizontalRule, Stadium, CalendarToday, ArrowBack } from '@mui/icons-material'
+import {
+    Assessment as AssessmentIcon, HorizontalRule, Stadium, CalendarToday, ArrowBack,
+    ExpandMore as ExpandMoreIcon, Insights as InsightsIcon, TrendingUp as TrendingUpIcon,
+    Stadium as StadiumIcon, Sports as SportsIcon,
+} from '@mui/icons-material'
 import { formatFecha } from '../../../utils/helpers'
 import { a11yProps, CustomTabPanel } from '../../../utils/a11yProps'
 import TotalMatch from './graphics/TotalMatch'
@@ -13,6 +17,9 @@ import H2HTabPanel from '../../Dashboard/Details/H2HTabPanel'
 import { getCompleteAnalysis } from '../../../services/functions'
 import CardChart from './graphics/CardChart'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
+import { TrophyIcon } from '@heroicons/react/24/outline'
+import PieChartsOne from './graphics/PieChartsOne'
+import CarruselSugerencias from './graphics/CarruselSugerencias'
 
 const MatchDetail = () => {
     const theme = useTheme()
@@ -52,7 +59,7 @@ const MatchDetail = () => {
         staleTime: 1000 * 60 * 15,
         cacheTime: 5 * 60 * 1000
     })
-
+    console.log(matchesStats)
     // Manejo de estados de carga combinados
     const isLoading = isLoadingMatch || isLoadingStats
     const isError = isErrorMatch || isErrorStats
@@ -134,9 +141,8 @@ const MatchDetail = () => {
                         <Paper
                             elevation={24}
                             sx={{
-                                bgcolor: "#1a1a1a",
+                                bgcolor: theme.palette.background.paper,
                                 borderRadius: 4,
-                                border: "1px solid #333",
                                 overflow: "hidden",
                                 boxShadow: "0 20px 40px rgba(54,143,244,0.1)"
                             }}
@@ -162,7 +168,7 @@ const MatchDetail = () => {
                             </Box>
 
                             {/* Información del partido */}
-                            <Box sx={{ p: { xs: 2, md: 4 } }}>
+                            <Box sx={{ p: { xs: 2, md: 4 }, background: theme.palette.background.paper, }}>
                                 {/* Estadio y fecha */}
                                 <Box sx={{
                                     display: "flex",
@@ -180,7 +186,7 @@ const MatchDetail = () => {
                                             bgcolor: "#333",
                                             fontSize: "20px",
                                             color: "white",
-                                            "& .MuiChip-icon": { color: "#368FF4" }
+                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
                                         }}
                                     />
                                     <Chip
@@ -191,7 +197,7 @@ const MatchDetail = () => {
                                             bgcolor: "#333",
                                             fontSize: "20px",
                                             color: "white",
-                                            "& .MuiChip-icon": { color: "#368FF4" }
+                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
                                         }}
                                     />
                                 </Box>
@@ -199,7 +205,7 @@ const MatchDetail = () => {
                                 {/* Equipos y marcador */}
                                 <Grid container spacing={2} alignItems="center" sx={{ mb: 4, justifyContent: { xs: 'center', md: 'space-between' } }}>
                                     {/* Equipo Local */}
-                                    <Grid item xs={12} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' } }}>
+                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' } }}>
                                         <motion.div
                                             whileHover={{ scale: 1.05 }}
                                             transition={{ duration: 0.2 }}
@@ -208,29 +214,28 @@ const MatchDetail = () => {
                                                 display: "flex",
                                                 flexDirection: "column",
                                                 alignItems: "center",
-                                                p: 2,
+                                                p: { xs: 1, md: 2 },
                                                 borderRadius: 2,
-                                                bgcolor: "#242424",
-                                                border: "1px solid #333",
-                                                minWidth: 140,
+                                                // bgcolor: theme.palette.background.paper,
+                                                border: "2px solid #333",
+                                                minWidth: { xs: 80, md: 140 },
                                             }}>
                                                 <Avatar
                                                     alt={partidoID.equipo_local?.nombre_equipo}
                                                     src={partidoID.equipo_local?.logo}
                                                     sx={{
-                                                        width: { xs: 60, md: 80 },
-                                                        height: { xs: 60, md: 80 },
+                                                        width: { xs: 35, md: 80 },
+                                                        height: { xs: 35, md: 80 },
                                                         '& img': { objectFit: 'contain' },
-                                                        border: "2px solid #444"
                                                     }}
                                                 />
                                                 <Typography
                                                     variant="h6"
                                                     sx={{
-                                                        color: "white",
+                                                        color: theme.palette.text.primary,
                                                         mt: 2,
                                                         textAlign: "center",
-                                                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
                                                         wordBreak: 'break-word',
                                                     }}
                                                 >
@@ -241,20 +246,20 @@ const MatchDetail = () => {
                                     </Grid>
 
                                     {/* Marcador */}
-                                    <Grid item xs={12} sm={4} md={4} sx={{ display: 'flex', justifyContent: 'center', }}>
+                                    <Grid item xs={4} sm={4} md={4} sx={{ display: 'flex', justifyContent: 'center', }}>
                                         <Box sx={{
                                             display: "flex",
                                             flexDirection: "column",
                                             alignItems: "center",
-                                            p: 3,
-                                            borderRadius: 2,
-                                            bgcolor: "#242424",
-                                            border: "2px solid #368FF4",
-                                            minWidth: 180,
+                                            p: { xs: 1, md: 3 },
+                                            // borderRadius: 2,
+                                            // bgcolor: theme.palette.background.paper ,
+                                            // border: "2px solid #368FF4",
+                                            minWidth: { xs: 'auto', md: 180 },
                                         }}>
                                             <Typography
                                                 variant="body2"
-                                                sx={{ color: "#368FF4", mb: 2, fontWeight: "bold" }}
+                                                sx={{ color: theme.palette.primary.main, mb: 1, fontWeight: "bold", fontSize: { xs: '0.6rem', md: '0.9rem' } }}
                                             >
                                                 RESULTADO
                                             </Typography>
@@ -262,28 +267,19 @@ const MatchDetail = () => {
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                gap: 1
+                                                gap: 0.5
                                             }}>
                                                 <Typography
-                                                    variant="h2"
-                                                    sx={{
-                                                        color: "white",
-                                                        fontWeight: "bold",
-                                                        fontSize: { xs: "2.5rem", md: "3.5rem" }
-                                                    }}
+                                                    sx={{ fontSize: { xs: "1.2rem", md: "3.5rem" }, color: theme.palette.text.primary, fontWeight: "bold" }}
                                                 >
                                                     {partidoID.estadisticas?.FTHG ?? " "}
                                                 </Typography>
-                                                <HorizontalRule sx={{
-                                                    color: "#368FF4",
-                                                    fontSize: { xs: "2rem", md: "3rem" }
-                                                }} />
+                                                <HorizontalRule sx={{ color: theme.palette.primary.main, fontSize: { xs: "1rem", md: "3rem" } }} />
                                                 <Typography
-                                                    variant="h2"
                                                     sx={{
-                                                        color: "white",
+                                                        color: theme.palette.text.primary,
                                                         fontWeight: "bold",
-                                                        fontSize: { xs: "2.5rem", md: "3.5rem" }
+                                                        fontSize: { xs: "1.2rem", md: "3.5rem" }
                                                     }}
                                                 >
                                                     {partidoID.estadisticas?.FTAG ?? " "}
@@ -293,7 +289,7 @@ const MatchDetail = () => {
                                     </Grid>
 
                                     {/* Equipo Visitante */}
-                                    <Grid item xs={12} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
+                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
                                         <motion.div
                                             whileHover={{ scale: 1.05 }}
                                             transition={{ duration: 0.2 }}
@@ -302,29 +298,28 @@ const MatchDetail = () => {
                                                 display: "flex",
                                                 flexDirection: "column",
                                                 alignItems: "center",
-                                                p: 2,
+                                                p: { xs: 1, md: 2 },
                                                 borderRadius: 2,
-                                                bgcolor: "#242424",
-                                                border: "1px solid #333",
-                                                minWidth: 140,
+                                                // bgcolor: theme.palette.background.paper,
+                                                border: "2px solid #333",
+                                                minWidth: { xs: 80, md: 140 },
                                             }}>
                                                 <Avatar
                                                     alt={partidoID.equipo_visita?.nombre_equipo}
                                                     src={partidoID.equipo_visita?.logo}
                                                     sx={{
-                                                        width: { xs: 60, md: 80 },
-                                                        height: { xs: 60, md: 80 },
+                                                        width: { xs: 35, md: 80 },
+                                                        height: { xs: 35, md: 80 },
                                                         '& img': { objectFit: 'contain' },
-                                                        border: "2px solid #444"
                                                     }}
                                                 />
                                                 <Typography
                                                     variant="h6"
                                                     sx={{
-                                                        color: "white",
+                                                        color: theme.palette.text.primary,
                                                         mt: 2,
                                                         textAlign: "center",
-                                                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
                                                         wordBreak: 'break-word',
                                                     }}
                                                 >
@@ -345,21 +340,22 @@ const MatchDetail = () => {
                                             variant="fullWidth"
                                             sx={{
                                                 "& .MuiTabs-indicator": {
-                                                    backgroundColor: "#368FF4",
+                                                    backgroundColor: theme.palette.primary.main,
                                                     height: 3
                                                 },
                                                 "& .MuiTab-root": {
-                                                    color: "#888",
+                                                    color: theme.palette.text.secondary,
                                                     fontWeight: "bold",
-                                                    fontSize: { xs: "0.9rem", md: "1rem" }
+                                                    fontSize: { xs: "0.6rem", md: "1.1rem" }
                                                 },
                                                 "& .MuiTab-root.Mui-selected": {
-                                                    color: "#368FF4"
+                                                    color: theme.palette.primary.main
                                                 }
                                             }}
                                         >
                                             <Tab label="📊 Estadísticas" {...a11yProps(0)} />
-                                            <Tab label="⚔️ H2H" {...a11yProps(1)} />
+                                            <Tab label="📈 Análisis" {...a11yProps(1)} />
+                                            <Tab label="⚔️ H2H" {...a11yProps(2)} />
                                         </Tabs>
                                     </Box>
 
@@ -379,45 +375,221 @@ const MatchDetail = () => {
                                                     animate={{ opacity: 1 }}
                                                     transition={{ duration: 0.5 }}
                                                 >
-                                                    <Box sx={{ width: '100%', px: { xs: 2, sm: 4 }, py: 4 }}>
-                                                        <div className="flex justify-end mb-4">
-                                                            <button
-                                                                onClick={() => navigate('/dashboard/analysis')} // <- ajusta tu ruta aquí
-                                                                className="bg-blue-600 hover:bg-blue-700 cursor-pointer text-white font-bold py-2 px-4 rounded transition duration-300"
-                                                            >
-                                                                🔍 Realizar un análisis más completo
-                                                            </button>
-                                                        </div>
+                                                    <Box sx={{ width: '100%' }}>
                                                         <Grid container justifyContent="center" spacing={4}>
-                                                            <Grid item xs={12} md={8}>
+                                                            {/* Total de enfrentamientos */}
+                                                            <Grid item xs={12} md={12}
+                                                                sx={{
+                                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                    py: 2,
+                                                                    px: { xs: 1, md: 3 },
+                                                                    width: '100%',
+                                                                }}>
                                                                 <TotalMatch totalMatches={finalMatchesStats.resumen?.total_enfrentamientos} />
                                                             </Grid>
-                                                            <Grid item xs={12} md={10}>
-                                                                <div className="bg-target border text-blue-500 rounded-md p-4 text-sm leading-6 shadow-sm">
-                                                                    <div className="font-semibold mb-2 text-white">🧠 ¿Qué significan estas métricas?</div>
-                                                                    <ul className="list-disc list-inside space-y-1 text-white">
-                                                                        <li>
-                                                                            <strong>Posesión Ofensiva:</strong> (Tiros + Tiros al arco + Corners) / Partidos. Indica el nivel de participación ofensiva del equipo.
-                                                                        </li>
-                                                                        <li>
-                                                                            <strong>Eficiencia Ofensiva:</strong> Goles / Tiros al arco. Mide la capacidad de convertir oportunidades en goles.
-                                                                        </li>
-                                                                        <li>
-                                                                            <strong>Goles Local/Visita:</strong> Producción goleadora según la localía. Evalúa el rendimiento en casa vs fuera de casa.
-                                                                        </li>
-                                                                        <li>
-                                                                            <strong>Indisciplina:</strong> (Amarillas + Rojas) / Partidos. Nivel promedio de sanciones por partido.
-                                                                        </li>
-                                                                    </ul>
-                                                                </div>
+
+                                                            {/* Resultados por equipo */}
+                                                            <Grid item xs={12} md={6}
+                                                                sx={{
+                                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                    py: 2,
+                                                                    px: { xs: 1, md: 3 },
+                                                                }}>
+                                                                <PieChartsOne
+                                                                    Data={[
+                                                                        { id: 0, label: equipo_local, value: finalMatchesStats.resumen.victorias_por_equipo.local },
+                                                                        { id: 1, label: equipo_visita, value: finalMatchesStats.resumen.victorias_por_equipo.visitante },
+                                                                        { id: 2, label: 'Empates', value: finalMatchesStats.resumen.victorias_por_equipo.empates }
+                                                                    ]}
+                                                                    title='⚽ Resultados por Equipo'
+                                                                />
                                                             </Grid>
-                                                            <Grid item xs={12} md={8}>
-                                                                <CardChart stats={finalMatchesStats.estadisticas_avanzadas[0]} />
+
+                                                            {/* Resultados por Localía */}
+                                                            <Grid item xs={12} md={6}
+                                                                sx={{
+                                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                    py: 2,
+                                                                    px: { xs: 1, md: 3 },
+                                                                }}>
+                                                                <PieChartsOne
+                                                                    Data={[
+                                                                        { label: 'Como Local', value: finalMatchesStats.resumen.victorias_por_localia.local },
+                                                                        { label: 'Como Visitante', value: finalMatchesStats.resumen.victorias_por_localia.visitante },
+                                                                        { label: 'Empates', value: finalMatchesStats.resumen.victorias_por_localia.empates }
+                                                                    ]}
+                                                                    title='🏠 Resultados por Localía'
+                                                                />
                                                             </Grid>
-                                                            <Grid item xs={12} md={8}>
-                                                                <CardChart stats={finalMatchesStats.estadisticas_avanzadas[1]} />
+
+                                                            {/* Estadísticas Avanzadas */}
+                                                            <Grid item xs={12} md={12}
+                                                                sx={{
+                                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                    py: 2,
+                                                                    px: { xs: 23, md: 2 },
+                                                                    width: '100%',
+                                                                }}>
+                                                                <Accordion
+                                                                    sx={{
+                                                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                                        backdropFilter: 'blur(10px)',
+                                                                        '&:before': { display: 'none' }
+                                                                    }}>
+                                                                    <AccordionSummary
+                                                                        expandIcon={<ExpandMoreIcon sx={{ color: '#368FF4' }} />}
+                                                                        sx={{
+                                                                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                                                                            '&:hover': { backgroundColor: 'rgba(0, 255, 136, 0.15)' }
+                                                                        }}
+                                                                    >
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                            <InsightsIcon sx={{ color: '#368FF4', mr: 2 }} />
+                                                                            <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontFamily: 'cursive' }}>
+                                                                                🧠 ¿Qué significan estas métricas?
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    </AccordionSummary>
+                                                                    <AccordionDetails sx={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+                                                                        <Typography variant="body1" sx={{ color: theme.palette.text.primary, mb: 2 }}>
+                                                                            Estas métricas se utilizan para analizar y comparar el rendimiento y estilo de juego de los equipos:
+                                                                        </Typography>
+
+                                                                        <Grid container spacing={2}>
+                                                                            <Grid item xs={12} md={6}>
+                                                                                <Alert
+                                                                                    icon={<TrendingUpIcon />}
+                                                                                    severity="info"
+                                                                                    sx={{
+                                                                                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                                                                        border: '1px solid rgba(33, 150, 243, 0.3)',
+                                                                                        color: theme.palette.text.primary,
+                                                                                        mb: 2
+                                                                                    }}
+                                                                                >
+                                                                                    <strong>Posesión Ofensiva:</strong> (Tiros + Tiros al arco + Corners) / Partidos.
+                                                                                    Indica el nivel de participación ofensiva del equipo.
+                                                                                </Alert>
+
+                                                                                <Alert
+                                                                                    icon={<AssessmentIcon />}
+                                                                                    severity="success"
+                                                                                    sx={{
+                                                                                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                                                                        border: '1px solid rgba(76, 175, 80, 0.3)',
+                                                                                        color: theme.palette.text.primary,
+                                                                                    }}
+                                                                                >
+                                                                                    <strong>Eficiencia Ofensiva:</strong> Goles / Tiros al arco.
+                                                                                    Mide la capacidad de convertir oportunidades en goles.
+                                                                                </Alert>
+                                                                            </Grid>
+
+                                                                            <Grid item xs={12} md={6}>
+                                                                                <Alert
+                                                                                    icon={<StadiumIcon />}
+                                                                                    severity="warning"
+                                                                                    sx={{
+                                                                                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                                                                                        border: '1px solid rgba(255, 152, 0, 0.3)',
+                                                                                        color: theme.palette.text.primary,
+                                                                                        mb: 2
+                                                                                    }}
+                                                                                >
+                                                                                    <strong>Goles Local/Visita:</strong> Producción goleadora según la localía.
+                                                                                    Evalúa el rendimiento en casa vs fuera de casa.
+                                                                                </Alert>
+
+                                                                                <Alert
+                                                                                    icon={<SportsIcon />}
+                                                                                    severity="error"
+                                                                                    sx={{
+                                                                                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                                                                        border: '1px solid rgba(244, 67, 54, 0.3)',
+                                                                                        color: theme.palette.text.primary
+                                                                                    }}
+                                                                                >
+                                                                                    <strong>Indisciplina:</strong> (Amarillas + Rojas) / Partidos.
+                                                                                    Nivel promedio de sanciones por partido.
+                                                                                </Alert>
+                                                                            </Grid>
+                                                                        </Grid>
+                                                                    </AccordionDetails>
+                                                                </Accordion>
+
+                                                                <Card
+                                                                    sx={{
+                                                                        width: '100%',
+                                                                        background: 'rgba(255, 255, 255, 0.05)',
+                                                                        backdropFilter: 'blur(10px)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                        borderRadius: 1,
+                                                                        overflow: 'hidden',
+                                                                        position: 'relative',
+                                                                        mt: 2,
+                                                                        '&::before': {
+                                                                            content: '""',
+                                                                            position: 'absolute',
+                                                                            top: 0,
+                                                                            left: 0,
+                                                                            right: 0,
+                                                                            height: '4px',
+                                                                            background: `linear-gradient(90deg, #FFD700, #FFA500)`
+                                                                        }
+                                                                    }}>
+                                                                    <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                                                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, flexWrap: 'wrap' }}>
+                                                                            <AssessmentIcon sx={{ color: '#FFD700', mr: 2, fontSize: { xs: 24, sm: 30 } }} />
+                                                                            <Typography variant="h5" sx={{ color: theme.palette.text.primary, fontFamily: 'cursive', fontSize: { xs: '0.7rem', sm: '1.5rem' } }}>
+                                                                                Métricas Avanzadas por Equipo
+                                                                            </Typography>
+                                                                        </Box>
+                                                                        <CardChart stats={finalMatchesStats.estadisticas_avanzadas[0]} />
+                                                                        <CardChart stats={finalMatchesStats.estadisticas_avanzadas[1]} />
+                                                                    </CardContent>
+                                                                </Card>
                                                             </Grid>
-                                                            <Grid item xs={12} md={10}>
+
+                                                            <Grid item xs={12} md={12}
+                                                                sx={{
+                                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                    py: 2,
+                                                                    px: { xs: 23, md: 2 },
+                                                                    width: '100%',
+                                                                }}>
+                                                                <CarruselSugerencias
+                                                                    title="Enfrentamientos Directos"
+                                                                    datos={finalMatchesStats.enfrentamientos_directos_sugerencias}
+                                                                />
+                                                            </Grid>
+
+                                                            <Grid container xs={12} spacing={4} justifyContent="center">
+                                                                <Grid item xs={12} md={4}
+                                                                    sx={{
+                                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                        py: 2,
+                                                                        px: { xs: 1, md: 3 },
+                                                                    }}>
+                                                                    <CarruselSugerencias
+                                                                        title="Enfrentamientos Directos"
+                                                                        datos={finalMatchesStats.enfrentamientos_directos_sugerencias}
+                                                                    />
+                                                                </Grid>
+
+                                                                <Grid item xs={12} md={4}
+                                                                    sx={{
+                                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                                                        py: 2,
+                                                                        px: { xs: 1, md: 3 },
+                                                                    }}>
+                                                                    <CarruselSugerencias
+                                                                        title="Enfrentamientos Directos"
+                                                                        datos={finalMatchesStats.enfrentamientos_directos_sugerencias}
+                                                                    />
+                                                                </Grid>
+                                                            </Grid>
+
+                                                            <Grid item xs={12} md={12}>
                                                                 <PieCharts stats={finalMatchesStats.resumen} equipo1={equipo_local} equipo2={equipo_visita} />
                                                             </Grid>
                                                         </Grid>
@@ -433,7 +605,7 @@ const MatchDetail = () => {
                                         </Box>
                                     </CustomTabPanel>
 
-                                    <CustomTabPanel value={value} index={1}>
+                                    <CustomTabPanel value={value} index={2}>
                                         {finalMatchesStats ? (
                                             <motion.div
                                                 initial={{ opacity: 0 }}
