@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getMatcheByID } from '../../../services/api/matches'
-import { Avatar, Box, Chip, CircularProgress, Container, Grid, IconButton, Paper, Tab, Tabs, Tooltip, Typography } from '@mui/material'
+import { Avatar, Box, Chip, CircularProgress, Container, Grid, IconButton, Paper, Tab, Tabs, Tooltip, Typography, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { HorizontalRule, Stadium, CalendarToday, ArrowBack } from '@mui/icons-material'
@@ -12,8 +12,10 @@ import PieCharts from './graphics/PieChart'
 import H2HTabPanel from '../../Dashboard/Details/H2HTabPanel'
 import { getCompleteAnalysis } from '../../../services/functions'
 import CardChart from './graphics/CardChart'
+import LoadingSpinner from '../../Loading/LoadingSpinner'
 
 const MatchDetail = () => {
+    const theme = useTheme()
     const { id_partido } = useParams()
     const location = useLocation()
     const [value, setValue] = useState(0)
@@ -22,8 +24,6 @@ const MatchDetail = () => {
     const equipo_local = location.state?.equipo_local
     const equipo_visita = location.state?.equipo_visita
 
-    console.log(equipo_local, equipo_visita)
-
     // 1. Consulta para Match by ID
     const {
         data: matchData,
@@ -31,8 +31,8 @@ const MatchDetail = () => {
         isError: isErrorMatch,
         error: errorMatch
     } = useQuery({
-        queryKey: ['matchById', id_partido],
-        queryFn: () => getMatcheByID({ id_partido: id_partido }),
+        queryKey: ["matchById", id_partido],
+        queryFn: () => getMatcheByID({ id_partido }),
         staleTime: 1000 * 60 * 15,
         cacheTime: 5 * 60 * 1000
     })
@@ -46,9 +46,9 @@ const MatchDetail = () => {
         isError: isErrorStats,
         error: errorStats
     } = useQuery({
-        queryKey: ['matchesStats', equipo_local, equipo_visita],
+        queryKey: ["matchesStats", equipo_local, equipo_visita],
         queryFn: () => getCompleteAnalysis(nombre_liga, equipo_local, equipo_visita),
-        enabled: !!equipo_local && !!equipo_visita && !!nombre_liga,
+        enabled: Boolean(equipo_local && equipo_visita && nombre_liga),
         staleTime: 1000 * 60 * 15,
         cacheTime: 5 * 60 * 1000
     })
@@ -57,24 +57,7 @@ const MatchDetail = () => {
     const isLoading = isLoadingMatch || isLoadingStats
     const isError = isErrorMatch || isErrorStats
 
-    if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100vh",
-                    width: "100%",
-                }}>
-                <CircularProgress size={80} sx={{ color: '#228B22' }} />
-                <Typography mt={2} variant="h6" sx={{ color: '#228B22' }}>
-                    Cargando datos...
-                </Typography>
-            </Box>
-        )
-    }
+    if (isLoading) return <LoadingSpinner />
 
     if (isError) {
         return (
@@ -86,22 +69,16 @@ const MatchDetail = () => {
         );
     }
 
-    const handleChange = (event, newValue) => {
-        setValue(newValue)
-    }
-
-    const handleGoBack = () => {
-        navigate(-1)
-    }
-
     const finalMatchesStats = matchesStats || []
     const finalMatchDataAsArray = matchData
         ? (Array.isArray(matchData) ? matchData : [matchData])
         : []
 
+    const handleChange = (_, newValue) => setValue(newValue)
+    const handleGoBack = () => navigate(-1)
+
     return (
         <Box sx={{
-            bgcolor: "#0a0a0a",
             minHeight: "100vh",
         }}>
             {/* Header con botón de regreso */}
@@ -109,7 +86,6 @@ const MatchDetail = () => {
                 position: "sticky",
                 top: 0,
                 zIndex: 10,
-                bgcolor: "rgba(10, 10, 10, 0.95)",
                 backdropFilter: "blur(10px)",
                 borderBottom: "1px solid #333",
                 py: 1
@@ -120,8 +96,7 @@ const MatchDetail = () => {
                             <IconButton
                                 onClick={handleGoBack}
                                 sx={{
-                                    color: "#00FF88",
-                                    bgcolor: "rgba(54, 143, 244, 0.1)",
+                                    bgcolor: theme.palette.primary.dark,
                                     border: "1px solid rgba(54, 143, 244, 0.3)",
                                     mr: 2,
                                     "&:hover": {
@@ -131,13 +106,13 @@ const MatchDetail = () => {
                                     transition: "all 0.3s ease"
                                 }}
                             >
-                                <ArrowBack sx={{ color: '#368FF4' }} />
+                                <ArrowBack sx={{ color: theme.palette.primary.contrastText }} />
                             </IconButton>
                         </Tooltip>
                         <Typography
                             variant="h5"
                             sx={{
-                                color: "white",
+                                color: theme.palette.text.primary,
                                 fontWeight: "bold",
                                 flexGrow: 1
                             }}

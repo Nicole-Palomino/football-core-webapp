@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Box, Grid, Tab, Tabs, Typography, useTheme } from '@mui/material'
+import { Box, Grid, Tab, Tabs, useTheme } from '@mui/material'
 import { useAuth } from '../contexts/AuthContexts'
 import MatchTabs from '../components/Dashboard/Match/MatchTabs'
 import LoadingSpinner from '../components/Loading/LoadingSpinner'
-import { useMatches } from '../contexts/MatchesContext'
-import { EmptyMessage } from '../utils/helpers'
+import EmptyMessage from '../utils/empty'
+import { useEstadoMatches, usePartidosFinalizados, usePartidosPorJugar } from '../contexts/MatchesContext'
 
 const Match = () => {
 
@@ -12,7 +12,9 @@ const Match = () => {
     const { isAuthenticated } = useAuth()
     const theme = useTheme()
 
-    const { partidosPorJugar, partidosFinalizados, isLoading, isError, error } = useMatches()
+    const partidosPorJugar = usePartidosPorJugar()
+    const partidosFinalizados = usePartidosFinalizados()
+    const { isLoading, isError, error } = useEstadoMatches()
 
     if (isLoading) return <LoadingSpinner />
     if (isError) return <div>Error: {error.message}</div>
@@ -79,12 +81,12 @@ const Match = () => {
                         <Box sx={{ flex: 1, overflowY: "visible" }}>
                             {value === 0 ? (
                                 partidosPorJugar.length > 0 ? (
-                                    <MatchTabs match={partidosPorJugar} />
+                                    <MatchTabs type="por-jugar" />
                                 ) : (
                                     <EmptyMessage text="No hay partidos por jugar." />
                                 )
                             ) : partidosFinalizados.length > 0 ? (
-                                <MatchTabs match={partidosFinalizados} />
+                                <MatchTabs type="finalizados" />
                             ) : (
                                 <EmptyMessage text="No hay partidos finalizados." />
                             )}

@@ -1,13 +1,17 @@
-import { List, ListItem, Grid, Box, Typography, IconButton, Tooltip, CircularProgress, Avatar } from "@mui/material"
+import { List, ListItem, Grid, Box, Typography, IconButton, Tooltip, Avatar, useTheme } from "@mui/material"
 import InfoOutlined from "@mui/icons-material/InfoOutlined"
 import FavoriteStar from '../Favorites/FavoriteStar'
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import { useFavoritos } from '../../../hooks/FavoritosContext'
 import { formatFecha } from '../../../utils/helpers'
 import { useNavigate } from 'react-router-dom'
+import LoadingFavorite from "../../Loading/LoadingFavorite"
+import React from "react"
 
-const MatchList = ({ partidos }) => {
+const MatchList = React.memo(({ partidos, type }) => {
     const { loadingFavoritos } = useFavoritos()
     const navigate = useNavigate()
+    const theme = useTheme()
 
     const onInfoClick = (team1_id, team2_id, partido_id) => {
         navigate(`/dashboard/${partido_id}`, {
@@ -18,90 +22,142 @@ const MatchList = ({ partidos }) => {
         })
     }
 
+    const onPrediccionClick = (partido_id) => {
+        navigate(`/predicciones/${partido_id}`);
+    }
+
+    const onResumenClick = (partido_id) => {
+        navigate(`/resumen/${partido_id}`)
+    }
+
+    const onImagenesClick = (partido_id) => {
+        navigate(`/imagenes/${partido_id}`)
+    }
+
     if (loadingFavoritos) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                <CircularProgress />
-            </Box>
-        )
+        <LoadingFavorite />
     }
 
     return (
-        <div>
-            <List sx={{ color: "white" }}>
-                {partidos.map((partido, index) => {
-                    return (
-                        <ListItem key={partido.id_partido}
-                            alignItems="center"
-                            sx={{ borderBottom: "1px solid #E0E0E0", fontFamily: "cursive" }}>
-                            <Grid container alignItems="center" spacing={2} justifyContent="space-between" sx={{ display: "flex", flexWrap: "nowrap" }}>
-                                <Grid item xs="auto" sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-                                    <FavoriteStar
-                                        partidoId={partido.id_partido}
-                                    />
-                                </Grid>
+        <List sx={{ color: theme.palette.text.primary }}>
+            {partidos.map((partido) => (
+                <ListItem
+                    key={partido.id_partido}
+                    sx={{
+                        fontFamily: "cursive",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderBottom: "1px solid rgba(255,255,255,0.1)",
+                        py: 1
+                    }}
+                >
+                    {/* Equipos */}
+                    <Grid
+                        container
+                        spacing={2}
+                        alignItems="center"
+                        wrap="nowrap"
+                        sx={{ flex: 1, minWidth: 0 }}
+                    >
+                        <Grid item xs="auto">
+                            <FavoriteStar partidoId={partido.id_partido} />
+                        </Grid>
 
-                                {/* Equipos */}
-                                <Grid item xs={7} sm={5} sx={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 1, textAlign: "left" }}>
-                                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center",width: "100%" }}>
-                                        <Avatar alt={partido.equipo_local.nombre_equipo} src={partido.equipo_local.logo}
-                                            sx={{ 
-                                                width: 30, 
-                                                height: 30, 
-                                                marginRight: 3, 
-                                                // backgroundColor: '#f5f5dc', 
-                                                '& img': {
-                                                    objectFit: 'contain'
-                                                }
-                                            }} />
-                                        <Typography noWrap sx={{ minWidth: "106px", fontSize: '13px', overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                            {partido.equipo_local.nombre_equipo}
-                                        </Typography>
-                                        <Typography noWrap sx={{ fontWeight: 'bold', textAlign: 'right', fontSize: '13px', minWidth: "28px",  }}>
-                                            {partido.estadisticas?.FTHG ?? " "}
-                                        </Typography>
-                                    </Box>
+                        <Grid
+                            item
+                            xs
+                            sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}
+                        >
+                            {/* Local */}
+                            <Box sx={{
+                                display: "grid",
+                                gridTemplateColumns: "auto 1fr auto",
+                                alignItems: "center",
+                                gap: 1
+                            }}>
+                                <Avatar alt={partido.equipo_local.nombre_equipo} src={partido.equipo_local.logo} sx={{ width: 30, height: 30, "& img": { objectFit: "contain" } }} />
+                                <Typography noWrap sx={{ fontSize: { xs: "12px", sm: "13px" }, fontWeight: 500 }}>
+                                    {partido.equipo_local.nombre_equipo}
+                                </Typography>
+                                <Typography noWrap sx={{ fontWeight: "bold", textAlign: "right", fontSize: { xs: "12px", sm: "13px" }, minWidth: "28px" }}>
+                                    {partido.estadisticas?.FTHG ?? " "}
+                                </Typography>
+                            </Box>
 
-                                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center",width: "100%" }}>
-                                        <Avatar alt={partido.equipo_visita.nombre_equipo} src={partido.equipo_visita.logo}
-                                            sx={{ 
-                                                width: 30, 
-                                                height: 30, 
-                                                marginRight: 3, 
-                                                // backgroundColor: '#f5f5dc', 
-                                                '& img': {
-                                                    objectFit: 'contain'
-                                                }
-                                            }} />
-                                        <Typography noWrap sx={{ minWidth: "106px", fontSize: '13px', overflow: "hidden", textOverflow: "ellipsis" }}>
-                                            {partido.equipo_visita.nombre_equipo}
-                                        </Typography>
-                                        <Typography noWrap sx={{ fontWeight: 'bold', textAlign: 'right', fontSize: '13px', minWidth: "28px" }}>
-                                            {partido.estadisticas?.FTAG ?? " "}
-                                        </Typography>
-                                    </Box>
-                                </Grid>
+                            {/* Visitante */}
+                            <Box sx={{
+                                display: "grid",
+                                gridTemplateColumns: "auto 1fr auto",
+                                alignItems: "center",
+                                gap: 1
+                            }}>
+                                <Avatar alt={partido.equipo_visita.nombre_equipo} src={partido.equipo_visita.logo} sx={{ width: 30, height: 30, "& img": { objectFit: "contain" } }} />
+                                <Typography noWrap sx={{ fontSize: { xs: "12px", sm: "13px" }, fontWeight: 500 }}>
+                                    {partido.equipo_visita.nombre_equipo}
+                                </Typography>
+                                <Typography noWrap sx={{ fontWeight: "bold", textAlign: "right", fontSize: { xs: "12px", sm: "13px" }, minWidth: "28px" }}>
+                                    {partido.estadisticas?.FTAG ?? " "}
+                                </Typography>
+                            </Box>
+                        </Grid>
+                    </Grid>
 
-                                <Grid item xs={4} sm={3} sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-                                    <Typography variant="body1" sx={{ color: "white", fontSize: "11px", textAlign: "center", mb: 1 }}>
-                                        {formatFecha(partido.dia)}
-                                    </Typography>
+                    {/* Fecha + acciones */}
+                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.5 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                fontSize: { xs: "11px", sm: "12px" },
+                                color: theme.palette.text.secondary,
+                                textAlign: "right"
+                            }}
+                        >
+                            {formatFecha(partido.dia)}
+                        </Typography>
 
-                                    <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-                                        <Tooltip title="Info">
-                                            <IconButton onClick={() => onInfoClick(partido.equipo_local.nombre_equipo, partido.equipo_visita.nombre_equipo, partido.id_partido)}>
-                                                <InfoOutlined sx={{ color: "white" }} />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                        </ListItem>
-                    )
-                })}
-            </List>
-        </div>
+                        {/* Íconos dinámicos */}
+                        <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
+                            {type === "por-jugar" ? (
+                                <>
+                                    <Tooltip title="Análisis">
+                                        <IconButton size="small" onClick={() => onInfoClick(
+                                            partido.equipo_local.nombre_equipo,
+                                            partido.equipo_visita.nombre_equipo,
+                                            partido.id_partido
+                                        )}>
+                                            <InfoOutlined sx={{ color: theme.palette.text.primary }} />
+                                        </IconButton>
+                                    </Tooltip>
+
+                                    <Tooltip title="Predicciones">
+                                        <IconButton size="small" onClick={() => onPrediccionClick(partido.id_partido)}>
+                                            <TipsAndUpdatesIcon sx={{ color: theme.palette.success.main }} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </>
+                            ) : (
+                                <>
+                                    <Tooltip title="Resumen">
+                                        <IconButton size="small" onClick={() => onResumenClick(partido.id_partido)}>
+                                            📄
+                                        </IconButton>
+                                    </Tooltip>
+
+                                    <Tooltip title="Imágenes">
+                                        <IconButton size="small" onClick={() => onImagenesClick(partido.id_partido)}>
+                                            🖼️
+                                        </IconButton>
+                                    </Tooltip>
+                                </>
+                            )}
+                        </Box>
+                    </Box>
+                </ListItem>
+            ))}
+        </List>
     )
-}
+})
 
 export default MatchList

@@ -2,7 +2,9 @@ import { createContext, useContext, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { getMatchAll } from "../services/api/matches"
 
-const MatchesContext = createContext()
+const PartidosPorJugarContext = createContext()
+const PartidosFinalizadosContext = createContext()
+const EstadoContext = createContext()
 
 export const MatchesProvider = ({ seasonId = 12, children }) => {
     const { data = [], error, isLoading, isError } = useQuery({
@@ -22,19 +24,22 @@ export const MatchesProvider = ({ seasonId = 12, children }) => {
         [data]
     )
 
+    const estado = useMemo(
+        () => ({ isLoading, isError, error }),
+        [isLoading, isError, error]
+    )
+
     return (
-        <MatchesContext.Provider
-            value={{
-                partidosPorJugar,
-                partidosFinalizados,
-                isLoading,
-                isError,
-                error,
-            }}
-        >
-            {children}
-        </MatchesContext.Provider>
+        <PartidosPorJugarContext.Provider value={partidosPorJugar}>
+            <PartidosFinalizadosContext.Provider value={partidosFinalizados}>
+                <EstadoContext.Provider value={estado}>
+                    {children}
+                </EstadoContext.Provider>
+            </PartidosFinalizadosContext.Provider>
+        </PartidosPorJugarContext.Provider>
     )
 }
 
-export const useMatches = () => useContext(MatchesContext)
+export const usePartidosPorJugar = () => useContext(PartidosPorJugarContext)
+export const usePartidosFinalizados = () => useContext(PartidosFinalizadosContext)
+export const useEstadoMatches = () => useContext(EstadoContext)

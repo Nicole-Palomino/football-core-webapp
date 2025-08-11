@@ -1,44 +1,56 @@
-import React, { useMemo, useState } from 'react'
-import { Box, Tabs, Tab } from "@mui/material"
+import React, { useCallback, useMemo, useState } from 'react'
+import { Box, Tabs, Tab, useTheme, useMediaQuery } from "@mui/material"
 import MatchAccordion from './MatchAccordion'
 import { formatFecha } from '../../../utils/helpers'
+import { usePartidosFinalizados, usePartidosPorJugar } from '../../../contexts/MatchesContext'
 
-const MatchTabs = ({ match }) => {
-    // const { partidosPorJugar, partidosFinalizados } = useMatches()
+const MatchTabs = ({ type }) => {
+    const matches = type === "por-jugar" ? usePartidosPorJugar() : usePartidosFinalizados()
+
+    const theme = useTheme()
     const [value, setValue] = useState(0)
-    const handleChange = (event, newValue) => { setValue(newValue) }
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const handleChange = useCallback((_, newValue) => setValue(newValue), [])
 
-    const fechasUnicas = useMemo(() => [...new Set(match.map((p) => formatFecha(p.dia)))], [match])
-    
+    const fechasUnicas = useMemo(() => [...new Set(matches.map((p) => formatFecha(p.dia)))], [matches])
+
+    const partidosPorFecha = useMemo(() => {
+        const grouped = {};
+        matches.forEach((p) => {
+            const fecha = formatFecha(p.dia)
+            if (!grouped[fecha]) grouped[fecha] = []
+            grouped[fecha].push(p)
+        })
+        return grouped
+    }, [matches])
+
     return (
         <Box sx={{ width: "100%", marginBottom: '50px' }}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider", backgroundColor: "#202121" }}>
+            <Box sx={{ borderBottom: 1, borderColor: theme.palette.primary.dark, backgroundColor: theme.palette.background.default }}>
                 <Tabs
                     value={value}
                     onChange={handleChange}
                     variant="scrollable"
                     scrollButtons="auto"
-                    allowScrollButtonsMobile 
+                    allowScrollButtonsMobile
                     sx={{
-                        "& .MuiTabs-indicator": { backgroundColor: "#368FF4" },
-                        "& .MuiTab-root": { color: "white", fontFamily: "cursive" },
-                        "& .MuiTab-root.Mui-selected": { color: "#368FF4" },
+                        "& .MuiTabs-indicator": { backgroundColor: theme.palette.background.default },
+                        "& .MuiTab-root": { color: theme.palette.text.primary, fontFamily: "cursive" },
+                        "& .MuiTab-root.Mui-selected": { color: theme.palette.primary.main },
                         "& .MuiTabs-scrollButtons.Mui-disabled": { opacity: 0.3 },
-                        "& .MuiButtonBase-root.MuiTabs-scrollButtons": { color: "#368FF4" }
+                        "& .MuiButtonBase-root.MuiTabs-scrollButtons": { color: theme.palette.primary.main }
                     }}>
-                    {fechasUnicas.map((dia, index) => (
-                        <Tab key={dia} label={dia} sx={{ flexShrink: 0 }} /> 
+                    {fechasUnicas.map((dia) => (
+                        <Tab key={dia} label={dia} sx={{ flexShrink: 0 }} />
                     ))}
                 </Tabs>
             </Box>
 
-            {fechasUnicas.map((dia, index) => (
-                <Box key={index}>
-                    {value === index && (
-                        <MatchAccordion data={match.filter(p => formatFecha(p.dia) === dia)} />
-                    )}
-                </Box>
-            ))}
+            {fechasUnicas[value] && (
+                <MatchAccordion 
+                    data={partidosPorFecha[fechasUnicas[value]]}
+                    type={type} />
+            )}
         </Box>
     )
 }

@@ -39,7 +39,8 @@ export const lightTheme = createTheme({
             secondary: '#5D626B'
         },
         divider: {
-            primary: '#e0e0e0'
+            primary: '#e0e0e0',
+            secondary: '#f5f5dc'
         },
     },
     typography: {
@@ -97,7 +98,8 @@ export const darkTheme = createTheme({
             secondary: '#99a1af'
         },
         divider: {
-            primary: '#2c2c2c'
+            primary: '#2c2c2c',
+            secondary: '#f5f5dc'
         },
     },
     typography: {

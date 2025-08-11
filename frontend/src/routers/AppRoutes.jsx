@@ -45,17 +45,17 @@ const AppRoutes = () => {
             {/* Rutas privadas con layout de Dashboard */}
             <Route path='/dashboard' element={
                 <FavoritosProvider>
-                    <PrivateRoute>
-                        <Suspense fallback={<LoadingPage />}>
-                            <Dashboard />
-                        </Suspense>
-                    </PrivateRoute>
+                    <MatchesProvider>
+                        <PrivateRoute>
+                            <Suspense fallback={<LoadingPage />}>
+                                <Dashboard />
+                            </Suspense>
+                        </PrivateRoute>
+                    </MatchesProvider>
                 </FavoritosProvider>
             }>
                 <Route index element={
-                    <MatchesProvider>
-                        <Match />
-                    </MatchesProvider>
+                    <Match />
                 } />
                 <Route path=':id_partido' element={<Suspense fallback={<LoadingPage />}><MatchDetail /> </Suspense>} />
                 <Route path='favorites' element={<Suspense fallback={<LoadingPage />}> <Favorite /> </Suspense>} />

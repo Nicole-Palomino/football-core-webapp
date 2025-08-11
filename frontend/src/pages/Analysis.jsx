@@ -49,10 +49,10 @@ import {
     TableChart as TableChartIcon
 } from '@mui/icons-material'
 import { combinarAnalisisYPrediccion, getAnalyticsCluster, getCompleteAnalysis, getLigues, getPoisson, getPredictionCluster, getTeams } from '../services/functions'
-import { formatFecha } from '../services/encryptionService'
 import { useQuery } from '@tanstack/react-query'
 import CarruselSugerencias from '../components/Dashboard/Match/graphics/CarruselSugerencias'
 import PieChartsOne from '../components/Dashboard/Match/graphics/PieChartsOne'
+import { formatFecha } from '../utils/helpers'
 
 const Analysis = () => {
 
