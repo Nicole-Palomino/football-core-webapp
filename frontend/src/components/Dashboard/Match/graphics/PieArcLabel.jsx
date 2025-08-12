@@ -1,12 +1,13 @@
-import { Box, useTheme } from '@mui/material'
+import { Box, useMediaQuery, useTheme } from '@mui/material'
 import { PieChart, pieArcLabelClasses } from '@mui/x-charts/PieChart'
 
 const PieArcLabel = ({ data, title }) => {
 
     const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     return (
-        <Box sx={{ maxWidth: 400, width: '100%', aspectRatio: '1 / 1', mx: 'auto', }}>
+        <Box sx={{ width: '100%', mx: 'auto' }}>
             <h3 className="text-center mb-4 uppercase font-bold text-md" style={{ color: theme.palette.text.primary }}>
                 {title}
             </h3>
@@ -19,19 +20,22 @@ const PieArcLabel = ({ data, title }) => {
                         arcLabelRadius: '60%',
                     },
                 ]}
-                width={400}
-                height={400}
-                legend={{ hidden: false }}
+                width={isMobile ? 250 : 300}
+                height={isMobile ? 300 : 300}
+                slotProps={{
+                    legend: {
+                        position: isMobile ? 'bottom' : 'right', 
+                        direction: isMobile ? 'row' : 'column',  
+                    },
+                }}
                 sx={{
-                    padding: {xs: 2, md: 1},
                     [`& .${pieArcLabelClasses.root}`]: {
                         fontWeight: 'bold',
-                        fill: theme.palette.primary.contrastText,
-                        fontSize: 22,
+                        fill: theme.palette.text.main,
+                        fontSize: isMobile ? 14 : 22,
                     },
                     '& .MuiChartsLegend-label': {
                         fill: theme.palette.text.primary,
-                        color: theme.palette.primary.primary,
                     },
                     '& .MuiChartsLegend-root': {
                         color: theme.palette.text.primary,

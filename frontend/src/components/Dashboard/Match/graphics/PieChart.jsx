@@ -14,7 +14,7 @@ const PieCharts = ({ stats, equipo1, equipo2 }) => {
     ];
 
     return (
-        <div className="flex flex-col md:flex-row justify-center items-start w-full gap-6 bg-target rounded-lg p-6 shadow-lg">
+        <div className="flex flex-col md:flex-row justify-center items-start w-full gap-6">
             <PieArcLabel data={victoriasPorEquipoData} title="Victorias Por Equipo" />
             <PieArcLabel data={victoriasPorLocaliaData} title="Victorias Por Localía" />
         </div>

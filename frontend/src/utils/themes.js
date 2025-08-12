@@ -17,7 +17,7 @@ export const lightTheme = createTheme({
             main: azulPrincipal,
             light: azulClaro,
             dark: azulOscuro,
-            contrastText: white,
+            contrastText: '#ffffff',
         },
         secondary: {
             main: white,
