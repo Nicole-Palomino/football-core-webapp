@@ -4,13 +4,14 @@ import { FaFutbol } from 'react-icons/fa'
 
 const TotalMatch = ({ totalMatches }) => {
     const theme = useTheme()
+
     return (
         <Box
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',  // centra horizontalmente
-                justifyContent: 'center', // centra verticalmente si hay altura fija
+                alignItems: 'center',  
+                justifyContent: 'center', 
                 textAlign: 'center',
                 p: 2
             }}
@@ -26,16 +27,6 @@ const TotalMatch = ({ totalMatches }) => {
                     fontSize: { xs: 50, md: 60 }, 
                 }}
             />
-            <Typography
-                variant="h6"
-                sx={{
-                    color: theme.palette.text.primary,
-                    mb: 2,
-                    fontFamily: 'cursive'
-                }}
-            >
-                Historial de Enfrentamientos
-            </Typography>
             <Typography
                 variant="h3"
                 sx={{

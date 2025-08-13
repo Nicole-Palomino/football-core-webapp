@@ -1,10 +1,11 @@
-import { Avatar, Box, Chip, Grid, List, ListItem, Paper, Typography, useMediaQuery } from '@mui/material'
+import { Avatar, Box, Chip, Grid, List, ListItem, Paper, Typography, useMediaQuery, useTheme } from '@mui/material'
 import { formatFecha } from '../../../utils/helpers'
 import { CalendarToday, EmojiEvents, SportsSoccer, Timeline } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 
-const ListMatch = ({ matches = [] }) => {
+const ListMatch = ({ matches = [], match }) => {
     const isMobile = useMediaQuery("(max-width:600px)")
+    const theme = useTheme()
 
     const getMatchResult = (localGoals, awayGoals) => {
         if (localGoals === undefined || awayGoals === undefined) return 'pending'
@@ -51,11 +52,11 @@ const ListMatch = ({ matches = [] }) => {
     }
 
     return (
-        <List sx={{ width: "100%", padding: "20px" }}>
+        <List sx={{ width: "100%", padding: "10px" }}>
             {/* Header de estadísticas rápidas */}
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#368FF4', mb: 2, gap: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <EmojiEvents sx={{ color: '#368FF4' }} />
+            <Box sx={{ mb: 2 }}>
+                <Typography sx={{ color: theme.palette.primary.main, mb: 2, gap: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: { xs: 18, md: 36 } }}>
+                    <EmojiEvents sx={{ color: theme.palette.primary.main }} />
                     Últimos {matches.length} Enfrentamientos
                 </Typography>
 
@@ -67,9 +68,9 @@ const ListMatch = ({ matches = [] }) => {
                     sx={{ mb: 2 }}
                 >
                     {[
-                        { label: "De Local", color: "#00FF00", bg: "rgba(0,255,0,0.1)", border: "rgba(0,255,0,0.3)", value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'local').length },
-                        { label: "Empates", color: "#FFD93D", bg: "rgba(255,211,61,0.1)", border: "rgba(255,211,61,0.3)", value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'draw').length },
-                        { label: "De Visitante", color: "#FF6B6B", bg: "rgba(255,107,107,0.1)", border: "rgba(255,107,107,0.3)", value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'away').length }
+                        { label: "De Local", color: theme.custom.rojo, bg: theme.custom.rojo + '2A', border: theme.custom.rojo + '6A', value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'local').length },
+                        { label: "Empates", color: theme.custom.naranja, bg: theme.custom.naranja + '2A', border: theme.custom.naranja + '6A', value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'draw').length },
+                        { label: "De Visitante", color: theme.custom.azulHover, bg: theme.custom.azulHover + '2A', border: theme.custom.azulHover + '6A', value: matches.filter(m => getMatchResult(m.FTHG, m.FTAG) === 'away').length }
                     ].map((stat, i) => (
                         <Grid item key={i} xs={12} sm="auto">
                             <Paper sx={{
@@ -87,7 +88,7 @@ const ListMatch = ({ matches = [] }) => {
                                 <Typography variant="h4" sx={{ color: stat.color }}>
                                     {stat.value}
                                 </Typography>
-                                <Typography variant="body1" sx={{ color: 'white' }}>
+                                <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
                                     {stat.label}
                                 </Typography>
                             </Paper>
@@ -102,6 +103,8 @@ const ListMatch = ({ matches = [] }) => {
                     const result = getMatchResult(item.FTHG, item.FTAG)
                     const resultColor = getResultColor(result)
                     const resultIcon = getResultIcon(result)
+                    const isLocal = item.HomeTeam === match[0].equipo_local.nombre_equipo
+                    const isAway = item.AwayTeam === match[0].equipo_visita.nombre_equipo
 
                     return (
                         <motion.div
@@ -113,7 +116,7 @@ const ListMatch = ({ matches = [] }) => {
                             <Paper
                                 elevation={4}
                                 sx={{
-                                    bgcolor: '#242424',
+                                    bgcolor: theme.palette.background.default,
                                     border: `2px solid ${resultColor}20`,
                                     borderRadius: 3,
                                     overflow: 'hidden',
@@ -141,18 +144,24 @@ const ListMatch = ({ matches = [] }) => {
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
-                                        mb: 2
+                                        mb: 2,
+                                        flexWrap: 'wrap',
+                                        gap: 1,
+                                        [theme.breakpoints.down("sm")]: {
+                                            flexDirection: "column",
+                                            alignItems: "flex-start"
+                                        }
                                     }}>
                                         <Chip
                                             icon={<CalendarToday />}
                                             label={formatFecha(item.Date)}
                                             size="small"
                                             sx={{
-                                                fontSize: '18px',
-                                                padding: '10px',
-                                                bgcolor: 'rgba(255,255,255,0.1)',
-                                                color: 'white',
-                                                '& .MuiChip-icon': { color: '#368FF4' }
+                                                fontSize: { xs: '14px', sm: '18px' },
+                                                padding: { xs: '6px', sm: '10px' },
+                                                bgcolor: theme.palette.background.paper,
+                                                color: theme.palette.text.primary,
+                                                '& .MuiChip-icon': { color: theme.palette.text.primary }
                                             }}
                                         />
 
@@ -177,9 +186,9 @@ const ListMatch = ({ matches = [] }) => {
                                     </Box>
 
                                     {/* Equipos y marcador */}
-                                    <Grid container spacing={2} alignItems="center">
+                                    <Grid container spacing={2} alignItems="center" sx={{ [theme.breakpoints.down("sm")]: { flexDirection: "column" } }}>
                                         {/* Equipo Local */}
-                                        <Grid item xs={5}>
+                                        <Grid item xs={12} sm={5}>
                                             <Box sx={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -190,21 +199,15 @@ const ListMatch = ({ matches = [] }) => {
                                                 border: result === 'local' ? '1px solid rgba(0,255,136,0.3)' : '1px solid transparent'
                                             }}>
                                                 <Avatar
-                                                    sx={{
-                                                        width: isMobile ? 30 : 40,
-                                                        height: isMobile ? 30 : 40,
-                                                        bgcolor: '#1976d2', // color de fondo opcional
-                                                        fontSize: isMobile ? 14 : 18,
-                                                        fontWeight: 'bold',
-                                                    }}
-                                                >
-                                                    {item.HomeTeam?.[0] ?? 'E'} {/* Usa la primera letra o 'E' por defecto */}
-                                                </Avatar>
+                                                    alt={isLocal ? match[0].equipo_local.nombre_equipo : match[0].equipo_visita.nombre_equipo}
+                                                    src={isLocal ? match[0].equipo_local.logo : match[0].equipo_visita.logo}
+                                                    sx={{ width: 30, height: 30, "& img": { objectFit: "contain" } }}
+                                                />
                                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                                     <Typography
                                                         variant={isMobile ? "body2" : "body1"}
                                                         sx={{
-                                                            color: result === 'local' ? '#00FF88' : 'white',
+                                                            color: result === 'local' ? theme.palette.text.secondary : theme.palette.text.primary,
                                                             fontWeight: result === 'local' ? 'bold' : 'normal',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
@@ -213,7 +216,7 @@ const ListMatch = ({ matches = [] }) => {
                                                     >
                                                         {item.HomeTeam}
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ color: '#888' }}>
+                                                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                                         Local
                                                     </Typography>
                                                 </Box>
@@ -221,7 +224,7 @@ const ListMatch = ({ matches = [] }) => {
                                         </Grid>
 
                                         {/* Marcador Central */}
-                                        <Grid item xs={2}>
+                                        <Grid item xs={12} sm={2}>
                                             <Box sx={{
                                                 display: 'flex',
                                                 flexDirection: 'column',
@@ -233,7 +236,7 @@ const ListMatch = ({ matches = [] }) => {
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: 0.5,
-                                                    bgcolor: 'rgba(255,255,255,0.1)',
+                                                    bgcolor: theme.custom.naranja + '4A',
                                                     px: 1,
                                                     py: 0.5,
                                                     borderRadius: 1
@@ -241,18 +244,18 @@ const ListMatch = ({ matches = [] }) => {
                                                     <Typography
                                                         variant="h6"
                                                         sx={{
-                                                            color: result === 'local' ? '#00FF88' : 'white',
+                                                            color: result === 'local' ? theme.palette.text.primary : theme.palette.text.secondary,
                                                             fontWeight: 'bold',
                                                             fontSize: isMobile ? '1rem' : '1.25rem'
                                                         }}
                                                     >
                                                         {item.FTHG ?? "-"}
                                                     </Typography>
-                                                    <Typography sx={{ color: '#888', mx: 0.5 }}>-</Typography>
+                                                    <Typography sx={{ color: theme.palette.text.primary, mx: 0.5 }}>-</Typography>
                                                     <Typography
                                                         variant="h6"
                                                         sx={{
-                                                            color: result === 'away' ? '#FF6B6B' : 'white',
+                                                            color: result === 'away' ? theme.palette.text.primary : theme.palette.text.secondary,
                                                             fontWeight: 'bold',
                                                             fontSize: isMobile ? '1rem' : '1.25rem'
                                                         }}
@@ -264,7 +267,7 @@ const ListMatch = ({ matches = [] }) => {
                                         </Grid>
 
                                         {/* Equipo Visitante */}
-                                        <Grid item xs={5}>
+                                        <Grid item xs={12} sm={5}>
                                             <Box sx={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -275,21 +278,15 @@ const ListMatch = ({ matches = [] }) => {
                                                 border: result === 'away' ? '1px solid rgba(255,107,107,0.3)' : '1px solid transparent'
                                             }}>
                                                 <Avatar
-                                                    sx={{
-                                                        width: isMobile ? 30 : 40,
-                                                        height: isMobile ? 30 : 40,
-                                                        bgcolor: '#d32f2f', // puedes elegir cualquier color de fondo
-                                                        fontSize: isMobile ? 14 : 18,
-                                                        fontWeight: 'bold',
-                                                    }}
-                                                >
-                                                    {item.AwayTeam?.[0] ?? 'E'}
-                                                </Avatar>
+                                                    alt={isAway ? match[0].equipo_visita.nombre_equipo : match[0].equipo_local.nombre_equipo}
+                                                    src={isAway ? match[0].equipo_visita.logo : match[0].equipo_local.logo}
+                                                    sx={{ width: 30, height: 30, "& img": { objectFit: "contain" } }}
+                                                />
                                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                                     <Typography
                                                         variant={isMobile ? "body2" : "body1"}
                                                         sx={{
-                                                            color: result === 'away' ? '#FF6B6B' : 'white',
+                                                            color: result === 'away' ? theme.palette.text.secondary : theme.palette.text.primary,
                                                             fontWeight: result === 'away' ? 'bold' : 'normal',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
@@ -298,7 +295,7 @@ const ListMatch = ({ matches = [] }) => {
                                                     >
                                                         {item.AwayTeam}
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ color: '#888' }}>
+                                                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                                         Visitante
                                                     </Typography>
                                                 </Box>

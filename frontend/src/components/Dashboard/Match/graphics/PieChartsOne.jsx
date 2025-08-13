@@ -1,8 +1,8 @@
 import PieArcLabel from './PieArcLabel'
 
-const PieChartsOne = ({ Data, title }) => {
+const PieChartsOne = ({ Data }) => {
     return (
-        <PieArcLabel data={Data} title={title} />
+        <PieArcLabel data={Data} />
     )
 }
 

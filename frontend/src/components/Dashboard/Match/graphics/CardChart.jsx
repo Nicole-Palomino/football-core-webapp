@@ -5,7 +5,7 @@ const CardChart = ({ stats }) => {
 
   return (
     <div className="text-center mt-5">
-      <h2 className="text-xl font-bold mb-2" style={{ color: theme.palette.text.primary }}>Estadísticas Avanzadas del {stats.Equipo}</h2>
+      <h2 className="text-xl font-bold mb-2" style={{ color: theme.palette.text.primary }}>Estadísticas del {stats.Equipo}</h2>
 
       <div className="mt-6 flex flex-wrap justify-center gap-4">
         {/* <!-- Posesión Ofensiva --> */}

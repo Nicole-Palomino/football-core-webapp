@@ -1,16 +1,13 @@
 import { Box, useMediaQuery, useTheme } from '@mui/material'
 import { PieChart, pieArcLabelClasses } from '@mui/x-charts/PieChart'
 
-const PieArcLabel = ({ data, title }) => {
+const PieArcLabel = ({ data }) => {
 
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     return (
         <Box sx={{ width: '100%', mx: 'auto' }}>
-            <h3 className="text-center mb-4 uppercase font-bold text-md" style={{ color: theme.palette.text.primary }}>
-                {title}
-            </h3>
             <PieChart
                 series={[
                     {
@@ -31,8 +28,8 @@ const PieArcLabel = ({ data, title }) => {
                 sx={{
                     [`& .${pieArcLabelClasses.root}`]: {
                         fontWeight: 'bold',
-                        fill: theme.palette.text.main,
-                        fontSize: isMobile ? 14 : 22,
+                        fill: theme.custom.blanco,
+                        fontSize: isMobile ? 14 : 25,
                     },
                     '& .MuiChartsLegend-label': {
                         fill: theme.palette.text.primary,
