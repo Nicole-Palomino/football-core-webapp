@@ -16,6 +16,7 @@ const ResetPassword = lazy(() => import('../pages/ResetPassword'))
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Match = lazy(() => import('../pages/Match'))
 const MatchDetail = lazy(() => import('../components/Dashboard/Match/MatchDetail'))
+const MatchPrediction = lazy(() => import('../components/Dashboard/Match/MatchPrediction'))
 const Favorite = lazy(() => import('../pages/Favorite'))
 const Analysis = lazy(() => import('../pages/Analysis'))
 const Forecasts = lazy(() => import('../pages/Forecasts'))
@@ -58,6 +59,7 @@ const AppRoutes = () => {
                     <Match />
                 } />
                 <Route path=':id_partido' element={<Suspense fallback={<LoadingPage />}><MatchDetail /> </Suspense>} />
+                <Route path='predicciones/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchPrediction /> </Suspense>} />
                 <Route path='favorites' element={<Suspense fallback={<LoadingPage />}> <Favorite /> </Suspense>} />
                 <Route path='analysis' element={<Suspense fallback={<LoadingPage />}> <Analysis /> </Suspense>} />
                 <Route path='forecasts' element={<Suspense fallback={<LoadingPage />}> <Forecasts /> </Suspense>} />

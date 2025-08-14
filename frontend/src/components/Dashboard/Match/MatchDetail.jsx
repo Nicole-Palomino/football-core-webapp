@@ -85,13 +85,13 @@ const MatchDetail = () => {
                                     border: "1px solid rgba(54, 143, 244, 0.3)",
                                     mr: 2,
                                     "&:hover": {
-                                        bgcolor: "rgba(54, 143, 244, 0.2)",
+                                        bgcolor: theme.palette.primary.main,
                                         transform: "translateX(-2px)"
                                     },
                                     transition: "all 0.3s ease"
                                 }}
                             >
-                                <ArrowBack sx={{ color: theme.palette.primary.contrastText }} />
+                                <ArrowBack sx={{ color: theme.custom.blanco }} />
                             </IconButton>
                         </Tooltip>
                         <Typography
@@ -161,9 +161,10 @@ const MatchDetail = () => {
                                         label={partidoID.equipo_local?.estadio}
                                         sx={{
                                             padding: "5px",
-                                            bgcolor: "#333",
+                                            bgcolor: theme.palette.background.paper,
+                                            boxShadow: "0 5px 5px #888",
                                             fontSize: "20px",
-                                            color: "white",
+                                            color: theme.palette.text.primary,
                                             "& .MuiChip-icon": { color: theme.palette.primary.main }
                                         }}
                                     />
@@ -172,9 +173,10 @@ const MatchDetail = () => {
                                         label={formatFecha(partidoID.dia)}
                                         sx={{
                                             padding: "5px",
-                                            bgcolor: "#333",
+                                            bgcolor: theme.palette.background.paper,
+                                            boxShadow: "0 5px 5px #888",
                                             fontSize: "20px",
-                                            color: "white",
+                                            color: theme.palette.text.primary,
                                             "& .MuiChip-icon": { color: theme.palette.primary.main }
                                         }}
                                     />

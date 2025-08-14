@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
     Box,
     Card,
@@ -14,8 +14,6 @@ import {
     Select,
     MenuItem,
     Button,
-    Chip,
-    Avatar,
     Table,
     TableBody,
     TableCell,
@@ -28,8 +26,6 @@ import {
     AccordionDetails,
     Divider,
     Alert,
-    CardHeader,
-    LinearProgress
 } from '@mui/material'
 import {
     Analytics as AnalyticsIcon,
@@ -37,13 +33,9 @@ import {
     Sports as SportsIcon,
     TrendingUp as TrendingUpIcon,
     Assessment as AssessmentIcon,
-    Timeline as TimelineIcon,
-    CompareArrows as CompareIcon,
     EmojiEvents as TrophyIcon,
-    Schedule as ScheduleIcon,
     Stadium as StadiumIcon,
     Insights as InsightsIcon,
-    Psychology as PsychologyIcon,
     QueryStats as QueryStatsIcon,
     DataSaverOff as DataSaverOffIcon,
     TableChart as TableChartIcon
@@ -57,7 +49,6 @@ import { formatFecha } from '../utils/helpers'
 const Analysis = () => {
 
     const [loading, setLoading] = useState(false)
-    // const [ligas, setLigas] = useState([])
     const [equipos, setEquipos] = useState([])
     const [selectedLiga, setSelectedLiga] = useState('')
     const [selectedEquipo1, setSelectedEquipo1] = useState('')
@@ -66,9 +57,6 @@ const Analysis = () => {
     const [hoveredCard, setHoveredCard] = useState(null)
     const [poissonData, setPoissonData] = useState(null)
     const [clusterData, setClusterData] = useState(null)
-    const [predictionData, setPredictionData] = useState(null)
-    const [activeAnalysisType, setActiveAnalysisType] = useState('complete')
-    const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0)
 
     function parseLigas(raw) {
         return Object.entries(raw).map(([key, value]) => ({

@@ -1,7 +1,7 @@
 import { List, ListItem, Grid, Box, Typography, IconButton, Tooltip, Avatar, useTheme } from "@mui/material"
 import InfoOutlined from "@mui/icons-material/InfoOutlined"
 import FavoriteStar from '../Favorites/FavoriteStar'
-import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates'
 import { useFavoritos } from '../../../hooks/FavoritosContext'
 import { formatFecha } from '../../../utils/helpers'
 import { useNavigate } from 'react-router-dom'
@@ -22,8 +22,13 @@ const MatchList = React.memo(({ partidos, type }) => {
         })
     }
 
-    const onPrediccionClick = (partido_id) => {
-        navigate(`/predicciones/${partido_id}`);
+    const onPrediccionClick = (team1_id, team2_id, partido_id) => {
+        navigate(`/dashboard/predicciones/${partido_id}`, {
+            state: {
+                equipo_local: team1_id,
+                equipo_visita: team2_id
+            }
+        })
     }
 
     const onResumenClick = (partido_id) => {
@@ -132,8 +137,12 @@ const MatchList = React.memo(({ partidos, type }) => {
                                     </Tooltip>
 
                                     <Tooltip title="Predicciones">
-                                        <IconButton size="small" onClick={() => onPrediccionClick(partido.id_partido)}>
-                                            <TipsAndUpdatesIcon sx={{ color: theme.palette.success.main }} />
+                                        <IconButton size="small" onClick={() => onPrediccionClick(
+                                            partido.equipo_local.nombre_equipo,
+                                            partido.equipo_visita.nombre_equipo,
+                                            partido.id_partido
+                                        )}>
+                                            <TipsAndUpdatesIcon sx={{ color: theme.custom.amarillo }} />
                                         </IconButton>
                                     </Tooltip>
                                 </>

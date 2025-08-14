@@ -3,8 +3,7 @@ import { combinarAnalisisYPrediccion, getAnalyticsCluster, getPoisson, getPredic
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import { useQuery } from '@tanstack/react-query'
 import {
-    Assessment as AssessmentIcon, HorizontalRule, Stadium, CalendarToday, ArrowBack,
-    DataSaverOff as DataSaverOffIcon, TableChart as TableChartIcon, SmartToy as SmartToyIcon,
+    Assessment as AssessmentIcon, DataSaverOff as DataSaverOffIcon, TableChart as TableChartIcon, 
     SportsSoccer as SportsSoccerIcon, Scoreboard as ScoreboardIcon, Whatshot as WhatshotIcon,
     Square as SquareIcon
 } from '@mui/icons-material'

@@ -67,9 +67,10 @@ const NavbarUsers = () => {
                 {/* Logo */}
                 <div className="flex flex-1">
                     <Link to="/dashboard" className="flex items-center space-x-2">
-                        <GiSoccerKick className="text-4xl" style={{ color: theme.palette.text.primary }} />
-                        <h1 className="text-3xl font-title" style={{ color: theme.palette.text.primary }}>
-                            SCORE<span style={{ color: theme.palette.primary.main }}>X</span>PERT
+                        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: theme.palette.text.primary }}>
+                            <span style={{ color: theme.palette.primary.main }}>F</span>OOT
+                            <span style={{ color: theme.palette.primary.main }}>B</span>ALL
+                            <span style={{ color: theme.palette.primary.main }}> C</span>ORE
                         </h1>
                     </Link>
                 </div>
@@ -146,9 +147,10 @@ const NavbarUsers = () => {
                     style={{ backgroundColor: theme.palette.background.default }}>
                     <div className="flex items-center justify-between">
                         <Link to="/" className="flex items-center space-x-2" style={{ color: theme.palette.text.primary }}>
-                            <GiSoccerKick className="text-4xl" />
-                            <h1 className="text-3xl font-title">
-                                SCORE<span style={{ color: theme.palette.primary.main }}>X</span>PERT
+                            <h1 className="text-2xl md:text-3xl font-bold" style={{ color: theme.palette.text.primary }}>
+                                <span style={{ color: theme.palette.primary.main }}>F</span>OOT
+                                <span style={{ color: theme.palette.primary.main }}>B</span>ALL
+                                <span style={{ color: theme.palette.primary.main }}> C</span>ORE
                             </h1>
                         </Link>
                         <button onClick={() => setMobileMenuOpen(false)} style={{ color: theme.palette.text.primary }}>

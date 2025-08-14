@@ -472,7 +472,7 @@ const Forecasts = () => {
                                                         { id: 0, label: selectedEquipo1, value: predictionData?.predicciones.estadisticas_esperadas.goles_local },
                                                         { id: 1, label: selectedEquipo2, value: predictionData?.predicciones.estadisticas_esperadas.goles_visitante },
                                                     ]}
-                                                    title='Goles de los Equipos'
+                                                    // title='Goles de los Equipos'
                                                 />
                                             </CardContent>
                                         </Card>
@@ -489,7 +489,7 @@ const Forecasts = () => {
                                                         { id: 0, label: selectedEquipo1, value: predictionData?.predicciones.estadisticas_esperadas.tiros_arco_local },
                                                         { id: 1, label: selectedEquipo2, value: predictionData?.predicciones.estadisticas_esperadas.tiros_arco_visitante },
                                                     ]}
-                                                    title='Tiros al Arco de los Equipos'
+                                                    // title='Tiros al Arco de los Equipos'
                                                 />
                                             </CardContent>
                                         </Card>
@@ -508,7 +508,7 @@ const Forecasts = () => {
                                                         { id: 0, label: selectedEquipo1, value: predictionData?.predicciones.estadisticas_esperadas.corners_local },
                                                         { id: 1, label: selectedEquipo2, value: predictionData?.predicciones.estadisticas_esperadas.corners_visitante },
                                                     ]}
-                                                    title='Corners de los Equipos'
+                                                    // title='Corners de los Equipos'
                                                 />
                                             </CardContent>
                                         </Card>
@@ -525,7 +525,7 @@ const Forecasts = () => {
                                                         { id: 0, label: selectedEquipo1, value: predictionData?.predicciones.estadisticas_esperadas.amarillas_local },
                                                         { id: 1, label: selectedEquipo2, value: predictionData?.predicciones.estadisticas_esperadas.amarillas_visitante },
                                                     ]}
-                                                    title='Tarjetas Amarillas de los Equipos'
+                                                    // title='Tarjetas Amarillas de los Equipos'
                                                 />
                                             </CardContent>
                                         </Card>

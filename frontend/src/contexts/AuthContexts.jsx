@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { jwtDecode } from "jwt-decode"
 import { getToken, setToken, removeToken, setStoredUser, getStoredUser, removeStoredUser } from "../services/auth"
 import axiosInstance from '../services/axiosConfig'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 const AuthContext = createContext()
 
@@ -15,62 +16,74 @@ const isTokenValid = (token) => {
     }
 }
 
-export const AuthProvider = ({ children }) => {
-    const [authToken, setAuthToken] = useState(null)
-    const [user, setUser] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
+const fetchUser = async (token) => {
+    const { data } = await axiosInstance.get("/users/me/", {
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    return data
+}
 
-    const fetchUserFromAPI = async (token) => {
-        try {
-            const { data } = await axiosInstance.get("/users/me/", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            setUser(data)
-            setStoredUser(data)
-            setIsAuthenticated(true)
-        } catch (error) {
-            console.error("Error obteniendo usuario:", error)
-            logout()
-        }
-    }
+export const AuthProvider = ({ children }) => {
+    const queryClient = useQueryClient()
+    const [authToken, setAuthToken] = useState(() => {
+        const token = getToken()
+        return (token && isTokenValid(token)) ? token : null
+    })
+
+    const { data: user, isLoading, isSuccess, isError, error } = useQuery({
+        queryKey: ['user'],
+        queryFn: () => fetchUser(authToken),
+        enabled: !!authToken, // Solo se ejecuta si hay un token
+        initialData: getStoredUser(), // Carga inicial desde localStorage
+        staleTime: 1000 * 60 * 10,
+        refetchOnWindowFocus: true, // Revalida los datos cuando la ventana vuelve a estar en foco
+        retry: false, // Desactiva los reintentos automáticos para no recargar en bucle si hay un error de auth
+        onSuccess: (data) => {
+            setStoredUser(data) // Guarda el usuario en localStorage
+        },
+        onError: (err) => {
+            console.error("Error al obtener usuario:", err)
+            if (err.response?.status === 401) {
+                logout() // Cierra la sesión si el token no es válido
+            }
+        },
+    })
 
     useEffect(() => {
-        const token = getToken()
-        const storedUser = getStoredUser()
-
-        if (token && isTokenValid(token)) {
-            setAuthToken(token)
-            if (storedUser) {
-                setUser(storedUser) // Carga rápida desde localStorage
-            }
-            fetchUserFromAPI(token) // Actualiza datos desde backend
-        } else {
+        if (!authToken) {
             logout()
         }
-        setLoading(false)
-    }, [])
+    }, [authToken])
 
     const login = async (token) => {
         setToken(token)
         setAuthToken(token)
-        await fetchUserFromAPI(token)
+        await queryClient.invalidateQueries({ queryKey: ['user'] })
     }
 
     const logout = () => {
         removeToken()
         removeStoredUser()
         setAuthToken(null)
-        setUser(null)
-        setIsAuthenticated(false)
+        queryClient.removeQueries({ queryKey: ['user'] })
     }
 
-    if (loading) {
-        return <div>Loading...</div>
+    if (isLoading && authToken) {
+        return <div>Cargando usuario...</div>
+    }
+
+    const isAuthenticated = isSuccess && !!user
+
+    const value = {
+        authToken,
+        user,
+        login,
+        logout,
+        isAuthenticated,
     }
 
     return (
-        <AuthContext.Provider value={{ authToken, user, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     )
