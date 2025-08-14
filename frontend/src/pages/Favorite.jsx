@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { deleteFavorite, getFavorites } from '../services/api/favorites'
-import { Avatar, Box, Chip, CircularProgress, Container, Fade, Grid, IconButton, List, ListItem, Paper, Tooltip, Typography } from '@mui/material'
+import { deleteFavorite } from '../services/api/favorites'
+import { Avatar, Box, Chip, CircularProgress, Container, Fade, Grid, IconButton, List, ListItem, Paper, Tooltip, Typography, useTheme } from '@mui/material'
 import {
     Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, Schedule as ScheduleIcon,
     InfoOutlined, Assessment as AssessmentIcon
 } from '@mui/icons-material'
 import { getStoredUser } from '../services/auth'
 import { formatFecha } from '../utils/helpers'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { useFavoritos } from '../hooks/FavoritosContext'
 import { useNavigate } from 'react-router-dom'
+import LoadingFavorite from '../components/Loading/LoadingFavorite'
+import Header from '../components/Forms/controls/Header'
 
 const Favorite = () => {
     const user = getStoredUser()
@@ -18,6 +20,7 @@ const Favorite = () => {
     const queryClient = useQueryClient()
     const [hoveredItem, setHoveredItem] = useState(null)
     const navigate = useNavigate()
+    const theme = useTheme()
 
     const { favoritos: favoriteMatches, loadingFavoritos: isLoading, isError, error } = useFavoritos()
 
@@ -90,40 +93,7 @@ const Favorite = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{
-                bgcolor: "#0a0a0a",
-                minHeight: "100vh",
-                background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
-            }}>
-                <Box sx={{ position: 'relative', mb: 4 }}>
-                    <CircularProgress
-                        size={80}
-                        sx={{
-                            color: '#368FF4',
-                            filter: 'drop-shadow(0 0 20px #368FF4)'
-                        }}
-                    />
-                    <FavoriteIcon
-                        sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            color: '#FF1717',
-                            fontSize: 30
-                        }}
-                    />
-                </Box>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        color: '#368FF4',
-                        fontFamily: 'cursive',
-                        textShadow: '0 0 10px #368FF4'
-                    }}>
-                    Cargando tus partidos favoritos...
-                </Typography>
-            </Box>
+            <LoadingFavorite />
         )
     }
 
@@ -138,46 +108,14 @@ const Favorite = () => {
 
     return (
         <Box sx={{
-            bgcolor: "#0a0a0a",
             minHeight: "100vh",
-            background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+            background: theme.palette.background.default
         }}>
             <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
                 {/* Header */}
-                <Fade in={true} timeout={1000}>
-                    <Box sx={{ textAlign: 'center', mb: 4 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                            <FavoriteIcon
-                                sx={{
-                                    fontSize: 50,
-                                    color: '#FF1717',
-                                    mr: 2,
-                                    filter: 'drop-shadow(0 0 15px #FF1717)'
-                                }}
-                            />
-                            <Typography
-                                variant="h3"
-                                sx={{
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    background: 'linear-gradient(45deg, #FF1717, #FF6B6B)',
-                                    backgroundClip: 'text',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent'
-                                }}>
-                                Mis Favoritos
-                            </Typography>
-                        </Box>
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                color: '#888',
-                                fontStyle: 'italic'
-                            }}>
-                            {favoriteMatches.length} {favoriteMatches.length === 1 ? 'partido favorito' : 'partidos favoritos'}
-                        </Typography>
-                    </Box>
-                </Fade>
+                <Header
+                    title='Mis Favoritos'
+                    subtitle={`${favoriteMatches.length} ${favoriteMatches.length === 1 ? 'partido favorito' : 'partidos favoritos'}`} />
 
                 {/* Matches Grid */}
                 {favoriteMatches.length === 0 ? (
@@ -220,9 +158,9 @@ const Favorite = () => {
                     <Paper
                         elevation={12}
                         sx={{
-                            bgcolor: '#1a1a1a',
-                            border: '1px solid #333',
-                            borderRadius: 3,
+                            bgcolor: theme.palette.background.default,
+                            border: `1px solid ${theme.palette.text.secondary}`,
+                            borderRadius: 2,
                             overflow: 'hidden'
                         }}
                     >
@@ -258,12 +196,13 @@ const Favorite = () => {
                                             <Grid
                                                 container
                                                 alignItems="center"
-                                                // no hace falta spacing grande si usas justifyContent
-                                                sx={{ width: '100%' }}
-                                                wrap="nowrap"
+                                                sx={{
+                                                    width: '100%',
+                                                    flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                                                }}
                                             >
                                                 {/* Estado */}
-                                                <Grid item xs="auto" sx={{ mr: 1 }}>
+                                                <Grid item xs="auto" sx={{ ml: 3 }}>
                                                     <Chip
                                                         label={
                                                             status === 'Histórico' ? 'HISTÓRICO' :
@@ -273,16 +212,16 @@ const Favorite = () => {
                                                         size="small"
                                                         sx={{
                                                             bgcolor: statusColor,
-                                                            color: 'black',
+                                                            color: theme.custom.blanco,
                                                             fontWeight: 'bold',
                                                             fontSize: '0.65rem',
-                                                            minWidth: '80px'
+                                                            minWidth: { xs: '60px', sm: '80px' }
                                                         }}
                                                     />
                                                 </Grid>
 
                                                 {/* Equipos: este debe crecer y ocupar el espacio intermedio */}
-                                                <Grid item xs sx={{ minWidth: 0, mx: 1 }}>
+                                                <Grid item xs sx={{ minWidth: 0, mx: { xs: 2, sm: 10 } }}>
                                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                                         {/* Local */}
                                                         <Box
@@ -297,13 +236,13 @@ const Favorite = () => {
                                                                 <Avatar
                                                                     alt={partido.equipo_local.nombre_equipo}
                                                                     src={partido.equipo_local.logo}
-                                                                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
+                                                                    sx={{ width: 30, height: 30, '& img': { objectFit: 'contain' } }}
                                                                 />
                                                                 <Typography
                                                                     variant="body2"
                                                                     sx={{
-                                                                        color: 'white',
-                                                                        fontSize: '14px',
+                                                                        color: theme.palette.text.primary,
+                                                                        fontSize: { xs: '12px', sm: '14px' },
                                                                         overflow: 'hidden',
                                                                         textOverflow: 'ellipsis',
                                                                         whiteSpace: 'nowrap',
@@ -317,7 +256,8 @@ const Favorite = () => {
                                                             <Typography
                                                                 variant="body2"
                                                                 sx={{
-                                                                    color: 'white',
+                                                                    fontSize: { xs: '12px', sm: '14px' },
+                                                                    color: theme.palette.text.primary,
                                                                     fontWeight: 'bold',
                                                                     minWidth: '30px',
                                                                     textAlign: 'center',
@@ -340,13 +280,13 @@ const Favorite = () => {
                                                                 <Avatar
                                                                     alt={partido.equipo_visita.nombre_equipo}
                                                                     src={partido.equipo_visita.logo}
-                                                                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
+                                                                    sx={{ width: 30, height: 30, '& img': { objectFit: 'contain' } }}
                                                                 />
                                                                 <Typography
                                                                     variant="body2"
                                                                     sx={{
-                                                                        color: 'white',
-                                                                        fontSize: '14px',
+                                                                        color: theme.palette.text.primary,
+                                                                        fontSize: { xs: '12px', sm: '14px' },
                                                                         overflow: 'hidden',
                                                                         textOverflow: 'ellipsis',
                                                                         whiteSpace: 'nowrap',
@@ -360,7 +300,8 @@ const Favorite = () => {
                                                             <Typography
                                                                 variant="body2"
                                                                 sx={{
-                                                                    color: 'white',
+                                                                    color: theme.palette.text.primary,
+                                                                    fontSize: { xs: '12px', sm: '14px' },
                                                                     fontWeight: 'bold',
                                                                     minWidth: '30px',
                                                                     textAlign: 'center',
@@ -373,12 +314,13 @@ const Favorite = () => {
                                                 </Grid>
 
                                                 {/* Fecha / Liga */}
-                                                <Grid item xs="auto" sx={{ mx: 10 }}>
+                                                <Grid item xs="auto" sx={{ mx: { xs: 2, sm: 10 } }}>
                                                     <Box sx={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                         <Typography
                                                             variant="caption"
                                                             sx={{
-                                                                color: '#368FF4',
+                                                                fontSize: { xs: '12px', sm: '14px' },
+                                                                color: theme.palette.primary.light,
                                                                 fontWeight: 'bold',
                                                                 display: 'block',
                                                                 mb: 0.5
@@ -386,7 +328,7 @@ const Favorite = () => {
                                                         >
                                                             {partido.liga.nombre_liga}
                                                         </Typography>
-                                                        <Typography variant="caption" sx={{ color: 'white', fontSize: '11px' }}>
+                                                        <Typography variant="caption" sx={{ color: theme.palette.text.primary, fontSize: '11px' }}>
                                                             {formatFecha(partido.dia)}
                                                         </Typography>
                                                     </Box>

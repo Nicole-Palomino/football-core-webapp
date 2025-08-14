@@ -15,7 +15,7 @@ const TableConColor = ({ finalMatchesStats=[], equipo }) => {
                     className="text-xs uppercase"
                     style={{
                         backgroundColor: theme.palette.primary.main,
-                        color: theme.palette.primary.contrastText,
+                        color: theme.custom.blanco,
                         textAlign: 'center'
                     }}
                 >

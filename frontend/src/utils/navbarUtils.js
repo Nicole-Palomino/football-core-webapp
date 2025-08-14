@@ -241,5 +241,5 @@ export const ServicesData = [
 // ✅
 export const settings = [
     { name: "Perfil", path: "/dashboard/profile" },
-    { name: "Configuración", path: "/dashboard/settings" }
+    // { name: "Configuración", path: "/dashboard/settings" }
 ]

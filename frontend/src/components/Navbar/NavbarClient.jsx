@@ -99,7 +99,7 @@ const NavbarClient = () => {
                         className="relative overflow-hidden px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                         style={{
                             background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                            color: theme.palette.text.primary
+                            color: theme.custom.blanco
                         }}
                     >
                         Comenzar

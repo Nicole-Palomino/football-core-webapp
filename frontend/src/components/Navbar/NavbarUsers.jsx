@@ -29,7 +29,7 @@ const NavbarUsers = () => {
 
     const iconMap = {
         "Perfil": <AccountCircleIcon sx={{ color: "blue" }} />,
-        "Configuración": <SettingsIcon sx={{ color: "blue" }} />
+        // "Configuración": <SettingsIcon sx={{ color: "blue" }} />
     }
 
     // cerrar sesión
@@ -103,7 +103,7 @@ const NavbarUsers = () => {
                         <ThemeToggleButton />
                         <Tooltip title={correo}>
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar sx={{ bgcolor: theme.palette.primary.dark }}>{firstLetter}</Avatar>
+                                <Avatar sx={{ bgcolor: theme.palette.primary.dark, color: theme.custom.blanco }}>{firstLetter}</Avatar>
                             </IconButton>
                         </Tooltip>
                         <Menu

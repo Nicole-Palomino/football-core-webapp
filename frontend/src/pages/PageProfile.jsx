@@ -1,78 +1,60 @@
 import React, { useState, useEffect } from 'react'
-import { 
-    Avatar, 
-    Box, 
-    Card, 
-    CardContent, 
-    Container, 
-    Typography, 
-    Chip, 
-    Grid, 
-    Fade, 
-    Zoom,
-    CircularProgress,
-    Divider,
-    IconButton,
-    Badge,
-    Paper,
-    LinearProgress,
-    Button,
-    Tooltip,
-    Dialog,
-    DialogTitle,
-    Alert,
-    Snackbar,
-    DialogContent,
-    TextField,
-    InputAdornment,
-    DialogActions
+import {
+    Avatar, Box, Card, CardContent, Container, Typography, Chip, Grid, CircularProgress,
+    IconButton, Badge, LinearProgress, Button, Tooltip, Dialog, DialogTitle, Alert,
+    Snackbar, DialogContent, TextField, DialogActions, useTheme
 } from '@mui/material'
 import {
-    Person as PersonIcon,
-    Email as EmailIcon,
-    CalendarToday as CalendarIcon,
-    Security as SecurityIcon,
-    AdminPanelSettings as AdminIcon,
-    Verified as VerifiedIcon,
-    Schedule as ScheduleIcon,
-    AccountCircle as AccountIcon,
-    Edit as EditIcon,
-    Settings as SettingsIcon,
-    Favorite as FavoriteIcon,
-    Sports as SportsIcon,
-    TrendingUp as TrendingUpIcon,
-    AccessTime as AccessTimeIcon,
-    Shield as ShieldIcon,
-    Star as StarIcon,
-    AccountBox as AccountBoxIcon,
-    VpnKey as VpnKeyIcon,
-    Logout as LogoutIcon,
-    Dashboard as DashboardIcon,
-    AccountBalanceWallet as AccountBalanceWalletIcon,
-    Visibility as VisibilityIcon,
-    VisibilityOff as VisibilityOffIcon,
-    Close as CloseIcon,
-    Save as SaveIcon,
-    Lock as LockIcon
+    Person as PersonIcon, Email as EmailIcon, CalendarToday as CalendarIcon, Security as SecurityIcon,
+    AdminPanelSettings as AdminIcon, Verified as VerifiedIcon, Schedule as ScheduleIcon,
+    AccountCircle as AccountIcon, Edit as EditIcon, Settings as SettingsIcon, Favorite as FavoriteIcon,
+    Sports as SportsIcon, Shield as ShieldIcon, Logout as LogoutIcon, Dashboard as DashboardIcon,
+    AccountBalanceWallet as AccountBalanceWalletIcon, Close as CloseIcon, Save as SaveIcon,
 } from '@mui/icons-material'
-import { getStoredUser } from '../services/auth'
 import { formatFechaHora } from '../utils/helpers'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContexts'
 import { updateUser } from '../services/api/usuario'
+import { useForm } from 'react-hook-form'
+import * as yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { setStoredUser } from '../services/auth'
+
+const schema = yup.object().shape({
+    usuario: yup
+        .string()
+        .min(3, "El usuario debe tener al menos 3 caracteres")
+        .max(50, "El usuario no puede tener más de 50 caracteres"),
+    correo: yup
+        .string()
+        .email("Ingresa un correo electrónico válido"),
+})
 
 const PageProfile = () => {
+    const theme = useTheme()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
-    const [hoveredCard, setHoveredCard] = useState(null)
     const [profileCompletion, setProfileCompletion] = useState(0)
     const [editModalOpen, setEditModalOpen] = useState(false)
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
-    const { logout } = useAuth()
+    const { logout, user } = useAuth()
+
+    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
+        resolver: yupResolver(schema)
+    })
+
+    const onSubmit = (data) => {
+        const updateData = {}
+        if (data.usuario !== user.usuario) updateData.usuario = data.usuario
+        if (data.correo !== user.correo) updateData.correo = data.correo
+
+        if (Object.keys(updateData).length === 0) {
+            return
+        }
+        updateUserMutation.mutate(updateData)
+    }
 
     const [editForm, setEditForm] = useState({
         usuario: '',
@@ -82,17 +64,11 @@ const PageProfile = () => {
     })
     const [formErrors, setFormErrors] = useState({})
 
-    const { data: user, isLoading, isError, error } = useQuery({
-        queryKey: ['user-profile'],
-        queryFn: getStoredUser,
-        staleTime: Infinity,
-        cacheTime: Infinity
-    })  
-
     const updateUserMutation = useMutation({
         mutationFn: async (userData) => updateUser(user.id_usuario, userData),
         onSuccess: (updatedUser) => {
-            queryClient.setQueryData(['user-profile'], updatedUser)
+            queryClient.setQueryData(['user'], updatedUser)
+            setStoredUser(updatedUser)
             setSnackbar({
                 open: true,
                 message: '¡Perfil actualizado exitosamente!',
@@ -104,7 +80,7 @@ const PageProfile = () => {
         onError: (error) => {
             setSnackbar({
                 open: true,
-                message: error.message || 'Error al actualizar el perfil',
+                message: error?.response?.data?.message || error.message || 'Error al actualizar el perfil',
                 severity: 'error'
             })
         }
@@ -112,13 +88,13 @@ const PageProfile = () => {
 
     useEffect(() => {
         if (user) {
-        let completion = 0
-        if (user.usuario) completion += 25
-        if (user.correo) completion += 25
-        if (user.rol?.nombre_rol) completion += 25
-        if (user.is_active) completion += 25
-        setProfileCompletion(completion)
-    }
+            let completion = 0
+            if (user.usuario) completion += 25
+            if (user.correo) completion += 25
+            if (user.rol?.nombre_rol) completion += 25
+            if (user.is_active) completion += 25
+            setProfileCompletion(completion)
+        }
     }, [user])
 
     const resetEditForm = () => {
@@ -129,78 +105,14 @@ const PageProfile = () => {
             id_estado: user.estado?.id_estado,
         })
         setFormErrors({})
-        setShowPassword(false)
-        setShowConfirmPassword(false)
     }
 
     const handleEditProfile = () => {
-        resetEditForm()
+        reset({
+            usuario: user?.usuario || "",
+            correo: user?.correo || ""
+        })
         setEditModalOpen(true)
-    }
-
-    const validateForm = () => {
-        const errors = {}
-        
-        // Validar usuario
-        if (editForm.usuario && editForm.usuario.length < 3) {
-            errors.usuario = 'El usuario debe tener al menos 3 caracteres'
-        }
-        if (editForm.usuario && editForm.usuario.length > 50) {
-            errors.usuario = 'El usuario no puede tener más de 50 caracteres'
-        }
-        
-        // Validar correo
-        if (editForm.correo) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-            if (!emailRegex.test(editForm.correo)) {
-                errors.correo = 'Ingresa un correo electrónico válido'
-            }
-        }
-        
-        setFormErrors(errors)
-        return Object.keys(errors).length === 0
-    }
-
-    const handleSaveChanges = () => {
-        if (!validateForm()) return
-
-        // Preparar datos para enviar (solo campos que han cambiado y no están vacíos)
-        const updateData = {}
-        
-        if (editForm.usuario && editForm.usuario !== user.usuario) {
-            updateData.usuario = editForm.usuario
-        }
-        
-        if (editForm.correo && editForm.correo !== user.correo) {
-            updateData.correo = editForm.correo
-        }
-        
-        // Si no hay cambios
-        if (Object.keys(updateData).length === 0) {
-            setSnackbar({
-                open: true,
-                message: 'No hay cambios para guardar',
-                severity: 'info'
-            })
-            return
-        }
-        
-        updateUserMutation.mutate(editForm)
-    }
-
-    const handleFormChange = (field, value) => {
-        setEditForm(prev => ({
-            ...prev,
-            [field]: value
-        }))
-        
-        // Limpiar error del campo cuando el usuario empiece a escribir
-        if (formErrors[field]) {
-            setFormErrors(prev => ({
-                ...prev,
-                [field]: undefined
-            }))
-        }
     }
 
     const handleLogout = () => {
@@ -218,7 +130,7 @@ const PageProfile = () => {
                     title: "Cerrando sesión...",
                     text: "Serás redirigido en un momento.",
                     icon: "info",
-                    timer: 2000, 
+                    timer: 2000,
                     showConfirmButton: false,
                     allowOutsideClick: false,
                     didClose: () => {
@@ -228,59 +140,6 @@ const PageProfile = () => {
                 })
             }
         })
-    }
-
-    if (isLoading) {
-        return (
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100vh",
-                    backgroundColor: "#0e0f0f",
-                    color: "white"
-                }}>
-                <Box sx={{ position: 'relative', mb: 4 }}>
-                    <CircularProgress
-                        size={80} 
-                        sx={{ 
-                            color: '#368FF4',
-                            filter: 'drop-shadow(0 0 20px #368FF4)'
-                        }} 
-                    />
-                    <PersonIcon 
-                        sx={{ 
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            color: '#368FF4',
-                            fontSize: 30
-                        }} 
-                    />
-                </Box>
-                <Typography 
-                    variant="h6" 
-                    sx={{ 
-                        color: '#368FF4',
-                        fontFamily: 'cursive',
-                        textShadow: '0 0 10px #368FF4'
-                    }}>
-                    Cargando perfil...
-                </Typography>
-            </Box>
-        )
-    }
-
-    if (isError) {
-        return (
-            <Container sx={{ textAlign: 'center', mt: 4, color: 'white' }}>
-                <Typography variant="h6">Error: {error.message}</Typography>
-                <Typography variant="body1">No se pudieron cargar los datos del usuario.</Typography>
-            </Container>
-        )
     }
 
     const getRoleColor = (roleName) => {
@@ -318,48 +177,49 @@ const PageProfile = () => {
     const daysActive = calculateDaysActive(user.registro)
 
     return (
-        <Box sx={{ 
-            bgcolor: "#0a0a0a", 
+        <Box sx={{
             minHeight: "100vh",
-            background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+            background: theme.palette.background.default
         }}>
-            <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
+            <Container maxWidth="xl" sx={{ py: { xs: 1, md: 2 } }}>
                 {/* Header con navegación rápida */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        justifyContent: 'space-between',
+                        alignItems: { xs: 'flex-start', sm: 'center' },
                         mb: 4,
                         p: 2,
-                        bgcolor: 'rgba(255,255,255,0.05)',
+                        bgcolor: theme.palette.background.default,
                         borderRadius: 3,
-                        border: '1px solid rgba(255,255,255,0.1)'
+                        border: `1px solid ${theme.palette.text.secondary}`,
+                        gap: { xs: 2, sm: 0 }
                     }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <AccountIcon sx={{ color: '#368FF4', fontSize: 40 }} />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                            <AccountIcon sx={{ color: theme.palette.primary.main, fontSize: 40 }} />
                             <Box>
-                                <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
+                                <Typography variant="h4" sx={{ color: theme.palette.text.primary, fontWeight: 'bold', fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                                     Mi Perfil
                                 </Typography>
-                                <Typography variant="body2" sx={{ color: '#888' }}>
+                                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                                     Gestiona tu información personal
                                 </Typography>
                             </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', sm: 'flex-end' }, width: { xs: '100%', sm: 'auto' } }}>
                             <Tooltip title="Dashboard" arrow>
-                                <IconButton 
+                                <IconButton
                                     onClick={() => navigate('/dashboard')}
-                                    sx={{ 
+                                    sx={{
                                         color: '#368FF4',
                                         bgcolor: 'rgba(54,143,244,0.1)',
-                                        '&:hover': { 
+                                        '&:hover': {
                                             bgcolor: 'rgba(54,143,244,0.2)',
                                             transform: 'scale(1.1)'
                                         }
@@ -370,12 +230,12 @@ const PageProfile = () => {
                             </Tooltip>
 
                             <Tooltip title="Configuración" arrow>
-                                <IconButton 
+                                <IconButton
                                     onClick={() => navigate('/dashboard/settings')}
-                                    sx={{ 
+                                    sx={{
                                         color: '#FFD700',
                                         bgcolor: 'rgba(255,215,0,0.1)',
-                                        '&:hover': { 
+                                        '&:hover': {
                                             bgcolor: 'rgba(255,215,0,0.2)',
                                             transform: 'scale(1.1)'
                                         }
@@ -386,12 +246,12 @@ const PageProfile = () => {
                             </Tooltip>
 
                             <Tooltip title="Cerrar Sesión" arrow>
-                                <IconButton 
+                                <IconButton
                                     onClick={handleLogout}
-                                    sx={{ 
+                                    sx={{
                                         color: '#FF4444',
                                         bgcolor: 'rgba(255,68,68,0.1)',
-                                        '&:hover': { 
+                                        '&:hover': {
                                             bgcolor: 'rgba(255,68,68,0.2)',
                                             transform: 'scale(1.1)'
                                         }
@@ -404,442 +264,438 @@ const PageProfile = () => {
                     </Box>
                 </motion.div>
 
-                <Grid container spacing={4} justifyContent="center">
-                    {/* Card Principal del Perfil */}
-                    <Grid item xs={12} lg={8}>
-                        <motion.div
-                            initial={{ opacity: 0, x: -30 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.8 }}
-                        >
-                            <Card
-                                onMouseEnter={() => setHoveredCard('main')}
-                                onMouseLeave={() => setHoveredCard(null)}
-                                sx={{
-                                    bgcolor: '#1a1a1a',
-                                    border: hoveredCard === 'main' ? '2px solid #368FF4' : '1px solid #333',
-                                    borderRadius: 4,
-                                    transition: 'all 0.3s ease',
-                                    transform: hoveredCard === 'main' ? 'translateY(-5px)' : 'translateY(0)',
-                                    boxShadow: hoveredCard === 'main' 
-                                        ? '0 20px 40px rgba(54,143,244,0.2)' 
-                                        : '0 10px 30px rgba(0,0,0,0.5)',
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                    '&::before': {
-                                        content: '""',
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: '4px',
-                                        background: 'linear-gradient(90deg, #368FF4, #1755FF)'
-                                    }
-                                }}
+                <Grid container spacing={4} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
+                    <Grid
+                        item
+                        xs={12}
+                        md={6}
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            minWidth: { md: '100%', xs: '100%' }
+                        }}
+                    >
+                        <Grid className="grid grid-cols-1 gap-4 mt-5">
+                            <motion.div
+                                initial={{ opacity: 0, x: -30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.8 }}
                             >
-                                <CardContent 
-                                    sx={{ 
-                                        p: 4,
-                                        display: 'flex', 
-                                        flexDirection: 'column', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'center', 
-                                        textAlign: 'center' 
-                                    }}>
-                                    {/* Header con Avatar y Info Principal */}
-                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 4, flexWrap: 'wrap', gap: 3 }}>
-                                        <Badge
-                                            overlap="circular"
-                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                            badgeContent={
-                                                user.is_active ? (
-                                                    <Box sx={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '50%',
-                                                        bgcolor: '#fff',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '3px solid #1a1a1a'
-                                                    }}>
-                                                        <VerifiedIcon sx={{ color: '#368FF4', fontSize: 20 }} />
-                                                    </Box>
-                                                ) : null
-                                            }
-                                        >
-                                            <Avatar sx={{ 
-                                                width: 120, 
-                                                height: 120,
-                                                background: `linear-gradient(45deg, ${roleInfo.bg}, ${roleInfo.bg}90)`,
-                                                fontSize: '2.5rem',
-                                                fontWeight: 'bold',
-                                                boxShadow: `0 0 30px ${roleInfo.bg}40`,
-                                                border: '4px solid rgba(255,255,255,0.1)'
-                                            }}>
-                                                {getInitials(user.usuario)}
-                                            </Avatar>
-                                        </Badge>
-
-                                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                                                <Typography variant="h4" sx={{ 
-                                                    color: 'white',
+                                <Card
+                                    sx={{
+                                        backgroundColor: theme.palette.background.default,
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            height: '4px',
+                                            background: 'linear-gradient(90deg, #368FF4, #1755FF)'
+                                        }
+                                    }}
+                                >
+                                    <CardContent
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            textAlign: 'center'
+                                        }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 4, flexWrap: 'wrap', gap: 3 }}>
+                                            <Badge
+                                                overlap="circular"
+                                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                                badgeContent={
+                                                    user.is_active ? (
+                                                        <Box sx={{
+                                                            width: 28,
+                                                            height: 28,
+                                                            borderRadius: '50%',
+                                                            bgcolor: theme.custom.blanco,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            border: '3px solid #1a1a1a'
+                                                        }}>
+                                                            <VerifiedIcon sx={{ color: '#368FF4', fontSize: 20 }} />
+                                                        </Box>
+                                                    ) : null
+                                                }
+                                            >
+                                                <Avatar sx={{
+                                                    width: 120,
+                                                    height: 120,
+                                                    color: theme.custom.blanco,
+                                                    background: `linear-gradient(45deg, ${roleInfo.bg}, ${roleInfo.bg}90)`,
+                                                    fontSize: '2.5rem',
                                                     fontWeight: 'bold',
-                                                    mr: 2
+                                                    boxShadow: `0 0 30px ${roleInfo.bg}40`,
+                                                    border: '4px solid rgba(255,255,255,0.1)'
                                                 }}>
-                                                    @{user.usuario}
-                                                </Typography>
-                                                <Button
-                                                    onClick={handleEditProfile}
-                                                    startIcon={<EditIcon />}
-                                                    variant="outlined"
-                                                    size="small"
-                                                    sx={{
-                                                        color: '#368FF4',
-                                                        borderColor: '#368FF4',
-                                                        '&:hover': {
-                                                            bgcolor: 'rgba(54,143,244,0.1)',
-                                                            borderColor: '#368FF4',
-                                                            transform: 'scale(1.05)'
-                                                        }
-                                                    }}
-                                                >
-                                                    Editar
-                                                </Button>
-                                            </Box>
+                                                    {getInitials(user.usuario)}
+                                                </Avatar>
+                                            </Badge>
 
-                                            {/* Chips de Estado y Rol */}
-                                            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                                                <Chip
-                                                    icon={React.createElement(roleInfo.icon)}
-                                                    label={user.rol?.nombre_rol || 'Usuario'}
-                                                    sx={{
-                                                        bgcolor: roleInfo.bg,
-                                                        color: 'black',
+                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                                                    <Typography variant="h4" sx={{
+                                                        color: theme.palette.text.primary,
                                                         fontWeight: 'bold',
-                                                        '& .MuiChip-icon': { color: 'black' }
-                                                    }}
-                                                />
-                                                <Chip
-                                                    icon={<SecurityIcon />}
-                                                    label={user.is_active ? 'Cuenta Activa' : 'Cuenta Inactiva'}
-                                                    sx={{
-                                                        bgcolor: getStatusColor(user.is_active),
-                                                        color: 'black',
-                                                        fontWeight: 'bold',
-                                                        '& .MuiChip-icon': { color: 'black' }
-                                                    }}
-                                                />
-                                            </Box>
-
-                                            {/* Progreso del Perfil */}
-                                            <Box sx={{ mb: 3 }}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                    <Typography variant="body2" sx={{ color: '#888' }}>
-                                                        Completitud del perfil
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ color: '#368FF4', fontWeight: 'bold' }}>
-                                                        {profileCompletion}%
-                                                    </Typography>
-                                                </Box>
-                                                <LinearProgress
-                                                    variant="determinate"
-                                                    value={profileCompletion}
-                                                    sx={{
-                                                        height: 8,
-                                                        borderRadius: 4,
-                                                        bgcolor: 'rgba(255,255,255,0.1)',
-                                                        '& .MuiLinearProgress-bar': {
-                                                            bgcolor: profileCompletion === 100 ? '#368FF4' : '#FFD700',
-                                                            borderRadius: 4
-                                                        }
-                                                    }}
-                                                />
-                                            </Box>
-                                        </Box>
-                                    </Box>
-
-                                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mb: 4 }} />
-
-                                    {/* Información Detallada */}
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                p: 2,
-                                                bgcolor: 'rgba(54,143,244,0.05)',
-                                                borderRadius: 2,
-                                                border: '1px solid rgba(54,143,244,0.2)'
-                                            }}>
-                                                <EmailIcon sx={{ color: '#368FF4', fontSize: 28, mr: 2 }} />
-                                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
-                                                        Correo Electrónico
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ 
-                                                        color: 'white', 
-                                                        fontWeight: 'bold',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis'
+                                                        mr: 2,
+                                                        fontSize: { xs: 20, md: 26 }
                                                     }}>
-                                                        {user.correo}
+                                                        @{user.usuario}
                                                     </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Grid>
 
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                p: 2,
-                                                bgcolor: 'rgba(255,215,0,0.05)',
-                                                borderRadius: 2,
-                                                border: '1px solid rgba(255,215,0,0.2)'
-                                            }}>
-                                                <CalendarIcon sx={{ color: '#FFD700', fontSize: 28, mr: 2 }} />
-                                                <Box>
-                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
-                                                        Miembro desde
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                        {formatFechaHora(user.registro)}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Grid>
-
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                p: 2,
-                                                bgcolor: 'rgba(255,107,107,0.05)',
-                                                borderRadius: 2,
-                                                border: '1px solid rgba(255,107,107,0.2)'
-                                            }}>
-                                                <ScheduleIcon sx={{ color: '#FF6B6B', fontSize: 28, mr: 2 }} />
-                                                <Box>
-                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
-                                                        Última actividad
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                        {formatFechaHora(user.updated_at)}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Grid>
-
-                                        <Grid item xs={12} md={6}>
-                                            <Box sx={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                p: 2,
-                                                bgcolor: 'rgba(138,43,226,0.05)',
-                                                borderRadius: 2,
-                                                border: '1px solid rgba(138,43,226,0.2)'
-                                            }}>
-                                                <AccountBalanceWalletIcon sx={{ color: '#8A2BE2', fontSize: 28, mr: 2 }} />
-                                                <Box>
-                                                    <Typography variant="caption" sx={{ color: '#888', display: 'block' }}>
-                                                        Plan de Usuario
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>
-                                                        {user.estado?.nombre_estado}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    </Grid>
-
-                    {/* Cards Laterales */}
-                    <Grid item xs={12} lg={4}>
-                        <Grid container spacing={3}>
-                            {/* Estadísticas Rápidas */}
-                            <Grid item xs={12}>
-                                <motion.div
-                                    initial={{ opacity: 0, x: 30 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.8, delay: 0.2 }}
-                                >
-                                    <Card
-                                        onMouseEnter={() => setHoveredCard('stats')}
-                                        onMouseLeave={() => setHoveredCard(null)}
-                                        sx={{
-                                            bgcolor: '#1a1a1a',
-                                            border: hoveredCard === 'stats' ? '2px solid #FFD700' : '1px solid #333',
-                                            borderRadius: 4,
-                                            transition: 'all 0.3s ease',
-                                            transform: hoveredCard === 'stats' ? 'translateY(-5px)' : 'translateY(0)',
-                                            boxShadow: hoveredCard === 'stats' 
-                                                ? '0 20px 40px rgba(255,215,0,0.2)' 
-                                                : '0 10px 30px rgba(0,0,0,0.5)',
-                                            position: 'relative',
-                                            overflow: 'hidden',
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: 'linear-gradient(90deg, #FFD700, #FFA500)'
-                                            }
-                                        }}
-                                    >
-                                        <CardContent sx={{ p: 3, textAlign: 'center' }}>
-                                            <Typography variant="h5" sx={{ color: 'white', mb: 1, fontWeight: 'bold' }}>
-                                                Estadísticas
-                                            </Typography>
-
-                                            <Box sx={{ mt: 3 }}>
-                                                <Grid container spacing={2}>
-                                                    <Grid item xs={6}>
-                                                        <Box sx={{ 
-                                                            p: 2, 
-                                                            bgcolor: 'rgba(54,143,244,0.1)', 
-                                                            borderRadius: 2,
-                                                            border: '1px solid rgba(54,143,244,0.2)'
-                                                        }}>
-                                                            <Typography variant="h4" sx={{ color: '#368FF4', fontWeight: 'bold' }}>
-                                                                {daysActive}
-                                                            </Typography>
-                                                            <Typography variant="caption" sx={{ color: '#888' }}>
-                                                                Días activo
-                                                            </Typography>
-                                                        </Box>
-                                                    </Grid>
-
-                                                    <Grid item xs={6}>
-                                                        <Box sx={{ 
-                                                            p: 2, 
-                                                            bgcolor: 'rgba(255,107,107,0.1)', 
-                                                            borderRadius: 2,
-                                                            border: '1px solid rgba(255,107,107,0.2)'
-                                                        }}>
-                                                            <Typography variant="h4" sx={{ color: '#FF6B6B', fontWeight: 'bold' }}>
-                                                                {user.is_active ? '✓' : '✗'}
-                                                            </Typography>
-                                                            <Typography variant="caption" sx={{ color: '#888' }}>
-                                                                Estado
-                                                            </Typography>
-                                                        </Box>
-                                                    </Grid>
-                                                </Grid>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-                            </Grid>
-
-                            {/* Accesos Rápidos */}
-                            <Grid item xs={12}>
-                                <motion.div
-                                    initial={{ opacity: 0, x: 30 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.8, delay: 0.4 }}
-                                >
-                                    <Card
-                                        onMouseEnter={() => setHoveredCard('quick')}
-                                        onMouseLeave={() => setHoveredCard(null)}
-                                        sx={{
-                                            bgcolor: '#1a1a1a',
-                                            border: hoveredCard === 'quick' ? '2px solid #FF6B6B' : '1px solid #333',
-                                            borderRadius: 4,
-                                            transition: 'all 0.3s ease',
-                                            transform: hoveredCard === 'quick' ? 'translateY(-5px)' : 'translateY(0)',
-                                            boxShadow: hoveredCard === 'quick' 
-                                                ? '0 20px 40px rgba(255,107,107,0.2)' 
-                                                : '0 10px 30px rgba(0,0,0,0.5)',
-                                            position: 'relative',
-                                            overflow: 'hidden',
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: 'linear-gradient(90deg, #FF6B6B, #FF4444)'
-                                            }
-                                        }}
-                                    >
-                                        <CardContent sx={{ p: 3 }}>
-                                            <Typography variant="h6" sx={{ color: 'white', mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
-                                                Accesos Rápidos
-                                            </Typography>
-                                            
-                                            <Grid container spacing={2}>
-                                                <Grid item xs={6}>
                                                     <Button
-                                                        fullWidth
-                                                        startIcon={<FavoriteIcon />}
-                                                        onClick={() => navigate('/dashboard/favorites')}
-                                                        sx={{
-                                                            color: '#FF1717',
-                                                            bgcolor: 'rgba(255,23,23,0.1)',
-                                                            border: '1px solid rgba(255,23,23,0.3)',
-                                                            '&:hover': {
-                                                                bgcolor: 'rgba(255,23,23,0.2)',
-                                                                transform: 'translateY(-2px)'
-                                                            },
-                                                            py: 1.5
-                                                        }}
-                                                    >
-                                                        Favoritos
-                                                    </Button>
-                                                </Grid>
-                                                
-                                                <Grid item xs={6}>
-                                                    <Button
-                                                        fullWidth
-                                                        startIcon={<SportsIcon />}
-                                                        onClick={() => navigate('/dashboard')}
+                                                        onClick={handleEditProfile}
+                                                        startIcon={<EditIcon />}
+                                                        variant="outlined"
+                                                        size="small"
                                                         sx={{
                                                             color: '#368FF4',
-                                                            bgcolor: 'rgba(54,143,244,0.1)',
-                                                            border: '1px solid rgba(54,143,244,0.3)',
+                                                            borderColor: '#368FF4',
                                                             '&:hover': {
-                                                                bgcolor: 'rgba(54,143,244,0.2)',
-                                                                transform: 'translateY(-2px)'
-                                                            },
-                                                            py: 1.5
+                                                                bgcolor: 'rgba(54,143,244,0.1)',
+                                                                borderColor: '#368FF4',
+                                                                transform: 'scale(1.05)'
+                                                            }
                                                         }}
                                                     >
-                                                        Partidos
+                                                        Editar
                                                     </Button>
-                                                </Grid>
-                                                
-                                                <Grid item xs={12}>
-                                                    <Button
-                                                        fullWidth
-                                                        startIcon={<SettingsIcon />}
-                                                        onClick={() => navigate('/dashboard/settings')}
+                                                </Box>
+
+                                                {/* Chips de Estado y Rol */}
+                                                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                                                    <Chip
+                                                        icon={React.createElement(roleInfo.icon)}
+                                                        label={user.rol?.nombre_rol || 'Usuario'}
                                                         sx={{
-                                                            color: '#FFD700',
-                                                            bgcolor: 'rgba(255,215,0,0.1)',
-                                                            border: '1px solid rgba(255,215,0,0.3)',
-                                                            '&:hover': {
-                                                                bgcolor: 'rgba(255,215,0,0.2)',
-                                                                transform: 'translateY(-2px)'
-                                                            },
-                                                            py: 1.5,
+                                                            bgcolor: roleInfo.bg,
+                                                            color: theme.custom.blanco,
+                                                            fontWeight: 'bold',
+                                                            '& .MuiChip-icon': { color: theme.custom.blanco, }
                                                         }}
-                                                    >
-                                                        Configuración
-                                                    </Button>
+                                                    />
+
+                                                    <Chip
+                                                        icon={<SecurityIcon />}
+                                                        label={user.is_active ? 'Cuenta Activa' : 'Cuenta Inactiva'}
+                                                        sx={{
+                                                            bgcolor: getStatusColor(user.is_active),
+                                                            color: theme.custom.blanco,
+                                                            fontWeight: 'bold',
+                                                            '& .MuiChip-icon': { color: theme.custom.blanco }
+                                                        }}
+                                                    />
+                                                </Box>
+
+                                                {/* Progreso del Perfil */}
+                                                <Box sx={{ mb: 3, flexWrap: 'wrap', gap: 2, }}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                                                            Completitud del perfil
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ color: theme.palette.primary.main, fontWeight: 'bold' }}>
+                                                            {profileCompletion}%
+                                                        </Typography>
+                                                    </Box>
+
+                                                    <LinearProgress
+                                                        variant="determinate"
+                                                        value={profileCompletion}
+                                                        sx={{
+                                                            height: 8,
+                                                            borderRadius: 4,
+                                                            bgcolor: 'rgba(255,255,255,0.1)',
+                                                            '& .MuiLinearProgress-bar': {
+                                                                bgcolor: profileCompletion === 100 ? theme.palette.primary.main : theme.palette.text.secondary,
+                                                                borderRadius: 4
+                                                            }
+                                                        }}
+                                                    />
+                                                </Box>
+                                            </Box>
+                                        </Box>
+
+                                        {/* Información Detallada */}
+                                        <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    p: 2,
+                                                    bgcolor: theme.custom.rojo,
+                                                    borderRadius: 2,
+                                                    border: '1px solid #ccc',
+                                                }}>
+                                                    <EmailIcon sx={{ color: theme.custom.blanco, fontSize: { xs: 20, md: 28 }, mr: 2 }} />
+                                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                        <Typography variant="caption" sx={{ color: theme.custom.blanco, display: 'block' }}>
+                                                            Correo Electrónico
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{
+                                                            color: theme.custom.blanco,
+                                                            fontWeight: 'bold',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            fontSize: { xs: 15, md: 20 }
+                                                        }}>
+                                                            {user.correo}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    p: 2,
+                                                    bgcolor: theme.custom.azul,
+                                                    borderRadius: 2,
+                                                    border: '1px solid #ccc'
+                                                }}>
+                                                    <CalendarIcon sx={{ color: theme.custom.blanco, fontSize: { xs: 20, md: 28 }, mr: 2 }} />
+                                                    <Box>
+                                                        <Typography variant="caption" sx={{ color: theme.custom.blanco, display: 'block' }}>
+                                                            Miembro desde
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ color: theme.custom.blanco, fontWeight: 'bold', fontSize: { xs: 15, md: 20 } }}>
+                                                            {formatFechaHora(user.registro)}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    p: 2,
+                                                    bgcolor: theme.custom.naranja,
+                                                    borderRadius: 2,
+                                                    border: '1px solid #ccc'
+                                                }}>
+                                                    <ScheduleIcon sx={{ color: theme.custom.blanco, fontSize: { xs: 20, md: 28 }, mr: 2 }} />
+                                                    <Box>
+                                                        <Typography variant="caption" sx={{ color: theme.custom.blanco, display: 'block' }}>
+                                                            Última actividad
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ color: theme.custom.blanco, fontWeight: 'bold', fontSize: { xs: 15, md: 20 } }}>
+                                                            {formatFechaHora(user.updated_at)}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    p: 2,
+                                                    bgcolor: theme.custom.morado,
+                                                    borderRadius: 2,
+                                                    border: '1px solid rgba(138,43,226,0.2)'
+                                                }}>
+                                                    <AccountBalanceWalletIcon sx={{ color: theme.custom.blanco, fontSize: { xs: 20, md: 28 }, mr: 2 }} />
+                                                    <Box>
+                                                        <Typography variant="caption" sx={{ color: theme.custom.blanco, display: 'block' }}>
+                                                            Plan de Usuario
+                                                        </Typography>
+                                                        <Typography variant="body1" sx={{ color: theme.custom.blanco, fontWeight: 'bold', fontSize: { xs: 15, md: 20 } }}>
+                                                            {user.estado?.nombre_estado}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </Grid>
+
+                        <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                            <motion.div
+                                initial={{ opacity: 0, x: 30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.8, delay: 0.2 }}
+                            >
+                                <Card
+                                    sx={{
+                                        backgroundColor: theme.palette.background.default,
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            height: '4px',
+                                            background: 'linear-gradient(90deg, #FFD700, #FFA500)'
+                                        }
+                                    }}
+                                >
+                                    <CardContent
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            textAlign: 'center'
+                                        }}>
+                                        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 1, fontWeight: 'bold' }}>
+                                            Estadísticas
+                                        </Typography>
+
+                                        <Box sx={{ mt: 3 }}>
+                                            <Grid container spacing={2}>
+                                                <Grid item xs={6}>
+                                                    <Box sx={{
+                                                        p: 2,
+                                                        bgcolor: 'rgba(54,143,244,0.1)',
+                                                        borderRadius: 2,
+                                                        border: '1px solid rgba(54,143,244,0.2)'
+                                                    }}>
+                                                        <Typography variant="h4" sx={{ color: '#368FF4', fontWeight: 'bold' }}>
+                                                            {daysActive}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                                                            Días activo
+                                                        </Typography>
+                                                    </Box>
+                                                </Grid>
+
+                                                <Grid item xs={6}>
+                                                    <Box sx={{
+                                                        p: 2,
+                                                        bgcolor: 'rgba(255,107,107,0.1)',
+                                                        borderRadius: 2,
+                                                        border: '1px solid rgba(255,107,107,0.2)'
+                                                    }}>
+                                                        <Typography variant="h4" sx={{ color: '#FF6B6B', fontWeight: 'bold' }}>
+                                                            {user.is_active ? '✓' : '✗'}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                                                            Estado
+                                                        </Typography>
+                                                    </Box>
                                                 </Grid>
                                             </Grid>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-                            </Grid>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, x: 30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.8, delay: 0.4 }}
+                            >
+                                <Card
+                                    sx={{
+                                        backgroundColor: theme.palette.background.default,
+                                        borderRadius: 1,
+                                        overflow: 'hidden',
+                                        position: 'relative',
+                                        '&::before': {
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            height: '4px',
+                                            background: 'linear-gradient(90deg, #FF6B6B, #FF4444)'
+                                        }
+                                    }}
+                                >
+                                    <CardContent
+                                        sx={{
+                                            p: 2,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            textAlign: 'center'
+                                        }}>
+                                        <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
+                                            Accesos Rápidos
+                                        </Typography>
+
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={6}>
+                                                <Button
+                                                    fullWidth
+                                                    startIcon={<FavoriteIcon />}
+                                                    onClick={() => navigate('/dashboard/favorites')}
+                                                    sx={{
+                                                        color: '#FF1717',
+                                                        bgcolor: 'rgba(255,23,23,0.1)',
+                                                        border: '1px solid rgba(255,23,23,0.3)',
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(255,23,23,0.2)',
+                                                            transform: 'translateY(-2px)'
+                                                        },
+                                                        py: 1.5
+                                                    }}
+                                                >
+                                                    Favoritos
+                                                </Button>
+                                            </Grid>
+
+                                            <Grid item xs={6}>
+                                                <Button
+                                                    fullWidth
+                                                    startIcon={<SportsIcon />}
+                                                    onClick={() => navigate('/dashboard')}
+                                                    sx={{
+                                                        color: '#368FF4',
+                                                        bgcolor: 'rgba(54,143,244,0.1)',
+                                                        border: '1px solid rgba(54,143,244,0.3)',
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(54,143,244,0.2)',
+                                                            transform: 'translateY(-2px)'
+                                                        },
+                                                        py: 1.5
+                                                    }}
+                                                >
+                                                    Partidos
+                                                </Button>
+                                            </Grid>
+
+                                            <Grid item xs={12}>
+                                                <Button
+                                                    fullWidth
+                                                    startIcon={<SettingsIcon />}
+                                                    onClick={() => navigate('/dashboard/settings')}
+                                                    sx={{
+                                                        color: '#ffa726',
+                                                        bgcolor: 'rgba(255,167,38,0.1)',
+                                                        border: '1px solid rgba(255,167,38,0.3)',
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(255,167,38,0.2)',
+                                                            transform: 'translateY(-2px)'
+                                                        },
+                                                        py: 1.5,
+                                                    }}
+                                                >
+                                                    Configuración
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -853,15 +709,15 @@ const PageProfile = () => {
                 fullWidth
                 PaperProps={{
                     sx: {
-                        bgcolor: '#1a1a1a',
+                        bgcolor: theme.palette.background.paper,
                         border: '1px solid #333',
-                        borderRadius: 4,
+                        borderRadius: 2,
                         backgroundImage: 'none'
                     }
                 }}
             >
-                <DialogTitle sx={{ 
-                    color: 'white', 
+                <DialogTitle sx={{
+                    color: theme.palette.text.primary,
                     borderBottom: '1px solid #333',
                     display: 'flex',
                     alignItems: 'center',
@@ -875,103 +731,91 @@ const PageProfile = () => {
                         </Typography>
                     </Box>
 
-                    <IconButton 
+                    <IconButton
                         onClick={() => setEditModalOpen(false)}
-                        sx={{ color: '#888' }}
+                        sx={{ color: theme.palette.text.secondary }}
                     >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
 
                 <DialogContent sx={{ p: 4, mt: 3 }}>
-                    <Grid container spacing={3} sx={{ mt: 3 }}>
-                        {/* Campo Usuario */}
-                        <Grid item xs={12}>
+                    <form onSubmit={handleSubmit(onSubmit)} style={{ padding: 6 }}>
+                        <div className="relative">
                             <TextField
+                                label="Nombre de usuario"
+                                variant="outlined"
                                 fullWidth
-                                label="Nombre de Usuario"
-                                value={editForm.usuario}
-                                onChange={(e) => handleFormChange('usuario', e.target.value)}
-                                error={!!formErrors.usuario}
-                                helperText={formErrors.usuario}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <PersonIcon sx={{ color: '#368FF4' }} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: {
-                                        color: 'white',
-                                        '& .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#333'
-                                        },
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#368FF4'
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#368FF4'
-                                        }
-                                    }
-                                }}
-                                InputLabelProps={{
-                                    sx: { color: '#888' }
-                                }}
+                                autoComplete="off"
                                 sx={{
-                                    '& .MuiFormHelperText-root': {
-                                        color: '#FF4444'
-                                    }
+                                    "& label": { color: theme.palette.text.primary },
+                                    "& .MuiOutlinedInput-root": {
+                                        color: theme.palette.text.primary,
+                                        "& fieldset": { borderColor: theme.palette.text.primary },
+                                        "&:hover fieldset": { borderColor: theme.palette.primary.main },
+                                    },
+                                    "& .Mui-error": {
+                                        "& label": { color: theme.custom.rojo },
+                                        "& label.Mui-focused": { color: theme.custom.rojo },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                        "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo }
+                                    },
                                 }}
-                            />
-                        </Grid>
+                                {...register("usuario", {
+                                    required: {
+                                        value: true,
+                                        message: "Nombre de usuario requerido"
+                                    }
+                                })}
+                                error={!!errors.usuario}
+                                helperText={errors.usuario ? errors.usuario.message : ''} />
+                        </div>
 
-                        {/* Campo Correo */}
-                        <Grid item xs={12}>
+                        <div className="relative mt-5 mb-5">
                             <TextField
-                                fullWidth
                                 label="Correo Electrónico"
-                                type="email"
-                                value={editForm.correo}
-                                onChange={(e) => handleFormChange('correo', e.target.value)}
-                                error={!!formErrors.correo}
-                                helperText={formErrors.correo}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <EmailIcon sx={{ color: '#368FF4' }} />
-                                        </InputAdornment>
-                                    ),
-                                    sx: {
-                                        color: 'white',
-                                        '& .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#333'
-                                        },
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#368FF4'
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#368FF4'
-                                        }
-                                    }
-                                }}
-                                InputLabelProps={{
-                                    sx: { color: '#888' }
-                                }}
+                                variant="outlined"
+                                fullWidth
+                                type='email'
+                                autoComplete="off"
                                 sx={{
-                                    '& .MuiFormHelperText-root': {
-                                        color: '#FF4444'
-                                    }
+                                    "& label": { color: theme.palette.text.primary },
+                                    "& .MuiOutlinedInput-root": {
+                                        color: theme.palette.text.primary,
+                                        "& fieldset": { borderColor: theme.palette.text.primary },
+                                        "&:hover fieldset": { borderColor: theme.palette.primary.main },
+                                    },
+                                    "& .Mui-error": {
+                                        "& label": { color: theme.custom.rojo },
+                                        "& label.Mui-focused": { color: theme.custom.rojo },
+                                        "& .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                        "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: theme.custom.rojo }
+                                    },
                                 }}
-                            />
-                        </Grid>
+                                {...register("correo", {
+                                    required: {
+                                        value: true,
+                                        message: "Correo Electrónico requerido"
+                                    },
+                                    pattern: {
+                                        value: /^[a-z0-9._%+-]+@(gmail\.com|hotmail\.com|outlook\.com)$/i,
+                                        message: "El correo electrónico debe proceder de Gmail, Hotmail o Outlook"
+                                    }
+                                })}
+                                error={!!errors.correo}
+                                helperText={errors.correo ? errors.correo.message : ''} />
+                        </div>
 
                         {/* Información adicional */}
                         <Grid item xs={12}>
-                            <Alert 
-                                severity="info" 
-                                sx={{ 
-                                    bgcolor: 'rgba(54,143,244,0.1)', 
+                            <Alert
+                                severity="info"
+                                sx={{
+                                    bgcolor: 'rgba(54,143,244,0.1)',
                                     border: '1px solid rgba(54,143,244,0.3)',
-                                    color: 'white',
+                                    color: theme.palette.text.primary,
                                     '& .MuiAlert-icon': {
                                         color: '#368FF4'
                                     }
@@ -988,47 +832,24 @@ const PageProfile = () => {
                                 </Typography>
                             </Alert>
                         </Grid>
-                    </Grid>
+
+                        <DialogActions>
+                            <Button onClick={() => setEditModalOpen(false)}>Cancelar</Button>
+                            <Button
+                                type="submit"
+                                disabled={isSubmitting}
+                                startIcon={
+                                    updateUserMutation.isLoading ? (
+                                        <CircularProgress size={20} sx={{ color: '#368FF4' }} />
+                                    ) : (
+                                        <SaveIcon />
+                                    )
+                                }>
+                                {updateUserMutation.isLoading ? 'Guardando...' : 'Guardar Cambios'}
+                            </Button>
+                        </DialogActions>
+                    </form>
                 </DialogContent>
-
-                <DialogActions sx={{ p: 3, borderTop: '1px solid #333' }}>
-                    <Button
-                        onClick={() => setEditModalOpen(false)}
-                        sx={{ 
-                            color: '#888',
-                            '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.05)'
-                            }
-                        }}
-                    >
-                        Cancelar
-                    </Button>
-
-                    <Button
-                        onClick={handleSaveChanges}
-                        disabled={updateUserMutation.isLoading}
-                        startIcon={
-                            updateUserMutation.isLoading ? (
-                                <CircularProgress size={20} sx={{ color: '#368FF4' }} />
-                            ) : (
-                                <SaveIcon />
-                            )
-                        }
-                        sx={{
-                            bgcolor: '#368FF4',
-                            color: 'white',
-                            '&:hover': {
-                                bgcolor: '#2a7bc4'
-                            },
-                            '&:disabled': {
-                                bgcolor: 'rgba(54,143,244,0.3)',
-                                color: 'rgba(255,255,255,0.5)'
-                            }
-                        }}
-                    >
-                        {updateUserMutation.isLoading ? 'Guardando...' : 'Guardar Cambios'}
-                    </Button>
-                </DialogActions>
             </Dialog>
 
             {/* Snackbar para notificaciones */}

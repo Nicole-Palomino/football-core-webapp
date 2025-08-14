@@ -204,8 +204,8 @@ const MatchDetail = () => {
                                                     alt={partidoID.equipo_local?.nombre_equipo}
                                                     src={partidoID.equipo_local?.logo}
                                                     sx={{
-                                                        width: { xs: 35, md: 80 },
-                                                        height: { xs: 35, md: 80 },
+                                                        width: { xs: 35, md: 90 },
+                                                        height: { xs: 35, md: 90 },
                                                         '& img': { objectFit: 'contain' },
                                                     }}
                                                 />
@@ -288,8 +288,8 @@ const MatchDetail = () => {
                                                     alt={partidoID.equipo_visita?.nombre_equipo}
                                                     src={partidoID.equipo_visita?.logo}
                                                     sx={{
-                                                        width: { xs: 35, md: 80 },
-                                                        height: { xs: 35, md: 80 },
+                                                        width: { xs: 35, md: 90 },
+                                                        height: { xs: 35, md: 90 },
                                                         '& img': { objectFit: 'contain' },
                                                     }}
                                                 />
