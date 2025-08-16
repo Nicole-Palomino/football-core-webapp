@@ -38,7 +38,7 @@ async def create_estadistica(db: AsyncSession, estadistica: schemas.EstadisticaC
     Crea una nueva Estadistica de forma asíncrona.
     Realiza la comprobación de existencia de Partido relacionado.
     """
-    partido = await crud_match.get_partido(db, estadistica.id_partido)
+    partido = await crud_match.get_partido_by_id(db, estadistica.id_partido)
     if not partido:
         raise ValueError(f"Partido con ID {estadistica.id_partido} no encontrado.")
     

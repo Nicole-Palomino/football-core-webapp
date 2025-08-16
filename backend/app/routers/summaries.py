@@ -23,7 +23,7 @@ router = APIRouter(
 async def create_summary(
     resumen: ResumenCreate, 
     db: AsyncSession = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_admin_user) # Sólo el administrador puede crear
+    current_user: schemas.User = Depends(get_current_admin_user)
 ):
     """
     Crea un nuevo Resumen. Requiere privilegios de administrador.
@@ -31,10 +31,14 @@ async def create_summary(
     try:
         return await crear_resumen(db=db, resumen=resumen)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except IntegrityError:
+        await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad de datos. Verifique los IDs de las relaciones.")
-
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+    
 # ⚠️
 @router.get("/", response_model=List[ResumenOut])
 async def read_summaries(

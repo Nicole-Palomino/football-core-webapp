@@ -3,10 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import Optional, List
+from sqlalchemy.exc import IntegrityError
 from app.models.summary import ResumenEstadistico
 from app.schemas.summary import ResumenCreate, ResumenUpdate
 from app.crud import crud_match
 from app import models
+from fastapi import HTTPException
+
 
 async def get_resumen(db: AsyncSession, resumen_id: int):
     """
@@ -55,28 +58,27 @@ async def listar_resumenes_por_partido(db: AsyncSession, id_partido: int):
     return result.scalars().all()
 
 async def crear_resumen(db: AsyncSession, resumen: ResumenCreate):
-    """
-    Crea un nuevo Resumen de forma asíncrona con validación optimizada de claves externas.
-    """
-    # Ejecutar verificacion
-    partido_task = crud_match.get_partido(db, resumen.id_partido)
-    partido = await asyncio.gather(
-        partido_task
-    )
-
-    # Validación
+    """Crea un nuevo Resumen con validación de claves externas."""
+    partido = await crud_match.get_partido_by_id(db, resumen.id_partido)
     if not partido:
         raise ValueError(f"Partido con ID {resumen.id_partido} no encontrado.")
-    
-    db_resumen = ResumenEstadistico(
-        nombre =  resumen.nombre,
-        url_imagen =  resumen.url_imagen,
-        id_partido = resumen.id_partido
+
+    nuevo_resumen = models.ResumenEstadistico(
+        nombre=resumen.nombre,
+        url_imagen=resumen.url_imagen,
+        id_partido=resumen.id_partido
     )
-    db.add(db_resumen)
-    await db.commit()
-    await db.refresh(db_resumen)
-    return db_resumen
+    db.add(nuevo_resumen)
+    try:
+        await db.commit()
+        await db.refresh(nuevo_resumen)
+        return nuevo_resumen
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error de integridad: {str(e.orig)}")
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
 
 async def update_resumen(db: AsyncSession, resumen_id: int, resumen: ResumenUpdate):
     """
