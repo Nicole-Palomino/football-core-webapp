@@ -7,6 +7,8 @@ import { formatFecha } from '../../../utils/helpers'
 import { useNavigate } from 'react-router-dom'
 import LoadingFavorite from "../../Loading/LoadingFavorite"
 import React from "react"
+import SummarizeIcon from '@mui/icons-material/Summarize'
+import PhotoSizeSelectActualIcon from '@mui/icons-material/PhotoSizeSelectActual'
 
 const MatchList = React.memo(({ partidos, type }) => {
     const { loadingFavoritos } = useFavoritos()
@@ -32,11 +34,16 @@ const MatchList = React.memo(({ partidos, type }) => {
     }
 
     const onResumenClick = (partido_id) => {
-        navigate(`/resumen/${partido_id}`)
+        navigate(`/resumen/${partido_id}`, {
+            state: {
+                equipo_local: team1_id,
+                equipo_visita: team2_id
+            }
+        })
     }
 
     const onImagenesClick = (partido_id) => {
-        navigate(`/imagenes/${partido_id}`)
+        navigate(`/dashboard/imagenes/${partido_id}`)
     }
 
     if (loadingFavoritos) {
@@ -55,7 +62,7 @@ const MatchList = React.memo(({ partidos, type }) => {
                         alignItems: "center",
                         justifyContent: "space-between",
                         borderBottom: "1px solid rgba(255,255,255,0.1)",
-                        py: 1
+                        py: 1,
                     }}
                 >
                     {/* Equipos */}
@@ -150,13 +157,13 @@ const MatchList = React.memo(({ partidos, type }) => {
                                 <>
                                     <Tooltip title="Resumen">
                                         <IconButton size="small" onClick={() => onResumenClick(partido.id_partido)}>
-                                            📄
+                                            <SummarizeIcon sx={{ color: theme.custom.azulHover }} />
                                         </IconButton>
                                     </Tooltip>
 
                                     <Tooltip title="Imágenes">
                                         <IconButton size="small" onClick={() => onImagenesClick(partido.id_partido)}>
-                                            🖼️
+                                            <PhotoSizeSelectActualIcon sx={{ color: theme.palette.text.primary }} />
                                         </IconButton>
                                     </Tooltip>
                                 </>
