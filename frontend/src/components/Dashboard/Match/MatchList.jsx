@@ -34,12 +34,7 @@ const MatchList = React.memo(({ partidos, type }) => {
     }
 
     const onResumenClick = (partido_id) => {
-        navigate(`/resumen/${partido_id}`, {
-            state: {
-                equipo_local: team1_id,
-                equipo_visita: team2_id
-            }
-        })
+        navigate(`/dashboard/summary/${partido_id}`)
     }
 
     const onImagenesClick = (partido_id) => {

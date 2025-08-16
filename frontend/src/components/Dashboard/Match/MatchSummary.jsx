@@ -1,14 +1,16 @@
-import { Avatar, Box, Chip, Container, Grid, IconButton, Paper, Tooltip, Typography, useTheme } from '@mui/material'
-import { useNavigate, useParams } from 'react-router-dom'
-import LoadingSpinner from '../../Loading/LoadingSpinner'
+import { Avatar, Box, Card, CardContent, Chip, Container, Fade, Grid, IconButton, Paper, Tooltip, Typography, useTheme } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getMatcheByID } from '../../../services/api/matches'
+import LoadingSpinner from '../../Loading/LoadingSpinner'
 import { ArrowBack, CalendarToday, HorizontalRule, Stadium } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { formatFecha } from '../../../utils/helpers'
-import { getMatcheByID } from '../../../services/api/matches'
-import CustomImage from '../Details/CustomImage'
+import TitleText from '../Details/TitleText'
+import BarComparativa from './graphics/BarComparativa'
+import TableChartIcon from '@mui/icons-material/TableChart'
 
-const MatchImage = () => {
+const MatchSummary = () => {
 
     const theme = useTheme()
     const { id_partido } = useParams()
@@ -45,7 +47,7 @@ const MatchImage = () => {
     const finalMatchDataAsArray = matchData
         ? (Array.isArray(matchData) ? matchData : [matchData])
         : []
-    
+    console.log(finalMatchDataAsArray)
     const handleGoBack = () => navigate(-1)
 
     return (
@@ -294,8 +296,112 @@ const MatchImage = () => {
 
                                 <Box sx={{ width: '100%' }}>
                                     <Box sx={{ borderBottom: 1, borderColor: '#333' }}>
-                                        <CustomImage 
-                                            id_partido={id_partido} />
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                width: '100%',
+                                            }}
+                                        >
+                                            <Fade in={true} timeout={1200}>
+                                                <Box sx={{ width: "100%", mx: "auto", maxWidth: "1400px" }}>
+                                                    <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
+                                                        <Grid
+                                                            item
+                                                            xs={12}
+                                                            md={6}
+                                                            sx={{
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                minWidth: { md: 1000, xs: 'auto' }
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                className='uppercase'
+                                                                sx={{
+                                                                    color: 'white',
+                                                                    mb: 4,
+                                                                    textAlign: 'center',
+                                                                    fontFamily: 'cursive',
+                                                                    background: 'linear-gradient(45deg, #201DBE, #49FD58)',
+                                                                    backgroundClip: 'text',
+                                                                    WebkitBackgroundClip: 'text',
+                                                                    WebkitTextFillColor: 'transparent',
+                                                                    fontSize: { xs: 18, md: 33 }
+                                                                }}>
+                                                                Resumen del Partido
+                                                            </Typography>
+
+                                                            <Grid className="grid grid-cols-1 gap-4 mt-5">
+                                                                <Card
+                                                                    sx={{
+                                                                        width: '100%',
+                                                                        background: 'rgba(255, 255, 255, 0.05)',
+                                                                        backdropFilter: 'blur(10px)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                        borderRadius: 1,
+                                                                        overflow: 'hidden',
+                                                                        position: 'relative',
+                                                                        mt: 2,
+                                                                        '&::before': {
+                                                                            content: '""',
+                                                                            position: 'absolute',
+                                                                            top: 0,
+                                                                            left: 0,
+                                                                            right: 0,
+                                                                            height: '4px',
+                                                                            background: `linear-gradient(90deg, #FB7452, #D9FB52)`
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                                                                        <TitleText
+                                                                            icon={TableChartIcon}
+                                                                            iconColor='#FB7452'
+                                                                            title={'Resumen Final del Partido'}
+                                                                        />
+
+                                                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, gap: 2 }}>
+                                                                            <div className="bg-slate-800 p-4 rounded-lg w-full">
+                                                                                <BarComparativa
+                                                                                    home={partidoID?.estadisticas.HTHG}
+                                                                                    away={partidoID?.estadisticas.HTAG}
+                                                                                    title='Goles HT'/>
+                                                                                <BarComparativa 
+                                                                                    home={partidoID?.estadisticas.HS}
+                                                                                    away={partidoID?.estadisticas.AS_}
+                                                                                    title='Disparos'/>
+                                                                                <BarComparativa 
+                                                                                    home={partidoID?.estadisticas.HST}
+                                                                                    away={partidoID?.estadisticas.AST}
+                                                                                    title='Disparos al arco'/>
+                                                                                <BarComparativa 
+                                                                                    home={partidoID?.estadisticas.HF}
+                                                                                    away={partidoID?.estadisticas.AF}
+                                                                                    title='Faltas'/>
+                                                                                <BarComparativa 
+                                                                                    home={partidoID?.estadisticas.HC}
+                                                                                    away={partidoID?.estadisticas.AC}
+                                                                                    title='Tiros de esquina'/>
+                                                                                <BarComparativa 
+                                                                                    home={partidoID?.estadisticas.HY}
+                                                                                    away={partidoID?.estadisticas.AY}
+                                                                                    title='Tarjetas amarillas'/>
+                                                                                <BarComparativa 
+                                                                                    home={partidoID?.estadisticas.HR}
+                                                                                    away={partidoID?.estadisticas.AR}
+                                                                                    title='Tarjetas rojas'/>
+                                                                            </div>
+                                                                        </Box>
+                                                                    </CardContent>
+                                                                </Card>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Box>
+                                            </Fade>
+                                        </Box>
                                     </Box>
                                 </Box>
                             </Box>
@@ -303,9 +409,8 @@ const MatchImage = () => {
                     </motion.div>
                 ))}
             </Container>
-
         </Box>
     )
 }
 
-export default MatchImage
+export default MatchSummary

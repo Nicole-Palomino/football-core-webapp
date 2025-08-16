@@ -5,7 +5,6 @@ import { FavoritosProvider } from '../hooks/FavoritosContext'
 import PrivateRoute from './PrivateRoute'
 import LoadingPage from '../components/Loading/LoadingPage'
 import { MatchesProvider } from '../contexts/MatchesContext'
-import MatchImage from '../components/Dashboard/Match/MatchImage'
 
 const HomePage = lazy(() => import('../pages/HomePage'))
 const Services = lazy(() => import('../components/Header/Services'))
@@ -18,6 +17,8 @@ const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Match = lazy(() => import('../pages/Match'))
 const MatchDetail = lazy(() => import('../components/Dashboard/Match/MatchDetail'))
 const MatchPrediction = lazy(() => import('../components/Dashboard/Match/MatchPrediction'))
+const MatchImage = lazy(() => import('../components/Dashboard/Match/MatchImage'))
+const MatchSummary = lazy(() => import('../components/Dashboard/Match/MatchSummary'))
 const Favorite = lazy(() => import('../pages/Favorite'))
 const Analysis = lazy(() => import('../pages/Analysis'))
 const Forecasts = lazy(() => import('../pages/Forecasts'))
@@ -62,6 +63,7 @@ const AppRoutes = () => {
                 <Route path=':id_partido' element={<Suspense fallback={<LoadingPage />}><MatchDetail /> </Suspense>} />
                 <Route path='predicciones/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchPrediction /> </Suspense>} />
                 <Route path='imagenes/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchImage /> </Suspense>} />
+                <Route path='summary/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchSummary /> </Suspense>} />
                 <Route path='favorites' element={<Suspense fallback={<LoadingPage />}> <Favorite /> </Suspense>} />
                 <Route path='analysis' element={<Suspense fallback={<LoadingPage />}> <Analysis /> </Suspense>} />
                 <Route path='forecasts' element={<Suspense fallback={<LoadingPage />}> <Forecasts /> </Suspense>} />
