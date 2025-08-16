@@ -56,6 +56,19 @@ async def read_summaries(
     result = await db.execute(query)
     return result.scalars().all()
 
+@router.get("/partido/{id_partido}", response_model=list[ResumenOut])
+async def get_resumenes_por_partido(
+    id_partido: int, 
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Devuelve todos los resúmenes de un partido.
+    """
+    resumenes = await listar_resumenes_por_partido(db, id_partido)
+    if not resumenes:
+        raise HTTPException(status_code=404, detail="No se encontraron resúmenes para este partido")
+    return resumenes
+
 # ✅
 @router.get("/resumen-partido", response_model=List[ResumenOut])
 async def read_summary_by_match(

@@ -68,7 +68,7 @@ async def crear_resumen(db: AsyncSession, resumen: ResumenCreate):
     if not partido:
         raise ValueError(f"Partido con ID {resumen.id_partido} no encontrado.")
     
-    db_resumen = ResumenCreate(
+    db_resumen = ResumenEstadistico(
         nombre =  resumen.nombre,
         url_imagen =  resumen.url_imagen,
         id_partido = resumen.id_partido
