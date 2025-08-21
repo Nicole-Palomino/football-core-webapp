@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.core.config import settings
 
+# used in crud_user.py 
 async def send_email(to_email: str, subject: str, body: str):
     """
     Envía un correo electrónico utilizando el servidor SMTP de Gmail.

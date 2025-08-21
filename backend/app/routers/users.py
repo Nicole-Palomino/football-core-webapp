@@ -17,23 +17,37 @@ router = APIRouter(
 # Nota: El POST /users/ endpoint para crear un usuario ha sido movido a /auth/register
 # ya que suele formar parte del flujo de autenticación.
 
-# ✅
+# finished
 @router.get("/", response_model=list[schemas.User])
-async def read_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def read_users(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: AsyncSession = Depends(get_db),
+    current_admin: schemas.User = Depends(get_current_admin_user),
+):
     """
     Recupera una lista de todos los Usuarios. Accesible por cualquier usuario autentificado.
     """
     usuarios = await crud.crud_user.get_all_users(db, skip=skip, limit=limit)
     return usuarios
 
+# finished
 @router.get("/{user_id}", response_model=schemas.User)
-async def read_user_by_id(user_id: int, db: AsyncSession = Depends(get_db), current_user: schemas.User = Depends(get_current_admin_user)):
+async def read_user_by_id(
+    user_id: int,
+    db: AsyncSession = Depends(get_db), 
+    current_user: schemas.User = Depends(get_current_active_user)
+):
     """
     Recupera un único usuario por ID. Requiere privilegios de administrador.
     """
     db_user = await crud.get_user(db, user_id=user_id)
     if db_user is None:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+    
+    if current_user.rol.nombre_rol != "Administrador" and db_user.id_usuario != current_user.id_usuario:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para ver este usuario")
+    
     return db_user
 
 # ✅

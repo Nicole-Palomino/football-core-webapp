@@ -1,10 +1,11 @@
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func
 from app import models, schemas
-from app.core.security import get_password_hash
+from app.core.password_utils import get_password_hash
 from app.utils.email_sender import send_email
 from app.crud import crud_role, crud_state
 
@@ -12,6 +13,7 @@ DEFAULT_ESTADO = 10  # Usuario Free
 DEFAULT_ROL = 3     # Usuario normal
 DEFAULT_ADMIN_ROL = 2 # Administrador
 
+# used in users.py
 async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
     """
     Recupera todos los usuarios de forma asíncrona, cargando ansiosamente roles y estado.
@@ -26,6 +28,7 @@ async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
     )
     return result.scalars().all()
 
+# used in auth.py || users.py || security.py
 async def get_user(db: AsyncSession, user_id: int):
     """
     Recupera un único usuario por su ID de forma asíncrona, cargando ansiosamente roles, saldo y transacciones.
@@ -40,6 +43,7 @@ async def get_user(db: AsyncSession, user_id: int):
     )
     return result.scalars().first()
 
+# used in auth.py
 async def get_user_by_correo(db: AsyncSession, correo: str):
     """
     Recupera un único Usuario por su email (correo) de forma asíncrona, cargando ansiosamente roles, saldo y transacciones.
@@ -50,6 +54,7 @@ async def get_user_by_correo(db: AsyncSession, correo: str):
     )
     return result.scalars().first()
 
+# used in auth.py
 async def get_user_by_username(db: AsyncSession, username: str):
     """
     Recupera un único usuario por su nombre de usuario de forma asíncrona.
@@ -60,34 +65,37 @@ async def get_user_by_username(db: AsyncSession, username: str):
     )
     return result.scalars().first()
 
+# used in auth.py
 async def create_user(db: AsyncSession, user: schemas.UserCreate):
     """
-    Crea un nuevo Usuario de forma asíncrona, haciendo hash de la contraseña y asociando rol y estado.
+    Crea un nuevo usuario de forma asíncrona, haciendo hash de la contraseña
+    y asociando rol y estado, retornando el usuario con relaciones cargadas.
     """
-    id_estado = DEFAULT_ESTADO
-    id_rol = DEFAULT_ROL
-    # Verificar la existencia de roles y estados
-    role = await crud_role.get_role(db, id_rol)
+    # Obtener rol y estado por defecto
+    role = await crud_role.get_role(db, DEFAULT_ROL)
     if not role:
-        raise ValueError(f"Rol con ID {id_rol} no encontrado.")
-    
-    estado = await crud_state.get_estado(db, id_estado)
+        raise ValueError(f"Rol con ID {DEFAULT_ROL} no encontrado.")
+
+    estado = await crud_state.get_estado(db, DEFAULT_ESTADO)
     if not estado:
-        raise ValueError(f"Estado con ID {id_estado} no encontrado.")
+        raise ValueError(f"Estado con ID {DEFAULT_ESTADO} no encontrado.")
 
     hashed_contrasena = get_password_hash(user.contrasena)
     db_user = models.User(
         usuario=user.usuario,
         correo=user.correo,
         contrasena=hashed_contrasena,
-        id_estado=id_estado,
-        id_rol=id_rol,
-        registro=datetime.utcnow()
+        id_estado=DEFAULT_ESTADO,
+        id_rol=DEFAULT_ROL,
+        registro=datetime.now(timezone.utc)
     )
     
     db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise ValueError("Error al crear el usuario. Verifique los datos ingresados.") from e
     
     stmt = (
         select(models.User)
@@ -99,37 +107,39 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
     )
     result = await db.execute(stmt)
     user_with_relations = result.scalars().first()
-    
+
     return user_with_relations
 
+# used in auth.py
 async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreate):
     """
     Crea un nuevo Usuario administrador de forma asíncrona, permitiendo definir manualmente el rol y estado.
     """
-    id_estado = DEFAULT_ESTADO
-    id_rol = DEFAULT_ADMIN_ROL
-    # Verificar la existencia de rol y estado proporcionados
-    role = await crud_role.get_role(db, id_rol)
+    # Obtener rol y estado por defecto
+    role = await crud_role.get_role(db, DEFAULT_ADMIN_ROL)
     if not role:
-        raise ValueError(f"Rol con ID {id_rol} no encontrado.")
-    
-    estado = await crud_state.get_estado(db, id_estado)
+        raise ValueError(f"Rol con ID {DEFAULT_ADMIN_ROL} no encontrado.")
+
+    estado = await crud_state.get_estado(db, DEFAULT_ESTADO)
     if not estado:
-        raise ValueError(f"Estado con ID {id_estado} no encontrado.")
+        raise ValueError(f"Estado con ID {DEFAULT_ESTADO} no encontrado.")
 
     hashed_contrasena = get_password_hash(user.contrasena)
     db_user = models.User(
         usuario=user.usuario,
         correo=user.correo,
         contrasena=hashed_contrasena,
-        id_estado=id_estado,
-        id_rol=id_rol,
-        registro=datetime.utcnow()
+        id_estado=DEFAULT_ESTADO,
+        id_rol=DEFAULT_ADMIN_ROL,
+        registro=datetime.now(timezone.utc)
     )
     
     db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise ValueError("Error al crear el usuario. Verifique los datos ingresados.") from e
 
     stmt = (
         select(models.User)
@@ -234,6 +244,7 @@ async def get_usuarios_por_dia(db: AsyncSession):
     return result.all()
 
 # --- Funciones de recuperación de contraseñas ---
+# used in auth.py 
 async def set_user_verification_code(db: AsyncSession, user: models.User):
     """
     Genera un código de verificación de 6 dígitos y establece su caducidad para un usuario.
@@ -257,7 +268,7 @@ async def set_user_verification_code(db: AsyncSession, user: models.User):
     Has solicitado restablecer tu contraseña.
     Tu código de verificación es: {code}
 
-    Este código expirará en 15 minutos. Si no lo solicitaste, por favor ignora este correo.
+    Este código expirará en 15 minutos. Si no lo solicitaste, ignora este correo.
 
     Saludos,
     Equipo de Soporte

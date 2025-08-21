@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app import models, schemas
 
+# used in crud_user.py
 async def get_role(db: AsyncSession, rol_id: int):
     """
     Recupera un único Rol por su ID de forma asíncrona.

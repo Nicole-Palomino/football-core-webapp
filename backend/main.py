@@ -2,10 +2,11 @@ from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.middlewares.security import log_requests_and_secure
 from app.database import engine, Base
 from app.routers import (
     favorites, leagues, matches, seasons, states, stats, summaries, 
-    teams, roles, users, auth, results, analysis, cluster, predictions,
+    teams, roles, users, auth, analysis, cluster, predictions,
     poisson, clasification
 )
 
@@ -26,6 +27,8 @@ app = FastAPI(
     docs_url="/documentacion",
     redoc_url="/redoc"
 )
+
+app.middleware('http')(log_requests_and_secure)
 
 # @app.on_event("startup")
 # async def on_startup():
@@ -64,7 +67,6 @@ app.include_router(stats.router)
 app.include_router(users.router)
 app.include_router(summaries.router)
 app.include_router(favorites.router)
-app.include_router(results.router)
 app.include_router(analysis.router)
 app.include_router(cluster.router)
 app.include_router(predictions.router)

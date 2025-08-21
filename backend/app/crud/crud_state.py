@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app import models, schemas
 
+# used in crud_user.py
 async def get_estado(db: AsyncSession, estado_id: int):
     """
     Recupera un único Estado por su ID de forma asíncrona.

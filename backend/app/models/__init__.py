@@ -1,8 +1,7 @@
 from . favorite import Favorito
-from .history_kmeans import ResultadoKMeans
-from .history_rf import ResultadoRF
 from .league import Liga
 from .match import Partido
+from .refresh_token import RefreshToken
 from .role import Rol
 from .season import Temporada
 from .stat import Estadistica

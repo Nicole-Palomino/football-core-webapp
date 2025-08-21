@@ -4,53 +4,52 @@ from typing import List, Optional, AsyncGenerator
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession # Utilizar AsyncSession para operaciones db asíncronas
 
 from app import schemas
 from app.crud import crud_user
 from app.database import AsyncSessionLocal # Utilizar AsyncSessionLocal como dependencia para get_db_for_auth
 from app.core.config import settings
-
-# Contexto hash de la contraseña
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from app.core.password_utils import verify_password
+from app.dependencies import get_db
 
 # OAuth2PasswordBearer para gestionar la extracción de tokens de la cabecera Authorization
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-async def get_db_for_auth() -> AsyncGenerator[AsyncSession, None]:
-    """
-    Proporciona una sesión de base de datos asíncrona específica para funciones de autenticación.
-    Garantiza el manejo adecuado de la sesión incluso cuando se llama fuera del flujo típico del punto final FastAPI.
-    """
-    async with AsyncSessionLocal() as session:
-        yield session
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verifica si una contraseña simple coincide con su versión hash.
-    """
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    """
-    Comprime una contraseña simple utilizando bcrypt.
-    """
-    return pwd_context.hash(password)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
     Crea un token de acceso JWT.
     """
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    now = datetime.now(timezone.utc)
+    expire = now + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({
+        "exp": expire,
+        "iat": now,
+        "nbf": now,
+        "iss": "football-core-api",   # Identificador de tu API
+        "aud": "football-clients"     # Quien debería usarlo (frontend / apps autorizadas)
+    })
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
+# used
+def create_access_token_for_user(user_id: int, email: str, roles: list[str] | None = None) -> str:
+    now = datetime.now(timezone.utc)
+    exp = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        "sub": email,
+        "user_id": str(user_id),
+        "roles": roles or [],
+        "iss": settings.JWT_ISSUER,
+        "aud": settings.JWT_AUDIENCE,
+        "iat": now,
+        "nbf": now,
+        "exp": exp,
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+# used
 async def authenticate_user(db: AsyncSession, username_or_email: str, password: str):
     """
     Autentica a un usuario por nombre de usuario o correo electrónico y contraseña de forma asíncrona.
@@ -67,7 +66,8 @@ async def authenticate_user(db: AsyncSession, username_or_email: str, password: 
         return False
     return user
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db_for_auth)):
+# used
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     """
     Dependencia que recupera el usuario actual del token JWT.
     No comprueba el estado activo.
@@ -78,7 +78,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token, 
+            settings.SECRET_KEY, 
+            algorithms=[settings.ALGORITHM],
+            audience=settings.JWT_AUDIENCE,
+            issuer=settings.JWT_ISSUER,
+        )
         correo: str = payload.get("sub") # 'sub' contiene normalmente el identificador único, como el correo electrónico
         roles: List[str] = payload.get("roles", [])
         if correo is None:
@@ -91,6 +97,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         raise credentials_exception
     return user
 
+# used
 async def get_current_active_user(current_user: schemas.User = Depends(get_current_user)):
     """
     Dependencia que garantiza que el usuario actual está activo.
@@ -99,6 +106,7 @@ async def get_current_active_user(current_user: schemas.User = Depends(get_curre
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Usuario inactivo")
     return current_user
 
+# used
 async def get_current_admin_user(current_user: schemas.User  = Depends(get_current_active_user)):
     """
     Dependencia que asegura que el usuario activo actual tiene rol “admin”.

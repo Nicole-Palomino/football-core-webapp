@@ -1,5 +1,33 @@
 from typing import Optional, List
 from pydantic import BaseModel
+from datetime import datetime
+
+# -----------------------------
+# Base Schema
+# -----------------------------
+class RefreshTokenBase(BaseModel):
+    user_id: int
+    user_agent: str | None = None
+    ip_address: str | None = None
+
+# -----------------------------
+# Schema para crear
+# -----------------------------
+class RefreshTokenCreate(RefreshTokenBase):
+    token: str 
+
+# -----------------------------
+# Schema para lectura
+# -----------------------------
+class RefreshTokenRead(RefreshTokenBase):
+    id: int
+    revoked: bool
+    replaced_by_token_hash: str | None = None
+    created_at: datetime
+    expires_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class Token(BaseModel):
     """Esquema para la respuesta del token de acceso JWT."""

@@ -1,19 +1,16 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr, Field
-from decimal import Decimal
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class Rol(BaseModel):
     id_rol: int
     nombre_rol: str
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Estado(BaseModel):
     id_estado: int
     nombre_estado: str
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserBase(BaseModel):
     """Esquema base para Usuario (tb_usuario)."""
@@ -42,8 +39,7 @@ class User(UserBase):
     id_usuario: int 
     is_active: bool
     registro: datetime
-    updated_at: datetime
-    contrasena: str
+    updated_at: Optional[datetime] = None
     
     # Campos de recuperación de contraseña (opcional en la respuesta)
     codigo_verificacion: Optional[int] = None
@@ -52,8 +48,7 @@ class User(UserBase):
     rol: Rol 
     estado: Estado
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Esquemas para la recuperación de contraseñas ---
 class PasswordRecoveryRequest(BaseModel):

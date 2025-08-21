@@ -25,7 +25,7 @@ class User(Base):
     codigo_verificacion = Column(Integer, nullable=True)
     expiracion = Column(DateTime, nullable=True)
 
-    # Clave foránea a tb_estados (id_estado)
+    # Clave foránea a tb_estados implementada para saber si es free o tiene un plan (id_estado)
     id_estado = Column(Integer, ForeignKey("tb_estados.id_estado"), nullable=False)
     # Clave foránea a tb_rol (id_rol) - Relación uno a muchos (un rol por usuario)
     id_rol = Column(Integer, ForeignKey("tb_rol.id_rol"), nullable=False)
@@ -39,6 +39,6 @@ class User(Base):
     
     # Relación muchos-a-uno con Rol (un usuario pertenece a un rol)
     rol = relationship("Rol", back_populates="users", lazy="selectin")
-    # Relación de muchos a uno con Estado (un usuario tiene un estado)
     estado = relationship("Estado") # Esta relación debe definirse si tb_estados está vinculado.
     favoritos = relationship("Favorito", back_populates="usuario", cascade="all, delete")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete")
