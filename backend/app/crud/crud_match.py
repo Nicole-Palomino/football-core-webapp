@@ -28,7 +28,7 @@ async def get_partido(db: AsyncSession, estado_id: int):
     )
     return result.scalars().all()
 
-# used in matches.py
+# used in matches.py || crud_stat.py || crud_summary.py
 async def get_partido_by_id(db: AsyncSession, partido_id: int):
     """
     Recupera un único Partido según su ID,

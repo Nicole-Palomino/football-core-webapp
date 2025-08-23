@@ -16,6 +16,8 @@ class ResumenEstadistico(Base):
     nombre = Column(String(100), nullable=False, unique=True)
     # URL o ruta al resumen del partido
     url_imagen = Column(String(250), nullable=False)
+    url_mvp = Column(String(250), nullable=False)
+    url_shotmap = Column(String(250), nullable=False)
     # Costo en monedas del resumen
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -86,10 +86,13 @@ app.include_router(seasons.router)
 app.include_router(teams.router)
 # finished
 app.include_router(matches.router)
-
+# finished
 app.include_router(stats.router)
+# finished
 app.include_router(summaries.router)
+# finished
 app.include_router(favorites.router)
+
 app.include_router(analysis.router)
 app.include_router(cluster.router)
 app.include_router(predictions.router)

@@ -1,9 +1,13 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from fastapi import HTTPException, status
+
 from app import models, schemas
 from app.crud import crud_match
 
+# used in crud_stat.py
 async def get_estadistica(db: AsyncSession, estadistica_id: int):
     """
     Recupera una Estadistica por su ID de forma asíncrona, con Partido relacionado.
@@ -15,6 +19,7 @@ async def get_estadistica(db: AsyncSession, estadistica_id: int):
     )
     return result.scalars().first()
 
+# used in crud_stat.py
 async def get_estadistica_by_partido_id(db: AsyncSession, partido_id: int):
     """
     Recupera de forma asíncrona una Estadística por su ID de Partido asociado.
@@ -25,7 +30,7 @@ async def get_estadistica_by_partido_id(db: AsyncSession, partido_id: int):
     )
     return result.scalars().first()
 
-
+# used in crud_stat.py
 async def get_estadisticas(db: AsyncSession, skip: int = 0, limit: int = 100):
     """
     Recupera una lista de Estadisticas de forma asíncrona.
@@ -33,6 +38,7 @@ async def get_estadisticas(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(select(models.Estadistica).offset(skip).limit(limit))
     return result.scalars().all()
 
+# used in crud_stat.py
 async def create_estadistica(db: AsyncSession, estadistica: schemas.EstadisticaCreate):
     """
     Crea una nueva Estadistica de forma asíncrona.
@@ -73,6 +79,7 @@ async def create_estadistica(db: AsyncSession, estadistica: schemas.EstadisticaC
     await db.refresh(db_estadistica)
     return db_estadistica
 
+# used in crud_stat.py
 async def update_estadistica(db: AsyncSession, estadistica_id: int, estadistica: schemas.EstadisticaUpdate):
     """
     Actualiza una Estadística existente de forma asíncrona.
@@ -85,7 +92,7 @@ async def update_estadistica(db: AsyncSession, estadistica_id: int, estadistica:
 
     # Si se actualiza id_partido, asegúrese de que el nuevo partido existe y no tiene ya estadísticas
     if "id_partido" in update_data and update_data["id_partido"] != db_estadistica.id_partido:
-        partido = await crud_match.get_partido(db, update_data["id_partido"])
+        partido = await crud_match.get_partido_by_id(db, update_data["id_partido"])
         if not partido:
             raise ValueError(f"Partido con ID {update_data['id_partido']} no encontrado para la actualización.")
         existing_stats_for_new_partido = await get_estadistica_by_partido_id(db, update_data["id_partido"])
@@ -103,14 +110,20 @@ async def update_estadistica(db: AsyncSession, estadistica_id: int, estadistica:
     await db.refresh(db_estadistica)
     return db_estadistica
 
+# used in crud_stat.py
 async def delete_estadistica(db: AsyncSession, estadistica_id: int):
     """
     Borra una Estadistica por su ID de forma asíncrona.
     Devuelve True si la eliminación se ha realizado correctamente, False en caso contrario.
     """
     db_estadistica = await get_estadistica(db, estadistica_id)
-    if db_estadistica:
+    try:
         await db.delete(db_estadistica)
         await db.commit()
-        return True
-    return False
+        return {"message": "Estadística eliminada correctamente"}
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar el estado porque tiene relaciones asociadas"
+        )

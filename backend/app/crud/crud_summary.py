@@ -1,14 +1,16 @@
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from typing import Optional, List
 from sqlalchemy.exc import IntegrityError
+from typing import Optional, List
+from fastapi import HTTPException, status
+
 from app.models.summary import ResumenEstadistico
 from app.schemas.summary import ResumenCreate, ResumenUpdate
 from app.crud import crud_match
 from app import models
-from fastapi import HTTPException
 
 
 async def get_resumen(db: AsyncSession, resumen_id: int):
@@ -66,6 +68,8 @@ async def crear_resumen(db: AsyncSession, resumen: ResumenCreate):
     nuevo_resumen = models.ResumenEstadistico(
         nombre=resumen.nombre,
         url_imagen=resumen.url_imagen,
+        url_mvp=resumen.url_mvp,
+        url_shotmap=resumen.url_shotmap,
         id_partido=resumen.id_partido
     )
     db.add(nuevo_resumen)
@@ -75,10 +79,10 @@ async def crear_resumen(db: AsyncSession, resumen: ResumenCreate):
         return nuevo_resumen
     except IntegrityError as e:
         await db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error de integridad: {str(e.orig)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error de integridad: {str(e.orig)}")
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error inesperado: {str(e)}")
 
 async def update_resumen(db: AsyncSession, resumen_id: int, resumen: ResumenUpdate):
     """
@@ -96,7 +100,7 @@ async def update_resumen(db: AsyncSession, resumen_id: int, resumen: ResumenUpda
     checks = {}
 
     if "id_partido" in update_data:
-        tasks.append(crud_match.get_partido(db, update_data["id_partido"]))
+        tasks.append(crud_match.get_partido_by_id(db, update_data["id_partido"]))
         checks["id_partido"] = "Partido"
 
     # Ejecutar todas las validaciones en paralelo
@@ -120,8 +124,13 @@ async def delete_resumen(db: AsyncSession, resumen_id: int):
     Devuelve True si la eliminación se ha realizado correctamente, False en caso contrario.
     """
     db_resumen = await get_resumen(db, resumen_id)
-    if db_resumen:
+    try:
         await db.delete(db_resumen)
         await db.commit()
-        return True
-    return False
+        return {"message": "Resumen eliminado correctamente"}
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar el estado porque tiene relaciones asociadas"
+        )

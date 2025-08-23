@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from typing import Optional
 
@@ -12,27 +12,23 @@ class LigaMini(BaseModel):
     nombre_liga: str
     pais: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class EstadoMini(BaseModel):
     id_estado: int
     nombre_estado: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PartidoFavorito(BaseModel):
     id_partido: int
     dia: date
     equipo_local: EquipoMini
     equipo_visita: EquipoMini
-    enlace_fotmob: Optional[str]
     estado: Optional[EstadoMini]
     liga: Optional[LigaMini]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FavoritoBase(BaseModel):
     """Esquema base para Favorito (tb_favorito)."""
@@ -49,5 +45,4 @@ class FavoritoOut(FavoritoBase):
     created_at: datetime
     partido: Optional[PartidoFavorito]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

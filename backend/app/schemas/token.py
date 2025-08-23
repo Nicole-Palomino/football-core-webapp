@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 # -----------------------------
@@ -26,8 +26,7 @@ class RefreshTokenRead(RefreshTokenBase):
     created_at: datetime
     expires_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Token(BaseModel):
     """Esquema para la respuesta del token de acceso JWT."""
