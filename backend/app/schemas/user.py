@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, ConfigDict, constr
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class Rol(BaseModel):
     id_rol: int

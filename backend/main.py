@@ -71,6 +71,7 @@ async def read_root():
     return {"message": "Server is running"}
 
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(states.router)
 app.include_router(roles.router)
 app.include_router(leagues.router)
@@ -78,7 +79,6 @@ app.include_router(seasons.router)
 app.include_router(teams.router)
 app.include_router(matches.router)
 app.include_router(stats.router)
-app.include_router(users.router)
 app.include_router(summaries.router)
 app.include_router(favorites.router)
 app.include_router(analysis.router)

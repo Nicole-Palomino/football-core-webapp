@@ -74,19 +74,19 @@ async def register_user(
     """
     db_user_by_email = await crud.get_user_by_correo(db, correo=user_create.correo)
     if db_user_by_email:
-        raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El correo ya está registrado.")
     
     db_user_by_username = await crud.get_user_by_username(db, username=user_create.usuario)
     if db_user_by_username:
-        raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El nombre de usuario ya está en uso.")
 
     try:
         new_user = await crud.create_user(db=db, user=user_create)
         return new_user
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IntegrityError:
-        raise HTTPException(status_code=400, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
 # finished || tested
 @router.post("/register-admin", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
