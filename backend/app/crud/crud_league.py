@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 from app import models, schemas
 
-# used in leagues.py
+# used in leagues.py || teams.py
 async def get_liga(db: AsyncSession, liga_id: int):
     """
     Recupera una Liga por su ID de forma asíncrona.

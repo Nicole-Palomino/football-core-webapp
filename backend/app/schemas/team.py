@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field
+from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 class EstadoOut(BaseModel):
     id_estado: int
@@ -38,5 +38,4 @@ class Equipo(EquipoBase):
     estado: EstadoOut 
     liga: LigaOut    
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

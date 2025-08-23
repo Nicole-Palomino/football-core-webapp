@@ -1,13 +1,17 @@
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select, asc, or_, and_, desc
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from app.utils.matches import preparar_dataset_para_kmeans, aplicar_kmeans, describir_clusters_avanzado, preparar_dataset_para_random_forest
+from datetime import time
+from fastapi import HTTPException, status
+
 from app import models, schemas
-from app.core.state import state
 from app.crud import crud_season
 from app.crud import crud_league, crud_state, crud_team
 
+# used in matches.py
 async def get_partido(db: AsyncSession, estado_id: int):
     """
     Recupera todos los Partidos que pertenecen a un estado específico (id_estado),
@@ -24,10 +28,11 @@ async def get_partido(db: AsyncSession, estado_id: int):
     )
     return result.scalars().all()
 
+# used in matches.py
 async def get_partido_by_id(db: AsyncSession, partido_id: int):
     """
     Recupera un único Partido según su ID,
-    incluyendo los equipos local y visita, y el estado del partido.
+    incluyendo los equipos local y visita, estadísticas y el estado del partido.
     """
     result = await db.execute(
         select(models.Partido)
@@ -72,38 +77,13 @@ async def get_partidos(
     result = await db.execute(query)
     return result.scalars().all()
 
-async def obtener_ultimos_partidos_de_equipo(
-    db: AsyncSession, 
-    equipo_id: int, 
-    limite: int = 10
-):
-    query = (
-        select(models.Partido)
-        .where(
-            models.Partido.id_estado == 4,
-            or_(
-                models.Partido.id_equipo_local == equipo_id,
-                models.Partido.id_equipo_visita == equipo_id
-            )
-        )
-        .options(
-            selectinload(models.Partido.equipo_local),
-            selectinload(models.Partido.equipo_visita),
-            selectinload(models.Partido.estado),
-            selectinload(models.Partido.estadisticas)
-        )
-        .order_by(desc(models.Partido.dia))
-        .limit(limite)
-    )
-    result = await db.execute(query)
-    return result.scalars().all()
-
-async def get_matches_by_state_and_season(
+# used in matches.py
+async def get_matches_by_season(
     db: AsyncSession, 
     season_id: int
 ):
     """
-    Recupera una lista de Partidos filtrados únicamente por estado y ordenados por fecha ascendente.
+    Recupera una lista de Partidos filtrados únicamente por temporada y ordenados por fecha ascendente.
     """
     query = (
         select(models.Partido)
@@ -124,6 +104,7 @@ async def get_matches_by_state_and_season(
     result = await db.execute(query)
     return result.scalars().all()
 
+# used in matches.py
 async def create_partido(db: AsyncSession, partido: schemas.PartidoCreate):
     """
     Crea un nuevo Partido de forma asíncrona con validación optimizada de claves externas.
@@ -155,28 +136,35 @@ async def create_partido(db: AsyncSession, partido: schemas.PartidoCreate):
     if not estado:
         raise ValueError(f"Estado con ID {partido.id_estado} no encontrado.")
 
+    hora_peru = time(partido.hora.hour, partido.hora.minute, partido.hora.second)
+
     db_partido = models.Partido(
         id_liga=partido.id_liga,
         id_temporada=partido.id_temporada,
         dia=partido.dia,
+        hora=hora_peru,
         id_equipo_local=partido.id_equipo_local,
         id_equipo_visita=partido.id_equipo_visita,
         enlace_threesixfive=partido.enlace_threesixfive,
-        enlace_fotmob=partido.enlace_fotmob,
         enlace_datafactory=partido.enlace_datafactory,
         id_estado=partido.id_estado,
     )
     db.add(db_partido)
-    await db.commit()
-    await db.refresh(db_partido)
+    try:
+        await db.commit()
+        await db.refresh(db_partido)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El partido ya existe")
     return db_partido
 
+# used in matches.py
 async def update_partido(db: AsyncSession, partido_id: int, partido: schemas.PartidoUpdate):
     """
     Actualiza un Partido existente de forma asíncrona.
     Realiza comprobaciones de existencia de claves externas sólo si se actualizan.
     """
-    db_partido = await get_partido(db, partido_id)
+    db_partido = await get_partido_by_id(db, partido_id)
     if not db_partido:
         return None
 
@@ -217,99 +205,20 @@ async def update_partido(db: AsyncSession, partido_id: int, partido: schemas.Par
     await db.refresh(db_partido)
     return db_partido
 
+# used in matches.py
 async def delete_partido(db: AsyncSession, partido_id: int):
     """
     Borra un Partido por su ID de forma asíncrona.
     Devuelve True si la eliminación se ha realizado correctamente, False en caso contrario.
     """
-    db_partido = await get_partido(db, partido_id)
-    if db_partido:
+    db_partido = await get_partido_by_id(db, partido_id)
+    try:
         await db.delete(db_partido)
         await db.commit()
-        return True
-    return False
-
-# -------------------- K-MEANS --------------------
-async def analizar_clusters_partidos_entre_equipos(
-    db: AsyncSession, equipo_1_id: int, equipo_2_id: int, k: int = 3
-):
-    partidos = await get_partidos(db, equipo_1_id, equipo_2_id)
-    df = preparar_dataset_para_kmeans(partidos)
-
-    if df.empty or len(df) < k:
-        return {"error": "No hay suficientes partidos para agrupar en k clústeres"}
-
-    df_clusterizado, modelo = aplicar_kmeans(df, n_clusters=k)
-
-    # Guardar perfiles de los clusters para devolver predicciones útiles
-    resumen_clusters = df_clusterizado.groupby('cluster').mean().round(2).to_dict(orient="index")
-    state.perfiles_clusters = resumen_clusters
-    state.modelo_global = modelo
-
-    descripcion_clusters = describir_clusters_avanzado(df_clusterizado)
-
-    return {
-        "partidos_clusterizados": df_clusterizado.to_dict(orient="records"),
-        "resumen_por_cluster": resumen_clusters,
-        "descripcion_clusters": descripcion_clusters,
-        "modelo": modelo
-    }
-
-async def analizar_clusters_partidos_equipos_individuales(
-    db: AsyncSession, equipo_1_id: int, equipo_2_id: int, k: int = 3
-):
-    partidos_equipo_1 = await obtener_ultimos_partidos_de_equipo(db, equipo_1_id, limite=10)
-    partidos_equipo_2 = await obtener_ultimos_partidos_de_equipo(db, equipo_2_id, limite=10)
-
-    partidos = partidos_equipo_1 + partidos_equipo_2
-    df = preparar_dataset_para_random_forest(partidos)
-
-    if df.empty or len(df) < k:
-        return {"error": "No hay suficientes partidos para agrupar en k clústeres"}
-
-    df_clusterizado, modelo = aplicar_kmeans(df, n_clusters=k)
-
-    resumen_clusters = df_clusterizado.groupby('cluster').mean().round(2).to_dict(orient="index")
-    state.perfiles_clusters = resumen_clusters
-    state.modelo_predictivo = modelo
-
-    descripcion_clusters = describir_clusters_avanzado(df_clusterizado)
-
-    return {
-        "partidos_clusterizados": df_clusterizado.to_dict(orient="records"),
-        "resumen_por_cluster": resumen_clusters,
-        "descripcion_clusters": descripcion_clusters,
-        "modelo": modelo
-    }
-
-async def obtener_ultimo_partido_entre_equipos(
-    db: AsyncSession,
-    equipo_1_id: int,
-    equipo_2_id: int
-):
-    query = (
-        select(models.Partido)
-        .options(
-            selectinload(models.Partido.estadisticas),
-            selectinload(models.Partido.equipo_local),
-            selectinload(models.Partido.equipo_visita)
+        return {"message": "Partido eliminado correctamente"}
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar el partido porque tiene relaciones asociadas"
         )
-        .where(
-            models.Partido.id_estado == 4,
-            or_(
-                and_(
-                    models.Partido.id_equipo_local == equipo_1_id,
-                    models.Partido.id_equipo_visita == equipo_2_id
-                ),
-                and_(
-                    models.Partido.id_equipo_local == equipo_2_id,
-                    models.Partido.id_equipo_visita == equipo_1_id
-                )
-            )
-        )
-        .order_by(models.Partido.dia.desc())  # Último partido
-        .limit(1)
-    )
-
-    result = await db.execute(query)
-    return result.scalars().first()

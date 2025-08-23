@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 from app import models, schemas
 
-# used in crud_user.py || states.py
+# used in crud_user.py || states.py || teams.py
 async def get_estado(db: AsyncSession, estado_id: int):
     """
     Recupera un único Estado por su ID de forma asíncrona.

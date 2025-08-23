@@ -82,8 +82,11 @@ app.include_router(roles.router)
 app.include_router(leagues.router)
 # finished
 app.include_router(seasons.router)
+# finished
 app.include_router(teams.router)
+# finished
 app.include_router(matches.router)
+
 app.include_router(stats.router)
 app.include_router(summaries.router)
 app.include_router(favorites.router)
