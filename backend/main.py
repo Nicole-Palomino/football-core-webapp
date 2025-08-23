@@ -70,11 +70,17 @@ app.add_middleware(
 async def read_root():
     return {"message": "Server is running"}
 
+# finished || tested
 app.include_router(auth.router)
+# finished || tested
 app.include_router(users.router)
+# finished 
 app.include_router(states.router)
+# finished
 app.include_router(roles.router)
+# finished
 app.include_router(leagues.router)
+# finished
 app.include_router(seasons.router)
 app.include_router(teams.router)
 app.include_router(matches.router)

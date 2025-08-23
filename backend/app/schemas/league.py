@@ -1,20 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field
-
-# Referencia para el esquema de Equipo
-class Equipo(BaseModel):
-    id_equipo: int
-    nombre_equipo: str
-    estadio: Optional[str] = None
-    logo: Optional[str] = None
-    id_estado: int
-    id_liga: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
+from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 class LigaBase(BaseModel):
     """Esquema base de la Liga."""
@@ -39,7 +25,5 @@ class Liga(LigaBase):
     id_liga: int
     created_at: datetime
     updated_at: datetime
-    # equipos: List[Equipo] = [] # Relación con el Equipo
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
