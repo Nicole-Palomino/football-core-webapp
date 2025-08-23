@@ -1,20 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional
 import asyncio
 import functools
-from collections import Counter
-from starlette.concurrency import run_in_threadpool
 from concurrent.futures import ThreadPoolExecutor
-from starlette.concurrency import run_in_threadpool
-import math
 import numpy as np
 
 from app.analysis.functions import (
     get_data,
-    functions_analysis,
-    functions_prediction,
-    functions_cluster,
-    functions_poisson,
     functions_clasificacion
 )
 

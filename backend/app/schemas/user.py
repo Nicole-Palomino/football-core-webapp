@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, constr
 
 class Rol(BaseModel):
     id_rol: int
@@ -21,15 +21,20 @@ class UserCreate(UserBase):
     """Esquema para dar de alta un nuevo Usuario."""
     contrasena: str = Field(..., min_length=8)
 
-class UserUpdate(BaseModel): # UserUpdate puede tener campos opcionales
-    """Esquema para actualizar un Usuario existente."""
-    usuario: Optional[str] = Field(None, min_length=3, max_length=50)
+class UserUpdate(BaseModel):
+    """
+    Esquema para actualizar usuarios.
+    Todos los campos son opcionales porque el usuario puede editar uno o varios.
+    """
+    usuario: Optional[str] = None
     correo: Optional[EmailStr] = None
+    contrasena: Optional[str] = None  # se valida mínimo 6 caracteres
 
 class UserUpdateAdmin(BaseModel): # UserUpdate puede tener campos opcionales
     """Esquema para actualizar un Usuario existente."""
-    usuario: Optional[str] = Field(None, min_length=3, max_length=50)
+    usuario: Optional[str] = None
     correo: Optional[EmailStr] = None
+    contrasena: Optional[str] = None
     is_active: Optional[bool] = None
     id_estado: Optional[int] = None
     id_rol: Optional[int] = None

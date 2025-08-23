@@ -1,8 +1,12 @@
-from dotenv import load_dotenv
-
 from fastapi import FastAPI
+from dotenv import load_dotenv
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.middlewares.security import log_requests_and_secure
+
+from app.middlewares.security import LoggingMiddleware
+from app.middlewares.rate_limit import limiter
 from app.database import engine, Base
 from app.routers import (
     favorites, leagues, matches, seasons, states, stats, summaries, 
@@ -28,7 +32,17 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-app.middleware('http')(log_requests_and_secure)
+app.add_middleware(LoggingMiddleware)
+
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    lambda request, exc: JSONResponse(
+        status_code=429,
+        content={"detail": "Demasiadas solicitudes, intente más tarde."}
+    )
+)
+app.add_middleware(SlowAPIMiddleware)
 
 # @app.on_event("startup")
 # async def on_startup():

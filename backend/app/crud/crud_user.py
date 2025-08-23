@@ -154,71 +154,102 @@ async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreate):
     
     return user_with_relations
 
+# used in users.py
 async def update_user(db: AsyncSession, user_id: int, user: schemas.UserUpdate):
     """
     Actualiza un usuario existente de forma asíncrona.
-    Maneja el hash de la contraseña si se proporciona “contrasena”.
+    - Verifica existencia del usuario.
+    - Valida duplicados de correo y nombre de usuario.
+    - Hashea la contraseña si es proporcionada.
+    - Convierte is_active a int (para compatibilidad).
     """
-    db_user = await get_user(db, user_id)
+    # Buscar usuario
+    db_user = await db.get(models.User, user_id)
     if not db_user:
         return None
-    
+
+    # Datos actualizados enviados en la request
     update_data = user.model_dump(exclude_unset=True)
-    
+
+    # Validar duplicado de usuario
     if "usuario" in update_data:
-        existing = await db.execute(select(models.User).where(models.User.usuario == update_data["usuario"], models.User.id_usuario != user_id))
-        if existing.scalar():
+        result = await db.execute(
+            select(models.User).where(
+                models.User.usuario == update_data["usuario"],
+                models.User.id_usuario != user_id
+            )
+        )
+        if result.scalar():
             raise ValueError("Ya existe un usuario con ese nombre de usuario.")
 
+    # Validar duplicado de correo
     if "correo" in update_data:
-        existing = await db.execute(select(models.User).where(models.User.correo == update_data["correo"], models.User.id_usuario != user_id))
-        if existing.scalar():
+        result = await db.execute(
+            select(models.User).where(
+                models.User.correo == update_data["correo"],
+                models.User.id_usuario != user_id
+            )
+        )
+        if result.scalar():
             raise ValueError("Ya existe un usuario con ese correo.")
 
+    # Actualizar campos
     for key, value in update_data.items():
-        if key == "is_active" and value is not None:
-            setattr(db_user, key, int(value)) # Convertir bool en int para is_active
+        if key == "contrasena" and value:  # Si envía nueva contraseña
+            hashed_pw = get_password_hash(value)
+            setattr(db_user, key, hashed_pw)
+        elif key == "is_active" and value is not None:  # Boolean a int
+            setattr(db_user, key, int(value))
         else:
             setattr(db_user, key, value)
-        
+
+    # Guardar cambios
     await db.commit()
     await db.refresh(db_user)
+
     return db_user
 
-async def update_admin(db: AsyncSession, user_id: int, user: schemas.UserUpdate):
+# used in users.py
+async def update_admin(db: AsyncSession, user_id: int, user_update: schemas.user.UserUpdateAdmin):
     """
-    Actualiza un usuario existente de forma asíncrona.
-    Maneja el hash de la contraseña si se proporciona “contrasena”.
+    Actualiza un usuario existente (modo administrador).
+    Permite modificar todos los campos del usuario, incluyendo is_active, rol y estado.
+    Maneja el hash de la contraseña si se proporciona.
     """
-    db_user = await get_user(db, user_id)
+    db_user = await db.get(models.User, user_id)
     if not db_user:
         return None
     
-    update_data = user.model_dump(exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True)
 
+    # Si se envía contraseña, la hasheamos
     if "contrasena" in update_data and update_data["contrasena"]:
         update_data["contrasena"] = get_password_hash(update_data["contrasena"])
-    
-    # Comprobar si las claves externas se están actualizando
+
+    # Validar rol si se está actualizando
     if "id_rol" in update_data:
         role = await crud_role.get_role(db, update_data["id_rol"])
         if not role:
             raise ValueError(f"Rol con ID {update_data['id_rol']} no encontrado.")
+
+    # Validar estado si se está actualizando
     if "id_estado" in update_data:
         estado = await crud_state.get_estado(db, update_data["id_estado"])
         if not estado:
             raise ValueError(f"Estado con ID {update_data['id_estado']} no encontrado.")
 
+    # Actualizar todos los campos recibidos
     for key, value in update_data.items():
         if key == "is_active" and value is not None:
-            setattr(db_user, key, int(value)) # Convertir bool en int para is_active
+            setattr(db_user, key, int(value))  # convertimos bool → int
         else:
             setattr(db_user, key, value)
-        
+
     await db.commit()
     await db.refresh(db_user)
     return db_user
 
+# used in users.py
 async def delete_user(db: AsyncSession, user_id: int):
     """
     Elimina un usuario por su ID de forma asíncrona.
@@ -231,6 +262,7 @@ async def delete_user(db: AsyncSession, user_id: int):
         return True
     return False
 
+# used in users.py
 async def get_usuarios_por_dia(db: AsyncSession):
     stmt = (
         select(
@@ -282,6 +314,7 @@ async def set_user_verification_code(db: AsyncSession, user: models.User):
     
     return user
 
+# used in auth.py 
 async def clear_user_verification_code(db: AsyncSession, user: models.User):
     """
     Borra el código de verificación y el tiempo de expiración de un usuario.
@@ -292,6 +325,7 @@ async def clear_user_verification_code(db: AsyncSession, user: models.User):
     await db.refresh(user)
     return user
 
+# used in auth.py
 async def update_user_password(db: AsyncSession, user: models.User, new_password: str):
     """
     Actualiza la contraseña de un usuario tras una verificación correcta.

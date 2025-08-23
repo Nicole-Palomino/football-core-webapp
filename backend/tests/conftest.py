@@ -33,7 +33,13 @@ async def create_test_db():
             insert(Rol).values(id_rol=2, nombre_rol="Administrador")
         )
         await conn.execute(
+            insert(Rol).values(id_rol=1, nombre_rol="Editor")
+        )
+        await conn.execute(
             insert(Estado).values(id_estado=10, nombre_estado="Usuario Free")
+        )
+        await conn.execute(
+            insert(Estado).values(id_estado=1, nombre_estado="Usuario Premium")
         )
 
     yield

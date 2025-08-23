@@ -1,5 +1,3 @@
-from app.core.logger import logger
-from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
@@ -7,10 +5,12 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
+
+from app import schemas, crud, models
 from app.crud import crud_user
 from app.crud import crud_refresh_token
 from app.dependencies import get_db
-from app import schemas, crud, models
+from app.core.logger import logger
 from app.core.security import (
     authenticate_user,
     create_access_token,
@@ -19,11 +19,7 @@ from app.core.security import (
     create_access_token_for_user, 
 )
 from app.core.config import settings
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-
-# --- Rate limiter (5 intentos cada 15 minutos por IP) ---
-limiter = Limiter(key_func=get_remote_address, default_limits=[])
+from app.middlewares.rate_limit import limiter
 
 router = APIRouter(
     tags=["Auth"],

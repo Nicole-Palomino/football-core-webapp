@@ -249,7 +249,7 @@ def obtener_ultima_temporada(nombre_liga):
     )
 
     base_dir = Path(__file__).parent 
-    carpeta_liga = (base_dir / ".." / liga_slug / f"{liga_slug}-2425.csv").resolve()
+    carpeta_liga = (base_dir / ".." / liga_slug / f"{liga_slug}-2526.csv").resolve()
     if os.path.exists(carpeta_liga):
         return pd.read_csv(carpeta_liga)
     else:
