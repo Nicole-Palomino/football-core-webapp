@@ -1,9 +1,36 @@
 import os
+import asyncio
 import pandas as pd
+import unicodedata
+import functools
 
+from typing import Optional
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+
+# Executor global
+executor = ThreadPoolExecutor(max_workers=4)
+
+def run_in_executor(func):
+    """Decorator para ejecutar funciones síncronas de forma asíncrona"""
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(executor, func, *args, **kwargs)
+    return wrapper
+
+def _normalize_liga(nombre_liga: str) -> str:
+    """Normaliza acentos y espacios para formar rutas seguras"""
+    return (
+        unicodedata.normalize("NFD", nombre_liga)
+        .encode("ascii", "ignore")
+        .decode("utf-8")
+        .lower()
+        .replace(" ", "-")
+    )
 
 # Datos de ligas y equipos
+# used in analysis.py
 LIGAS_DATA = {
     "LaLiga": {
         "equipos": ["Real Madrid", "Barcelona", "Atlético Madrid", "Sevilla", "Real Betis", 
@@ -37,6 +64,8 @@ LIGAS_DATA = {
     }
 }
 
+# used in analysis.py
+@run_in_executor
 def obtener_datos_liga(nombre_liga):
     """
     Obtiene todos los equipos de cada liga
@@ -50,14 +79,10 @@ def obtener_datos_liga(nombre_liga):
     """
     # Normalizar el nombre para formar la ruta del .txt
     # Contiene todos lo nombres de los equipos activos de la liga seleccionada
-    liga_folder = (
-        nombre_liga.lower()
-        .replace(" ", "-")
-        .replace("á", "a")
-        .replace("é", "e")
-    )
-    base_dir = Path(__file__).parent 
+    liga_folder = _normalize_liga(nombre_liga)
+    base_dir = Path(__file__).resolve().parent
     ruta_txt = (base_dir / ".." / liga_folder / "teams.txt").resolve()
+
     # Verificar si existe la ruta
     # Si existe trae los equipos sino coloca los mencionados en LIGAS_DATA
     if os.path.exists(ruta_txt):
@@ -75,6 +100,7 @@ def obtener_datos_liga(nombre_liga):
         "color": LIGAS_DATA[nombre_liga]["color"]
     }
 
+# used in analysis.py
 def leer_y_filtrar_csv(nombre_liga):
     """
     Lee todos los archivos CSV de una carpeta y los concatena.
@@ -88,15 +114,14 @@ def leer_y_filtrar_csv(nombre_liga):
     """
     todos_los_datos = []
     archivos_encontrados = False
-    liga_folder = (
-        nombre_liga.lower()
-        .replace(" ", "-")
-        .replace("á", "a")
-        .replace("é", "e")
-    )
+    liga_folder = _normalize_liga(nombre_liga)
     base_dir = Path(__file__).parent 
     ruta_carpeta = (base_dir / ".." / liga_folder).resolve()
 
+    if not os.path.exists(ruta_carpeta):
+        print(f"❌ Carpeta no encontrada: {ruta_carpeta}")
+        return None
+    
     # Itera sobre todos los archivos en la carpeta seleccionada
     # Verifica que sea un .csv
     for archivo in os.listdir(ruta_carpeta):
@@ -115,14 +140,7 @@ def leer_y_filtrar_csv(nombre_liga):
         print(f"No se encontraron archivos CSV en la carpeta: {ruta_carpeta}")
         return None
     
-    # Concatena todos los DataFrames en uno solo Dataframe
-    if todos_los_datos:
-        df_completo = pd.concat(todos_los_datos, ignore_index=True)
-    else:
-        print("No se pudo concatenar ningún DataFrame. Posiblemente no se leyeron correctamente.")
-        return None
-    
-    return df_completo
+    return pd.concat(todos_los_datos, ignore_index=True) if todos_los_datos else None
 
 def obtener_fecha_ultima_modificacion_csv(nombre_liga: str) -> float:
     """
@@ -255,8 +273,6 @@ def obtener_ultima_temporada(nombre_liga):
     else:
         return None
     
-from typing import Optional
-
 def obtener_ultimo_partido_entre_equipos(df: pd.DataFrame, equipo1: str, equipo2: str) -> Optional[pd.Series]:
     """
     Obtiene el último partido entre dos equipos de una liga seleccionada.

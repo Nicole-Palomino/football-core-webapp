@@ -1,32 +1,19 @@
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional
 import asyncio
-import functools
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 
 from app.analysis.functions import (
     get_data,
     functions_analysis,
-    functions_prediction,
-    functions_cluster,
-    functions_poisson,
-    functions_clasificacion
 )
-
 from app.core.security import get_current_active_user
 from app.schemas.user import User
 
-# Executor para funciones síncronas
+# Executor global
 executor = ThreadPoolExecutor(max_workers=4)
-
-def run_in_executor(func):
-    """Decorator para ejecutar funciones síncronas de forma asíncrona"""
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(executor, func, *args, **kwargs)
-    return wrapper
 
 # normalizar scalars de numpy
 def to_native(x):
@@ -42,6 +29,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
+# finished
 @router.get("/ligas")
 async def get_ligas():
     """Obtiene todas las ligas disponibles"""
@@ -51,22 +39,20 @@ async def get_ligas():
 async def get_equipos_liga(liga: str):
     """Obtiene todos los equipos de una liga"""
     try:
-        datos_liga = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.obtener_datos_liga, liga
-        )
+        datos_liga = await get_data.obtener_datos_liga(liga)
         return datos_liga
+    except KeyError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Liga '{liga}' no encontrada")
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Liga no encontrada: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Liga no encontrada: {str(e)}")
     
 @router.get("/partidos/{liga}")
 async def get_partidos_liga(liga: str, limite: Optional[int] = Query(None, description="Límite de partidos")):
     """Obtiene los partidos de una liga"""
     try:
-        df = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.leer_y_filtrar_csv, liga
-        )
+        df = await get_data.leer_y_filtrar_csv(liga)
         if df is None or df.empty:
-            raise HTTPException(status_code=404, detail="No se encontraron partidos para esta liga")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontraron partidos para esta liga")
         
         if limite:
             df = df.head(limite)
@@ -75,8 +61,11 @@ async def get_partidos_liga(liga: str, limite: Optional[int] = Query(None, descr
             "total_partidos": len(df),
             "partidos": df.to_dict('records')
         }
+    
+    except HTTPException:
+        raise  # re-lanzamos para no convertirlo en 500
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener partidos: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener partidos: {str(e)}")
     
 @router.get("/enfrentamientos/{liga}")
 async def get_enfrentamientos(
