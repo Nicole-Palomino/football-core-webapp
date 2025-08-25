@@ -6,6 +6,8 @@ class ResumenBase(BaseModel):
     """Esquema base para Resumen."""
     nombre: str
     url_imagen: str
+    url_mvp: str
+    url_shotmap: str
     id_partido: int
 
 class ResumenCreate(ResumenBase):
@@ -16,6 +18,8 @@ class ResumenUpdate(ResumenBase):
     """Esquema para actualizar un Resumen existente."""
     nombre: Optional[str] = Field(None, max_length=100)
     url_imagen: Optional[str] = Field(None, max_length=250)
+    url_mvp: Optional[str] = Field(None, max_length=250)
+    url_shotmap: Optional[str] = Field(None, max_length=250)
     id_partido: Optional[int] = None
 
 class ResumenOut(ResumenBase):

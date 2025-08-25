@@ -11,7 +11,6 @@ class Partido(BaseModel):
     id_equipo_local: int
     id_equipo_visita: int
     enlace_threesixfive: Optional[str] = None
-    enlace_fotmob: Optional[str] = None
     enlace_datafactory: Optional[str] = None
     id_estado: int
 
@@ -51,8 +50,8 @@ class EstadisticaUpdate(EstadisticaBase):
 class Estadistica(EstadisticaBase):
     """Esquema para devolver datos de Estadística (incluye ID, marcas de tiempo y Partido relacionado)."""
     id_estadistica: int
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     partido: Optional[Partido] = None 
 
     model_config = ConfigDict(

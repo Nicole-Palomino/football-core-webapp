@@ -12,7 +12,7 @@ from app.schemas.summary import ResumenCreate, ResumenUpdate
 from app.crud import crud_match
 from app import models
 
-
+# used in summaries.py
 async def get_resumen(db: AsyncSession, resumen_id: int):
     """
     Recupera un único Resumen por su ID de forma asíncrona, con Partido relacionado.
@@ -26,26 +26,26 @@ async def get_resumen(db: AsyncSession, resumen_id: int):
     )
     return result.scalars().first()
 
+# used in summaries.py
 async def listar_resumenes(
     db: AsyncSession,
     skip: int = 0, 
     limit: int = 50,
-    estados: Optional[List[int]] = None
 ):
     """
     Recupera una lista de Resúmenes solo de partidos con los estados dados.
     """
-    query = select(ResumenEstadistico).options(
-        selectinload(ResumenEstadistico.partido),
+    query = (
+        select(ResumenEstadistico)
+        .options(selectinload(ResumenEstadistico.partido))
+        .offset(skip)
+        .limit(limit)
     )
 
-    if estados:
-        query = query.join(ResumenEstadistico.partido).where(models.Partido.id_estado.in_(estados))
-
-    query = query.offset(skip).limit(limit)
     result = await db.execute(query)
     return result.scalars().all()
 
+# used in summaries.py
 async def listar_resumenes_por_partido(db: AsyncSession, id_partido: int):
     """
     Recupera los Resumenes por Partido de forma asíncrona.
@@ -59,6 +59,7 @@ async def listar_resumenes_por_partido(db: AsyncSession, id_partido: int):
     )
     return result.scalars().all()
 
+# used in summaries.py
 async def crear_resumen(db: AsyncSession, resumen: ResumenCreate):
     """Crea un nuevo Resumen con validación de claves externas."""
     partido = await crud_match.get_partido_by_id(db, resumen.id_partido)
@@ -84,6 +85,7 @@ async def crear_resumen(db: AsyncSession, resumen: ResumenCreate):
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error inesperado: {str(e)}")
 
+# used in summaries.py
 async def update_resumen(db: AsyncSession, resumen_id: int, resumen: ResumenUpdate):
     """
     Actualiza un Resumen existente de forma asíncrona.
@@ -118,6 +120,7 @@ async def update_resumen(db: AsyncSession, resumen_id: int, resumen: ResumenUpda
     await db.refresh(db_resumen)
     return db_resumen
 
+# used in summaries.py
 async def delete_resumen(db: AsyncSession, resumen_id: int):
     """
     Borra un Resumen por su ID de forma asíncrona.
