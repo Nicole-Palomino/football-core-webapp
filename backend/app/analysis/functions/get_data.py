@@ -101,7 +101,8 @@ def obtener_datos_liga(nombre_liga):
     }
 
 # used in analysis.py
-def leer_y_filtrar_csv(nombre_liga):
+@run_in_executor
+def leer_y_filtrar_csv(nombre_liga) -> pd.DataFrame:
     """
     Lee todos los archivos CSV de una carpeta y los concatena.
 
@@ -140,7 +141,7 @@ def leer_y_filtrar_csv(nombre_liga):
         print(f"No se encontraron archivos CSV en la carpeta: {ruta_carpeta}")
         return None
     
-    return pd.concat(todos_los_datos, ignore_index=True) if todos_los_datos else None
+    return pd.concat(todos_los_datos, ignore_index=True)
 
 def obtener_fecha_ultima_modificacion_csv(nombre_liga: str) -> float:
     """
@@ -170,29 +171,20 @@ def obtener_fecha_ultima_modificacion_csv(nombre_liga: str) -> float:
 
     return ultima_modificacion
 
+# used in analysis.py
+@run_in_executor
 def filtrar_partidos_entre_equipos(df: pd.DataFrame, equipo1: str, equipo2: str) -> pd.DataFrame:
-    """
-    Filtra todos los partidos o enfrentamientos entre dos equipos.
-
-    Args:
-        df (pd.Dataframe): Dataframe completo de los partidos de la liga.
-        equipo1 (str): Equipo Local.
-        equipo2 (str): Equipo Visitante.
-
-    Returns:
-        pandas.DataFrame: Un DataFrame que contiene todos los partidos o enfrentamientos entre dos equipos,
-                          o None si no se encuentran archivos partidos entre esos equipos.
-    """
-    equipo1 = equipo1.lower()
-    equipo2 = equipo2.lower()
+    """Filtra todos los partidos entre dos equipos"""
+    equipo1, equipo2 = equipo1.lower(), equipo2.lower()
 
     partidos = df[
-        ((df['HomeTeam'].str.lower() == equipo1) & (df['AwayTeam'].str.lower() == equipo2)) |
-        ((df['HomeTeam'].str.lower() == equipo2) & (df['AwayTeam'].str.lower() == equipo1))
+        ((df['HomeTeam'].str.strip().str.lower() == equipo1) & (df['AwayTeam'].str.strip().str.lower() == equipo2)) |
+        ((df['HomeTeam'].str.strip().str.lower() == equipo2) & (df['AwayTeam'].str.strip().str.lower() == equipo1))
     ]
 
     return partidos
 
+# used in analysis.py
 def filtrar_ultimos_partidos_de_equipo(df: pd.DataFrame, equipo: str, limite: int = 40) -> pd.DataFrame:
     """
     Devuelve los últimos partidos jugados por un equipo (local o visitante) desde un DataFrame.
@@ -228,6 +220,7 @@ def filtrar_ultimos_partidos_de_equipo(df: pd.DataFrame, equipo: str, limite: in
     # Devuelve los últimos N
     return partidos_filtrados.head(limite).reset_index(drop=True)
 
+# used in analysis.py
 def filtrar_partidos_sin_importar_local_visita(df: pd.DataFrame, equipo1: str, equipo2: str) -> pd.DataFrame:
     """
     Devuelve un DataFrame con todos los partidos entre dos equipos,

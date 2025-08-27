@@ -1,16 +1,12 @@
-
-import asyncio
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 
 from app.analysis.functions import (
-    get_data,
-    functions_analysis,
+    get_data, functions_analysis,
 )
 from app.core.security import get_current_active_user
-from app.schemas.user import User
+from app.core.logger import logger
 
 # Executor global
 executor = ThreadPoolExecutor(max_workers=4)
@@ -35,6 +31,7 @@ async def get_ligas():
     """Obtiene todas las ligas disponibles"""
     return {"ligas": get_data.LIGAS_DATA}
 
+# finished
 @router.get("/equipos/{liga}")
 async def get_equipos_liga(liga: str):
     """Obtiene todos los equipos de una liga"""
@@ -45,7 +42,8 @@ async def get_equipos_liga(liga: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Liga '{liga}' no encontrada")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Liga no encontrada: {str(e)}")
-    
+
+# finished
 @router.get("/partidos/{liga}")
 async def get_partidos_liga(liga: str, limite: Optional[int] = Query(None, description="Límite de partidos")):
     """Obtiene los partidos de una liga"""
@@ -66,7 +64,8 @@ async def get_partidos_liga(liga: str, limite: Optional[int] = Query(None, descr
         raise  # re-lanzamos para no convertirlo en 500
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener partidos: {str(e)}")
-    
+
+# finished
 @router.get("/enfrentamientos/{liga}")
 async def get_enfrentamientos(
     liga: str, 
@@ -75,17 +74,17 @@ async def get_enfrentamientos(
 ):
     """Obtiene el historial de enfrentamientos entre dos equipos"""
     try:
-        df = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.leer_y_filtrar_csv, liga
-        )
+        df = await get_data.leer_y_filtrar_csv(liga)
+
+        if df is None or df.empty:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se encontraron partidos para la liga '{liga}'")
+
         
-        partidos = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.filtrar_partidos_entre_equipos, df, equipo1, equipo2
-        )
+        partidos = await get_data.filtrar_partidos_entre_equipos(df, equipo1, equipo2)
         
-        if partidos.empty:
+        if partidos is None or partidos.empty:
             raise HTTPException(
-                status_code=404, 
+                status_code=status.HTTP_404_NOT_FOUND, 
                 detail=f"No se encontraron enfrentamientos entre {equipo1} y {equipo2}"
             )
         
@@ -93,9 +92,12 @@ async def get_enfrentamientos(
             "total_enfrentamientos": len(partidos),
             "enfrentamientos": partidos.to_dict('records')
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener enfrentamientos: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al obtener enfrentamientos: {str(e)}")
 
+# finished
 @router.get("/analisis-completo/{liga}")
 async def get_analisis_completo(
     liga: str,
@@ -104,36 +106,37 @@ async def get_analisis_completo(
 ):
     """Obtiene el análisis completo entre dos equipos (similar a show_analysis.py)"""
     try:
+        logger.info(f"🔍 Analizando liga={liga}, equipo1={equipo1}, equipo2={equipo2}")
         # Leer datos de la liga
-        df = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.leer_y_filtrar_csv, liga
-        )
+        df = await get_data.leer_y_filtrar_csv(liga)
+        if df is None:
+            logger.error("❌ leer_y_filtrar_csv devolvió None")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se encontraron partidos para la liga '{liga}'")
         
+        logger.info(f"✅ DataFrame cargado con {df.shape[0]} filas y {df.shape[1]} columnas")
+
         # Filtrar partidos entre equipos
-        partidos = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.filtrar_partidos_sin_importar_local_visita, df, equipo1, equipo2
-        )
-        
+        partidos = get_data.filtrar_partidos_sin_importar_local_visita(df, equipo1, equipo2)
         if partidos.empty:
+            logger.warning("⚠️ No se encontraron partidos entre los equipos")
             raise HTTPException(
-                status_code=404,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No hay partidos registrados entre {equipo1} y {equipo2}"
             )
-        
+        logger.info(f"✅ Partidos filtrados: {partidos.shape}")
+
         # Obtener últimos partidos de cada equipo
-        partidos_eq1 = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.filtrar_ultimos_partidos_de_equipo, df, equipo1
-        )
-        
-        partidos_eq2 = await asyncio.get_event_loop().run_in_executor(
-            executor, get_data.filtrar_ultimos_partidos_de_equipo, df, equipo2
-        )
-        
+        partidos_eq1 = get_data.filtrar_ultimos_partidos_de_equipo(df, equipo1)
+        partidos_eq2 = get_data.filtrar_ultimos_partidos_de_equipo(df, equipo2)
+        logger.info(f"✅ Últimos partidos: {equipo1}={len(partidos_eq1)}, {equipo2}={len(partidos_eq2)}")
+
         # Construir estadísticas
-        df_stats = await asyncio.get_event_loop().run_in_executor(
-            executor, functions_analysis.construir_estadisticas_equipos, partidos
-        )
-        
+        df_stats = await functions_analysis.construir_estadisticas_equipos(partidos)
+        if df_stats is None:
+            logger.error("❌ construir_estadisticas_equipos devolvió None")
+        else:
+            logger.info(f"✅ Estadísticas generadas: {df_stats.shape}")
+
         # Contar resultados
         victorias_local = int((partidos["FTHG"] > partidos["FTAG"]).sum())
         victorias_visitante = int((partidos["FTAG"] > partidos["FTHG"]).sum())
@@ -151,8 +154,8 @@ async def get_analisis_completo(
         ).sum())
 
         # Primer Tiempo
-        total_eq1, total_eq2 = functions_analysis.goles_primer_tiempo_entre_dos(partidos, equipo1, equipo2)
-        ventaja1, ventaja2, empates_ht, total = functions_analysis.ventaja_primer_tiempo_entre_equipos(df, equipo1, equipo2)
+        total_eq1, total_eq2 = await functions_analysis.goles_primer_tiempo_entre_dos(partidos, equipo1, equipo2)
+        ventaja1, ventaja2, empates_ht, total = await functions_analysis.ventaja_primer_tiempo_entre_equipos(df, equipo1, equipo2)
         
         return {
             "resumen": {
@@ -190,6 +193,8 @@ async def get_analisis_completo(
             "estadisticas_avanzadas": df_stats.to_dict('records'),
             "enfrentamientos_directos": partidos.to_dict('records')
         }
-        
+    except HTTPException:
+        raise    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en análisis completo: {str(e)}")
+        logger.exception(f"🔥 Error inesperado en get_analisis_completo: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en análisis completo: {str(e)}")
