@@ -1,28 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional
-import asyncio
-import functools
-from concurrent.futures import ThreadPoolExecutor
-from starlette.concurrency import run_in_threadpool
 import math
 import numpy as np
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.analysis.functions import (
     get_data, functions_prediction,
 )
-
 from app.core.security import get_current_active_user
-
-# Executor para funciones síncronas
-executor = ThreadPoolExecutor(max_workers=4)
-
-def run_in_executor(func):
-    """Decorator para ejecutar funciones síncronas de forma asíncrona"""
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(executor, func, *args, **kwargs)
-    return wrapper
 
 router = APIRouter(
     prefix="/predictions",
@@ -31,22 +15,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
-def to_native(value):
-    # Convierte numpy/pandas scalars y trata NaN/inf
-    if isinstance(value, (np.generic,)):
-        value = value.item()
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            return None
-    return value
-
-def normalize_dict(d):
-    if isinstance(d, dict):
-        return {k: normalize_dict(v) for k, v in d.items()}
-    if isinstance(d, list):
-        return [normalize_dict(i) for i in d]
-    return to_native(d)
-
+# finished
 @router.post("/entrenar-modelo/{liga}")
 async def entrenar_modelo_prediccion(
     liga: str,
@@ -55,15 +24,11 @@ async def entrenar_modelo_prediccion(
 ):
     """Entrena o carga un modelo de predicción para dos equipos"""
     try:
-        modelos = await asyncio.get_event_loop().run_in_executor(
-            executor, 
-            functions_prediction.verificar_o_entrenar_modelos_estadisticos,
-            equipo1, equipo2, liga
-        )
+        modelos = await functions_prediction.verificar_o_entrenar_modelos_estadisticos(equipo1, equipo2, liga)
         
         if modelos is None:
             raise HTTPException(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="No se pudieron entrenar o cargar los modelos"
             )
         
@@ -72,8 +37,9 @@ async def entrenar_modelo_prediccion(
             "modelos_disponibles": list(modelos.keys())
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al entrenar modelo: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al entrenar modelo: {str(e)}")
 
+# finished
 @router.get("/predecir/{liga}")
 async def predecir_partido(
     liga: str,
@@ -82,22 +48,17 @@ async def predecir_partido(
 ):
     """Predice el resultado de un partido entre dos equipos"""
     try:
-        modelos = await run_in_threadpool(
-            functions_prediction.verificar_o_entrenar_modelos_estadisticos,
-            equipo1, equipo2, liga
-        )
+        modelos = await functions_prediction.verificar_o_entrenar_modelos_estadisticos(equipo1, equipo2, liga)
         if modelos is None:
-            raise HTTPException(status_code=500, detail="No se pudieron entrenar o cargar los modelos")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="No se pudieron entrenar o cargar los modelos")
 
-        df_liga = await run_in_threadpool(get_data.leer_y_filtrar_csv, liga)
+        df_liga = await get_data.leer_y_filtrar_csv(liga)
         if df_liga is None or df_liga.empty:
-            raise HTTPException(status_code=404, detail="No hay datos de la liga")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No hay datos de la liga")
 
-        partido = await run_in_threadpool(
-            get_data.obtener_ultimo_partido_entre_equipos, df_liga, equipo1, equipo2
-        )
+        partido = get_data.obtener_ultimo_partido_entre_equipos(df_liga, equipo1, equipo2)
         if partido is None:
-            raise HTTPException(status_code=404, detail="No se encontró un partido entre estos equipos")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró un partido entre estos equipos")
 
         # función auxiliar
         def extraer(attr, serie):
@@ -131,12 +92,9 @@ async def predecir_partido(
             "rojas_visitante": extraer("AR", partido),
         }
 
-        predicciones = await run_in_threadpool(
-            functions_prediction.predecir_estadisticas_partido,
-            modelos, datos_partido
-        )
+        predicciones = functions_prediction.predecir_estadisticas_partido(modelos, datos_partido)
         if not isinstance(predicciones, dict):
-            raise HTTPException(status_code=500, detail="Predicciones en formato inesperado")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Predicciones en formato inesperado")
 
         # Normalizar recursivamente
         def to_native(value):
@@ -205,4 +163,4 @@ async def predecir_partido(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en predicción: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en predicción: {str(e)}")

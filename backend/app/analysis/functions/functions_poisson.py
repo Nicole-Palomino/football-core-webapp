@@ -1,10 +1,10 @@
 import pandas as pd
-import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import numpy as np
 from scipy.stats import poisson
 from collections import Counter
 
+# used in poisson.py
 def estandarizar_columnas_futbol(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns={
         'FTHG': 'goles_local',
@@ -49,6 +49,7 @@ def calcular_probabilidades_resultado(goles_local_esp: float, goles_visitante_es
         "check_total": round(total * 100, 2)
     }
 
+# used in poisson.py
 def simular_resultados_monte_carlo(goles_local_esp: float, goles_visitante_esp: float, n_simulaciones: int = 10000):
     resultados = []
 
@@ -71,6 +72,7 @@ def simular_resultados_monte_carlo(goles_local_esp: float, goles_visitante_esp: 
 
     return conteo_resultado, conteo_score
 
+# used in poisson.py
 def matriz_score_exacto(goles_local_esp: float, goles_visitante_esp: float, max_goles: int = 5):
     matriz = pd.DataFrame(index=range(max_goles+1), columns=range(max_goles+1))
 
@@ -83,6 +85,7 @@ def matriz_score_exacto(goles_local_esp: float, goles_visitante_esp: float, max_
     matriz.columns.name = "Goles Visitante"
     return matriz
 
+# used in poisson.py
 def entrenar_modelo_poisson(df: pd.DataFrame, target: str, equipo: str, correlacion_umbral: float = 0.95):
     columnas = [ f"goles_{equipo}",
         f"tiros_{equipo}", f"tiros_arco_{equipo}",
@@ -122,6 +125,7 @@ def entrenar_modelo_poisson(df: pd.DataFrame, target: str, equipo: str, correlac
 
     return modelo
 
+# used in poisson.py
 def predecir_goles(modelo, datos_partido: dict, equipo: str):
     entrada = {
         f"goles_{equipo}": datos_partido[f"goles_{equipo}"],

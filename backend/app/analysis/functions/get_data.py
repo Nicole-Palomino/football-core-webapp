@@ -38,12 +38,12 @@ LIGAS_DATA = {
         "logo": "🟡🔴",
         "color": "#FF6B6B"
     },
-    # "Premier League": {
-    #     "equipos": ["Manchester City", "Arsenal", "Liverpool", "Chelsea", "Newcastle", 
-    #                "Manchester United", "Tottenham", "Brighton", "Aston Villa", "West Ham"],
-    #     "logo": "⚪🔴",
-    #     "color": "#4ECDC4"
-    # },
+    "Premier League": {
+        "equipos": ["Manchester City", "Arsenal", "Liverpool", "Chelsea", "Newcastle", 
+                   "Manchester United", "Tottenham", "Brighton", "Aston Villa", "West Ham"],
+        "logo": "⚪🔴",
+        "color": "#4ECDC4"
+    },
     "Serie A": {
         "equipos": ["Napoli", "AC Milan", "Inter Milan", "Juventus", "AS Roma", 
                    "Lazio", "Atalanta", "Fiorentina", "Bologna", "Torino"],

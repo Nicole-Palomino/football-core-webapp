@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 
+# used in verificar_o_entrenar_modelos_estadisticos
 def preparar_dataset_estadistico(df: pd.DataFrame) -> pd.DataFrame:
     """
     Prepara un DataFrame con variables estadísticas renombradas y agrega columnas objetivo:
@@ -68,6 +69,7 @@ def preparar_dataset_estadistico(df: pd.DataFrame) -> pd.DataFrame:
     print("✅ Dataset preparado con shape:", df.shape)
     return df
 
+# used in verificar_o_entrenar_modelos_estadisticos
 def entrenar_modelos_individuales(df: pd.DataFrame) -> dict:
     modelos = {}
 
@@ -185,12 +187,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MODELOS_DIR = BASE_DIR / "storage" / "predict"
 MODELOS_DIR.mkdir(parents=True, exist_ok=True)
 
+# used in verificar_o_entrenar_modelos_estadisticos
 def get_model_path(equipo_1, equipo_2, liga):
     clave = f"{liga}_{equipo_1}_{equipo_2}".lower().replace(" ", "_")
     hash_id = hashlib.md5(clave.encode()).hexdigest()[:8]
     return MODELOS_DIR / f"modelo_{clave}_{hash_id}.pkl"
 
-def verificar_o_entrenar_modelos_estadisticos(equipo_1, equipo_2, liga):
+# used in predictions.py
+async def verificar_o_entrenar_modelos_estadisticos(equipo_1, equipo_2, liga):
     modelo_path = get_model_path(equipo_1, equipo_2, liga)
     csv_mtime = get_data.obtener_fecha_ultima_modificacion_csv(liga)  # 🔄 usa esta
 
@@ -205,7 +209,7 @@ def verificar_o_entrenar_modelos_estadisticos(equipo_1, equipo_2, liga):
                 print(f"❌ Error al cargar modelos: {e}")
 
     # Si no existe el modelo o el CSV fue actualizado: reentrena
-    df_liga = get_data.leer_y_filtrar_csv(liga)
+    df_liga = await get_data.leer_y_filtrar_csv(liga)
     partidos_equipo_1 = get_data.filtrar_ultimos_partidos_de_equipo(df_liga, equipo_1, limite=40)
     partidos_equipo_2 = get_data.filtrar_ultimos_partidos_de_equipo(df_liga, equipo_2, limite=40)
     partidos = partidos_equipo_1 + partidos_equipo_2
@@ -220,6 +224,7 @@ def verificar_o_entrenar_modelos_estadisticos(equipo_1, equipo_2, liga):
     print(f"✅ Modelos entrenados y guardados: {modelo_path.name}")
     return modelos
 
+# used in predictions.py
 def predecir_estadisticas_partido(modelos: dict, datos_partido: dict) -> dict:
     df = pd.DataFrame([datos_partido])
 

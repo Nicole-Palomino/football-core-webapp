@@ -1,17 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import Optional
-import asyncio
-import functools
-from concurrent.futures import ThreadPoolExecutor
 
 from app.analysis.functions import (
     functions_cluster,
 )
-
 from app.core.security import get_current_active_user
 from app.schemas.user import User
-
-
 
 router = APIRouter(
     prefix="/clusters",

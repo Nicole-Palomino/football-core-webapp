@@ -1,37 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional
-import asyncio
-import functools
-from collections import Counter
-from starlette.concurrency import run_in_threadpool
-from concurrent.futures import ThreadPoolExecutor
-from starlette.concurrency import run_in_threadpool
 import math
 import numpy as np
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from collections import Counter
+
 from app.analysis.functions import (
-    get_data,
-    functions_analysis,
-    functions_prediction,
-    functions_cluster,
-    functions_poisson,
-    functions_clasificacion
+    get_data, functions_cluster, functions_poisson,
 )
-
 from app.core.security import get_current_active_user
-from app.schemas.user import User
-
-# Executor para funciones síncronas
-executor = ThreadPoolExecutor(max_workers=4)
-
-def run_in_executor(func):
-    """Decorator para ejecutar funciones síncronas de forma asíncrona"""
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(executor, func, *args, **kwargs)
-    return wrapper
-
 
 def to_native(value):
     if isinstance(value, (np.generic,)):
@@ -55,6 +31,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
+# finished
 @router.get("/probabilidades/{liga}")
 async def calcular_probabilidades_poisson(
     liga: str,
@@ -65,38 +42,26 @@ async def calcular_probabilidades_poisson(
     """Calcula probabilidades usando distribución de Poisson"""
     try:
         # Obtener datos de liga
-        df_liga = await run_in_threadpool(get_data.leer_y_filtrar_csv, liga)
+        df_liga = await get_data.leer_y_filtrar_csv(liga)
         if df_liga is None or df_liga.empty:
-            raise HTTPException(status_code=404, detail=f"No hay datos para la liga {liga}")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No hay datos para la liga {liga}")
 
-        partidos = await run_in_threadpool(
-            get_data.filtrar_partidos_sin_importar_local_visita, df_liga, equipo1, equipo2
-        )
+        partidos =get_data.filtrar_partidos_sin_importar_local_visita(df_liga, equipo1, equipo2)
         if partidos is None or getattr(partidos, "empty", False):
             raise HTTPException(
-                status_code=404,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No hay partidos entre {equipo1} y {equipo2}"
             )
 
         # Estandarizar columnas
-        dataframe_partidos = await run_in_threadpool(
-            functions_poisson.estandarizar_columnas_futbol, partidos
-        )
+        dataframe_partidos = functions_poisson.estandarizar_columnas_futbol(partidos)
 
         # Últimos partidos de cada equipo
-        partidos_eq1 = await run_in_threadpool(
-            get_data.filtrar_ultimos_partidos_de_equipo, df_liga, equipo1
-        )
-        partidos_eq2 = await run_in_threadpool(
-            get_data.filtrar_ultimos_partidos_de_equipo, df_liga, equipo2
-        )
+        partidos_eq1 = get_data.filtrar_ultimos_partidos_de_equipo(df_liga, equipo1)
+        partidos_eq2 = get_data.filtrar_ultimos_partidos_de_equipo(df_liga, equipo2)
 
-        promedio_eq1 = await run_in_threadpool(
-            functions_cluster.calcular_promedios, partidos_eq1, equipo1
-        )
-        promedio_eq2 = await run_in_threadpool(
-            functions_cluster.calcular_promedios, partidos_eq2, equipo2
-        )
+        promedio_eq1 = functions_cluster.calcular_promedios(partidos_eq1, equipo1)
+        promedio_eq2 = functions_cluster.calcular_promedios(partidos_eq2, equipo2)
 
         datos_partido = {
             "goles_local": to_native(promedio_eq1.get("goles")),
@@ -116,46 +81,30 @@ async def calcular_probabilidades_poisson(
         }
 
         # Entrenar modelos Poisson
-        modelo_local = await run_in_threadpool(
-            functions_poisson.entrenar_modelo_poisson,
-            dataframe_partidos, "goles_local", "local"
-        )
-        modelo_visitante = await run_in_threadpool(
-            functions_poisson.entrenar_modelo_poisson,
-            dataframe_partidos, "goles_visitante", "visitante"
-        )
+        modelo_local = functions_poisson.entrenar_modelo_poisson(dataframe_partidos, "goles_local", "local")
+        modelo_visitante = functions_poisson.entrenar_modelo_poisson(dataframe_partidos, "goles_visitante", "visitante")
 
         # Predicciones esperadas
-        goles_pred_local = await run_in_threadpool(
-            functions_poisson.predecir_goles, modelo_local, datos_partido, "local"
-        )
-        goles_pred_visitante = await run_in_threadpool(
-            functions_poisson.predecir_goles, modelo_visitante, datos_partido, "visitante"
-        )
+        goles_pred_local = functions_poisson.predecir_goles(modelo_local, datos_partido, "local")
+        goles_pred_visitante = functions_poisson.predecir_goles(modelo_visitante, datos_partido, "visitante")
 
         goles_pred_local = to_native(goles_pred_local)
         goles_pred_visitante = to_native(goles_pred_visitante)
 
         # Simulación Monte Carlo
-        resultados, scores = await run_in_threadpool(
-            functions_poisson.simular_resultados_monte_carlo,
-            goles_pred_local, goles_pred_visitante
-        )
+        resultados, scores = functions_poisson.simular_resultados_monte_carlo(goles_pred_local, goles_pred_visitante)
         if not isinstance(resultados, dict):
             resultados = {}
         if not isinstance(scores, Counter):
             scores = Counter(scores)
 
         # Matriz de scores exactos
-        matriz = await run_in_threadpool(
-            functions_poisson.matriz_score_exacto,
-            goles_pred_local, goles_pred_visitante, max_goles
-        )
+        matriz = functions_poisson.matriz_score_exacto(goles_pred_local, goles_pred_visitante, max_goles)
 
         # Seguridad: evitar división por cero
         total_simulaciones = sum(to_native(v) or 0 for v in resultados.values())
         if total_simulaciones == 0:
-            raise HTTPException(status_code=500, detail="No se pudieron obtener simulaciones válidas")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="No se pudieron obtener simulaciones válidas")
 
         # Construir respuesta con normalización
         response = {
@@ -179,4 +128,4 @@ async def calcular_probabilidades_poisson(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en análisis Poisson: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error en análisis Poisson: {str(e)}")
