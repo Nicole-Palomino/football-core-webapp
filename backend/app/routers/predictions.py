@@ -8,16 +8,10 @@ import math
 import numpy as np
 
 from app.analysis.functions import (
-    get_data,
-    functions_analysis,
-    functions_prediction,
-    functions_cluster,
-    functions_poisson,
-    functions_clasificacion
+    get_data, functions_prediction,
 )
 
 from app.core.security import get_current_active_user
-from app.schemas.user import User
 
 # Executor para funciones síncronas
 executor = ThreadPoolExecutor(max_workers=4)

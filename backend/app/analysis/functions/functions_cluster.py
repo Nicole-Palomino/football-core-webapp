@@ -3,7 +3,10 @@ import numpy as np
 import hashlib
 import joblib
 import os
+import asyncio
+import functools
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
@@ -12,6 +15,18 @@ from typing import Dict
 
 from app.analysis.functions import get_data
 
+# Executor para funciones síncronas
+executor = ThreadPoolExecutor(max_workers=4)
+
+def run_in_executor(func):
+    """Decorator para ejecutar funciones síncronas de forma asíncrona"""
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, func, *args, **kwargs)
+    return wrapper
+
+# used in analizar_clusters_partidos_entre_equipos
 def encontrar_k_optimo(df: pd.DataFrame, k_min: int = 2, k_max: int = 6):
     resultados = []
 
@@ -29,6 +44,7 @@ def encontrar_k_optimo(df: pd.DataFrame, k_min: int = 2, k_max: int = 6):
     k_optimo = df_resultados.sort_values(by="pseudo_r2", ascending=False).iloc[0]["n_clusters"]
     return int(k_optimo), df_resultados
 
+# used in analizar_clusters_partidos_entre_equipos
 def preparar_dataset_para_kmeans(df: pd.DataFrame) -> pd.DataFrame:
     columnas = [
         "FTHG", "FTAG", "HTHG", "HTAG", "HS", "AS", "HST", "AST",
@@ -57,6 +73,7 @@ def preparar_dataset_para_kmeans(df: pd.DataFrame) -> pd.DataFrame:
     print("✅ Dataset preparado para KMeans con shape:", df.shape)
     return df
 
+# used in analizar_clusters_partidos_entre_equipos
 def aplicar_kmeans(df: pd.DataFrame, n_clusters: int = 3):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(df)
@@ -74,6 +91,7 @@ def aplicar_kmeans(df: pd.DataFrame, n_clusters: int = 3):
     print(f"Aplicar Kmeans (pseudo R²):  {pseudo_r2:.6f}")
     return df, kmeans, scaler
 
+# used in analizar_clusters_partidos_entre_equipos
 def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
     descripciones = {}
 
@@ -82,6 +100,13 @@ def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
     for cluster_id in range(total_clusters):
         df = df_clusterizado[df_clusterizado["cluster"] == cluster_id]
         cantidad_partidos = len(df)
+
+        if df.empty:
+            descripciones[cluster_id] = {
+                "titulo": f"Clúster {cluster_id}",
+                "descripcion": "⚠️ Este clúster no contiene partidos."
+            }
+            continue
 
         # Estadísticas básicas
         promedio_goles_local = df["goles_local"].mean()
@@ -109,7 +134,25 @@ def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
         goleadas_local = df[(df["goles_local"] - df["goles_visitante"]) >= 3].shape[0]
         goleadas_visitante = df[(df["goles_visitante"] - df["goles_local"]) >= 3].shape[0]
 
+        # ---- CREAR TITULO AUTOMÁTICO ----
+        if porcentaje_empates > 40:
+            titulo = "Clúster de empates"
+        elif promedio_goles_local > promedio_goles_visitante + 1:
+            titulo = "Clúster de dominio local"
+        elif promedio_goles_visitante > promedio_goles_local + 1:
+            titulo = "Clúster de dominio visitante"
+        elif total_goles > 4:
+            titulo = "Clúster goleador"
+        elif total_goles < 2:
+            titulo = "Clúster defensivo"
+        elif total_tarjetas > 4 or total_faltas > 22:
+            titulo = "Clúster físico"
+        else:
+            titulo = "Clúster equilibrado"
+
+        # ---- DESCRIPCIÓN DETALLADA ----
         descripcion = f"🤖 **Clúster {cluster_id}** \n\n"
+        descripcion += f"📊 Título: **{titulo}**\n\n"
 
         # Dominio en el marcador
         if promedio_goles_local > promedio_goles_visitante + 1:
@@ -156,13 +199,19 @@ def describir_clusters_avanzado(df_clusterizado: pd.DataFrame) -> dict:
         elif total_tarjetas < 2 and total_faltas < 15:
             descripcion += "⚽️ Encuentros con buen fair play y pocas interrupciones.\n"
 
-        descripciones[cluster_id] = descripcion.strip()
+        # Guardar resultado
+        descripciones[cluster_id] = {
+            "titulo": titulo,
+            "descripcion": descripcion.strip(),
+            "cantidad_partidos": cantidad_partidos
+        }
 
     return descripciones
 
-def analizar_clusters_partidos_entre_equipos(equipo1, equipo2, liga):
-    df_liga = get_data.leer_y_filtrar_csv(liga)
-    partidos = get_data.filtrar_partidos_entre_equipos(df_liga, equipo1, equipo2)
+# used in cluster.py
+async def analizar_clusters_partidos_entre_equipos(equipo1, equipo2, liga):
+    df_liga = await get_data.leer_y_filtrar_csv(liga)
+    partidos = await get_data.filtrar_partidos_entre_equipos(df_liga, equipo1, equipo2)
 
     df = preparar_dataset_para_kmeans(partidos)
     # ✅ Buscar el mejor número de clústeres usando pseudo R²
@@ -183,6 +232,7 @@ def analizar_clusters_partidos_entre_equipos(equipo1, equipo2, liga):
         "scaler": scaler
     }
 
+# used in predecir_cluster_automatico
 def generar_perfil_por_cluster(df: pd.DataFrame, etiquetas: np.ndarray) -> dict:
     print("Función generar_perfil_por_cluster llamada")
     df_cluster = df.copy()
@@ -191,7 +241,12 @@ def generar_perfil_por_cluster(df: pd.DataFrame, etiquetas: np.ndarray) -> dict:
     perfiles = {}
     for cluster in sorted(df_cluster["cluster"].unique()):
         datos = df_cluster[df_cluster["cluster"] == cluster]
+        cantidad = len(datos)
+
         perfil = {
+            # Metadata
+            "cantidad_partidos": cantidad,
+
             # Resultado final
             "prob_victoria_local": round((datos["goles_local"] > datos["goles_visitante"]).mean(), 2),
             "prob_empate": round((datos["goles_local"] == datos["goles_visitante"]).mean(), 2),
@@ -221,7 +276,25 @@ def generar_perfil_por_cluster(df: pd.DataFrame, etiquetas: np.ndarray) -> dict:
             "rojas_local": round(datos["rojas_local"].mean(), 2),
             "rojas_visitante": round(datos["rojas_visitante"].mean(), 2),
         }
+
+        # ---- PERFIL RESUMIDO ----
+        if perfil["prob_empate"] > 0.4:
+            perfil_resumido = "Muchos empates"
+        elif perfil["prob_victoria_local"] > 0.6:
+            perfil_resumido = "Domina Local"
+        elif perfil["prob_victoria_visitante"] > 0.6:
+            perfil_resumido = "Domina Visitante"
+        elif perfil["goles_esperados_local"] + perfil["goles_esperados_visitante"] > 4:
+            perfil_resumido = "Clúster goleador"
+        elif perfil["goles_esperados_local"] + perfil["goles_esperados_visitante"] < 2:
+            perfil_resumido = "Clúster defensivo"
+        else:
+            perfil_resumido = "Clúster equilibrado"
+
+        perfil["perfil_resumido"] = perfil_resumido
+
         perfiles[cluster] = perfil
+
     return perfiles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -233,12 +306,13 @@ def get_model_path(equipo_1, equipo_2, liga):
     hash_id = hashlib.md5(clave.encode()).hexdigest()[:8]
     return MODELOS_DIR / f"modelo_{clave}_{hash_id}.pkl"
 
-def verificar_o_entrenar_modelo(equipo_1, equipo_2, liga):
+# used in predecir_cluster_automatico
+async def verificar_o_entrenar_modelo(equipo_1, equipo_2, liga):
     modelo_path = get_model_path(equipo_1, equipo_2, liga)
 
     # Leer datos de la liga y partidos entre equipos
-    df_liga = get_data.leer_y_filtrar_csv(liga)
-    df_partidos = get_data.filtrar_partidos_entre_equipos(df_liga, equipo_1, equipo_2)
+    df_liga = await get_data.leer_y_filtrar_csv(liga)
+    df_partidos = await get_data.filtrar_partidos_entre_equipos(df_liga, equipo_1, equipo_2)
 
     if df_partidos.empty:
         print("⚠️ No hay partidos entre los equipos.")
@@ -278,7 +352,7 @@ def verificar_o_entrenar_modelo(equipo_1, equipo_2, liga):
                 pass  # Forzar reentrenamiento si falla carga
 
     # ENTRENAR NUEVO MODELO
-    resultado = analizar_clusters_partidos_entre_equipos(equipo_1, equipo_2, liga)
+    resultado = await analizar_clusters_partidos_entre_equipos(equipo_1, equipo_2, liga)
     df_clusterizado = pd.DataFrame(resultado["partidos_clusterizados"])
     etiquetas = df_clusterizado["cluster"].values
 
@@ -296,13 +370,15 @@ def verificar_o_entrenar_modelo(equipo_1, equipo_2, liga):
         "scaler": scaler,
         "perfiles": perfiles,
     }
-    
+
+# used in predecir_cluster_automatico
 def predecir_cluster_partido(modelo, scaler, partido_input: Dict[str, float]) -> int:
     df_input = pd.DataFrame([partido_input])
     df_scaled = scaler.transform(df_input)
     return int(modelo.predict(df_scaled)[0])
 
 # Calcular promedios de estadísticas para el input del modelo
+# used in predecir_cluster_automatico
 def calcular_promedios(partidos, equipo):
     return {
         "goles": (partidos[partidos["HomeTeam"] == equipo]["FTHG"].mean() +
@@ -322,9 +398,10 @@ def calcular_promedios(partidos, equipo):
         "rojas": (partidos[partidos["HomeTeam"] == equipo]["HR"].mean() +
                         partidos[partidos["AwayTeam"] == equipo]["AR"].mean()) / 2,
     }
-        
-def predecir_cluster_automatico(equipo_1, equipo_2, liga):
-    verificacion = verificar_o_entrenar_modelo(equipo_1, equipo_2, liga)
+
+# used in cluster.py 
+async def predecir_cluster_automatico(equipo_1, equipo_2, liga):
+    verificacion = await verificar_o_entrenar_modelo(equipo_1, equipo_2, liga)
 
     if verificacion is None:
         print("❌ No se pudo analizar los clusters.")
@@ -338,7 +415,7 @@ def predecir_cluster_automatico(equipo_1, equipo_2, liga):
         print("❌ El modelo, el scaler o los perfiles de clusters no están disponibles.")
         return
     
-    df_liga = get_data.leer_y_filtrar_csv(liga)
+    df_liga = await get_data.leer_y_filtrar_csv(liga)
     
     # Obtener últimos partidos de cada equipo
     partidos_eq1 = get_data.filtrar_ultimos_partidos_de_equipo(df_liga, equipo_1, limite=40)
@@ -382,27 +459,35 @@ def predecir_cluster_automatico(equipo_1, equipo_2, liga):
     total_goles = goles_local + goles_visitante
 
     resumen = (
-        f"🔍 El partido pertenece al clúster {cluster_predicho}, caracterizado por una alta probabilidad de victoria del equipo local "
-        f"({perfil.get('prob_victoria_local', 0) * 100:.1f}%), mientras que las chances de empate "
-        f"({perfil.get('prob_empate', 0) * 100:.1f}%) y victoria visitante "
-        f"({perfil.get('prob_victoria_visitante', 0) * 100:.1f}%) son menores.\n\n"
+        f"📊 Los datos del modelo ubican este partido en el **clúster {cluster_predicho}**, "
+        f"un escenario donde {equipo_1} parte con una clara ventaja: "
+        f"{perfil.get('prob_victoria_local', 0)*100:.1f}% de probabilidades de ganar. "
+        f"{equipo_2}, en cambio, apenas alcanza un {perfil.get('prob_victoria_visitante', 0)*100:.1f}%, "
+        f"mientras que el empate ronda el {perfil.get('prob_empate', 0)*100:.1f}%.\n\n"
 
-        f"📈 En el **primer tiempo**, el equipo local anota en promedio {perfil.get('goles_ht_local', 0):.1f} goles, mientras que el visitante marca "
-        f"{perfil.get('goles_ht_visitante', 0):.1f}. Las probabilidades al descanso son: "
-        f"victoria local ({perfil.get('prob_ht_local_gana', 0) * 100:.1f}%), empate ({perfil.get('prob_ht_empate', 0) * 100:.1f}%) y victoria visitante "
-        f"({perfil.get('prob_ht_visitante_gana', 0) * 100:.1f}%).\n\n"
+        f"⚡ En el **primer tiempo**, el local suele anotar {perfil.get('goles_ht_local',0):.1f} goles, "
+        f"frente a los {perfil.get('goles_ht_visitante',0):.1f} del visitante. "
+        f"Esto se traduce en una probabilidad de {perfil.get('prob_ht_local_gana',0)*100:.1f}% "
+        f"de irse al descanso en ventaja.\n\n"
 
-        f"⚽ A lo largo del partido, se espera un marcador promedio de {perfil.get('goles_esperados_local', 0):.1f} a {perfil.get('goles_esperados_visitante', 0):.1f}, "
-        f"con {'alta' if perfil.get('ambos_marcan', 0) >= 0.5 else 'baja'} probabilidad de que ambos equipos marquen. "
-        f"Se estiman un total de {total_goles:.1f} goles ({'over' if total_goles > 2.5 else 'under'} 2.5).\n\n"
+        f"⚽ A nivel global, el marcador esperado es de "
+        f"{perfil.get('goles_esperados_local',0):.1f} - {perfil.get('goles_esperados_visitante',0):.1f}. "
+        f"{'Se anticipa un partido abierto con goles de ambos lados' if perfil.get('ambos_marcan',0) >= 0.5 else 'El partido apunta a ser más cerrado, con dificultades para que marquen ambos equipos'}. "
+        f"En total, se esperan {total_goles:.1f} goles, lo que sitúa la línea en "
+        f"{'over' if total_goles > 2.5 else 'under'} 2.5.\n\n"
 
-        f"🎯 En promedio, el equipo local realiza {perfil.get('tiros_arco_local', 0):.1f} tiros al arco, frente a los {perfil.get('tiros_arco_visitante', 0):.1f} del visitante. "
-        f"Además, se registran {perfil.get('corners_local', 0):.1f} corners para el local y {perfil.get('corners_visitante', 0):.1f} para el visitante.\n\n"
+        f"🎯 En cuanto a juego ofensivo, {equipo_1} promedia {perfil.get('tiros_arco_local',0):.1f} tiros al arco, "
+        f"contra los {perfil.get('tiros_arco_visitante',0):.1f} de {equipo_2}. "
+        f"También se esperan {perfil.get('corners_local',0):.1f} corners para el local "
+        f"y {perfil.get('corners_visitante',0):.1f} para la visita.\n\n"
 
-        f"🟨 En cuanto a disciplina, se esperan {perfil.get('amarillas_local', 0):.1f} amarillas y {perfil.get('rojas_local', 0):.2f} rojas para el equipo local, "
-        f"y {perfil.get('amarillas_visitante', 0):.1f} amarillas y {perfil.get('rojas_visitante', 0):.2f} rojas para el visitante.\n\n"
+        f"🟨 La disciplina puede influir: el local recibe en promedio "
+        f"{perfil.get('amarillas_local',0):.1f} amarillas y {perfil.get('rojas_local',0):.2f} rojas, "
+        f"mientras que {equipo_2} promedia {perfil.get('amarillas_visitante',0):.1f} amarillas y "
+        f"{perfil.get('rojas_visitante',0):.2f} expulsiones.\n\n"
 
-        f"🔢 Marcador estimado más probable: {round(perfil.get('goles_esperados_local', 0))} - {round(perfil.get('goles_esperados_visitante', 0))}."
+        f"🔮 En conclusión, el marcador más probable sería **{round(perfil.get('goles_esperados_local',0))} - {round(perfil.get('goles_esperados_visitante',0))}**, "
+        f"con una narrativa que favorece a {equipo_1}."
     )
 
     return {

@@ -92,8 +92,9 @@ app.include_router(stats.router)
 app.include_router(summaries.router)
 # finished
 app.include_router(favorites.router)
-
+# finished
 app.include_router(analysis.router)
+
 app.include_router(cluster.router)
 app.include_router(predictions.router)
 app.include_router(poisson.router)
