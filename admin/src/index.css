@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #228B22;
+  --color-secondary: #A8E100;
+  --color-light: #27AE60;
+  --color-hover: #1ABC9C;
+  --color-background: #151616;
+  --color-navbar: #0e0f0f;
+  --color-target: #202121;
+  --color-text-hover: #00FF88;
+  --color-home: #fe5f55;
+  --color-draw: #00C49F;
+  --color-custom-scroll: #4B5563;
+
+  /* Definición de fuentes personalizadas */
+  --font-title: "Monomaniac One", sans-serif;
+  --font-subtitle: "Comic Neue", sans-serif;
+
+  /* Definición de padding del contenedor */
+  --container-padding-default: 1rem;
+  --container-padding-sm: 2rem;
+  --container-padding-lg: 4rem;
+  --container-padding-xl: 5rem;
+  --container-padding-2xl: 6rem;
+}
