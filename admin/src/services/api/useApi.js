@@ -15,7 +15,7 @@ export const useApi = () => {
                 const { data } = await axiosInstance.get(url)
                 return data
             },
-            staleTime: 1000 * 60 * 5, // cache por 5 min
+            staleTime: 1000 * 60 * 15, // cache por 15 min
             refetchOnWindowFocus: false,
             retry: false,
             ...options,

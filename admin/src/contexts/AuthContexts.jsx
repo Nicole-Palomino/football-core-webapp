@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode"
 import { getToken, setToken, removeToken, setStoredUser, getStoredUser, removeStoredUser } from "../services/auth"
 import axiosInstance from '../services/axiosConfig'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext()
 
@@ -25,6 +26,7 @@ const fetchUser = async (token) => {
 
 export const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
 
     // Estado inicial del access token
     const [authToken, setAuthToken] = useState(() => {
@@ -51,11 +53,9 @@ export const AuthProvider = ({ children }) => {
         },
     })
 
-    // Si no hay token, limpiar usuario cacheado
     useEffect(() => {
-        if (!authToken) {
-            removeStoredUser()
-            queryClient.removeQueries({ queryKey: ['user'] })
+        if (authToken) {
+            queryClient.invalidateQueries({ queryKey: ['user'] })
         }
     }, [authToken, queryClient])
 
@@ -63,15 +63,26 @@ export const AuthProvider = ({ children }) => {
     const login = async (token) => {
         setToken(token)
         setAuthToken(token)
-        await queryClient.invalidateQueries({ queryKey: ['user'] })
+        await queryClient.fetchQuery({
+            queryKey: ['user'],
+            queryFn: () => fetchUser(token),
+        })
     }
 
     // Logout → limpia todo
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await axiosInstance.post("/logout", null, { withCredentials: true })
+        } catch (error) {
+            console.error("Error al cerrar sesión en backend:", error)
+        }
+
         removeToken()
         removeStoredUser()
         setAuthToken(null)
         queryClient.removeQueries({ queryKey: ['user'] })
+
+        navigate('/')
     }
 
     // Mostrar cargando solo si hay token y aún no cargó user
@@ -79,7 +90,7 @@ export const AuthProvider = ({ children }) => {
         return <div>Cargando usuario...</div>
     }
 
-    const isAuthenticated = !!authToken && !!user
+    const isAuthenticated = !!authToken
 
     const value = {
         authToken,
@@ -87,6 +98,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated,
+        loading: isLoading,
     }
 
     return (

@@ -5,20 +5,23 @@ import { useAuth } from "../contexts/AuthContexts"
 import { loginUser } from "../services/api/auth"
 import Spinner from "../components/Spinners/Spinner"
 import { Eye, EyeOff, Trophy, Users, BarChart3, Calendar, Shield } from 'lucide-react'
+import { useNavigate } from "react-router-dom"
 
 const HomePage = () => {
 
+    const navigate = useNavigate()
     const { register, handleSubmit, formState: { errors } } = useForm()
-    const { setAuthToken } = useAuth()
+    const { login } = useAuth()
     const [showPassword, setShowPassword] = useState(false)
 
     const mutation = useMutation({
         mutationFn: loginUser,
-        onSuccess: (data) => {
-            setAuthToken(data.access_token) // guardamos en contexto
+        onSuccess: async (data) => {
+            await login(data.access_token) // guardamos en contexto
+            navigate("/dashboard")
         },
         onError: (error) => {
-            console.error("Error en login:", error)
+            console.error("Error en login:", error.message)
         },
     })
 
@@ -73,7 +76,7 @@ const HomePage = () => {
                         </div>
                     </div>
 
-                    <div onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         {/* Campo de usuario */}
                         <div className="space-y-2">
                             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
@@ -134,8 +137,7 @@ const HomePage = () => {
 
                         {/* Botón de envío */}
                         <button
-                            type="button"
-                            onClick={handleSubmit(onSubmit)}
+                            type="submit"
                             disabled={mutation.isPending}
                             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                         >
@@ -151,7 +153,7 @@ const HomePage = () => {
                                 </>
                             )}
                         </button>
-                    </div>
+                    </form>
 
                     {/* Mensaje de error */}
                     {mutation.isError && (
@@ -159,7 +161,7 @@ const HomePage = () => {
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                                 <p className="text-red-700 text-sm font-medium">
-                                    Credenciales inválidas. Verifica tus datos e intenta nuevamente.
+                                    {mutation.error?.message || "Error desconocido"}
                                 </p>
                             </div>
                         </div>

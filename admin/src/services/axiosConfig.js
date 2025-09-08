@@ -49,33 +49,33 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config
 
-        // Si el token expiró
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry &&
+            !originalRequest.url.includes("/login") &&
+            !originalRequest.url.includes("/register")
+        ) {
             originalRequest._retry = true
 
-            // Si ya hay un refresh en curso, espera el nuevo token
             if (isRefreshing) {
                 return new Promise((resolve) => {
-                subscribeTokenRefresh((newToken) => {
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`
-                    resolve(axiosInstance(originalRequest))
-                })
+                    subscribeTokenRefresh((newToken) => {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`
+                        resolve(axiosInstance(originalRequest))
+                    })
                 })
             }
 
-            // Si no hay refresh en curso, dispara uno
             isRefreshing = true
             try {
                 const { data } = await axiosInstance.post("/refresh", {}, { withCredentials: true })
                 const newToken = data.access_token
 
-                // Guardar nuevo token
                 setToken(newToken)
                 axiosInstance.defaults.headers.Authorization = `Bearer ${newToken}`
                 isRefreshing = false
                 onRefreshed(newToken)
 
-                // Reintenta la request original
                 originalRequest.headers.Authorization = `Bearer ${newToken}`
                 return axiosInstance(originalRequest)
             } catch (err) {
