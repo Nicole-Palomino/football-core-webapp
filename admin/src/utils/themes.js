@@ -17,6 +17,8 @@ export const lightTheme = createTheme({
     textSecondary: 'text-gray-600',
     border: 'border-gray-200',
     hover: 'hover:bg-gray-100',
+    input: 'bg-white border-gray-300 text-gray-900',
+    modal: 'bg-white',
     active: 'bg-blue-50 text-blue-600 border-r-2 border-blue-600',
     palette: {
         mode: 'light',
@@ -84,6 +86,8 @@ export const darkTheme = createTheme({
     textSecondary: 'text-gray-300',
     border: 'border-gray-700',
     hover: 'hover:bg-gray-700',
+    input: 'bg-gray-700 border-gray-600 text-white',
+    modal: 'bg-gray-800',
     active: 'bg-blue-900 text-blue-300 border-r-2 border-blue-400',
     palette: {
         mode: 'dark',

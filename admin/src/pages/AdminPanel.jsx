@@ -7,16 +7,19 @@ import { lightTheme, darkTheme } from '../utils/themes'
 import { menuItems } from '../utils/items'
 import { useAuth } from '../contexts/AuthContexts'
 import Dashboard from '../components/Dashboard/Dashboard'
+import Usuarios from '../components/Dashboard/Usuarios'
+import { useThemeMode } from '../contexts/ThemeContext'
+import Estados from '../components/Dashboard/Estados'
+import Roles from '../components/Dashboard/Roles'
 
 const AdminPanel = () => {
 
     const [activeTab, setActiveTab] = useState('dashboard')
-    const [darkMode, setDarkMode] = useState(false)
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [userMenuOpen, setUserMenuOpen] = useState(false)
     const { user, logout } = useAuth()
-
-    const currentTheme = darkMode ? darkTheme : lightTheme
+    
+    const { currentTheme, setDarkMode, darkMode } = useThemeMode()
 
     const getInitials = (name) => {
         if (!name) return ''
@@ -34,43 +37,7 @@ const AdminPanel = () => {
             case 'dashboard':
                 return ( <Dashboard /> )
             case 'usuarios':
-                return (
-                    <div className={contentClasses}>
-                        <h1 className="text-3xl font-bold mb-6">Gestión de Usuarios</h1>
-                        <div className={`${currentTheme.sidebar} rounded-lg shadow-sm ${currentTheme.border} border`}>
-                            <div className="p-6">
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mb-4">
-                                    Nuevo Usuario
-                                </button>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className={`${currentTheme.border} border-b`}>
-                                                <th className="text-left p-3">Nombre</th>
-                                                <th className="text-left p-3">Email</th>
-                                                <th className="text-left p-3">Rol</th>
-                                                <th className="text-left p-3">Estado</th>
-                                                <th className="text-left p-3">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr className={`${currentTheme.border} border-b ${currentTheme.hover}`}>
-                                                <td className="p-3">Juan Pérez</td>
-                                                <td className="p-3">juan@email.com</td>
-                                                <td className="p-3">Administrador</td>
-                                                <td className="p-3"><span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">Activo</span></td>
-                                                <td className="p-3">
-                                                    <button className="text-blue-600 hover:underline mr-2">Editar</button>
-                                                    <button className="text-red-600 hover:underline">Eliminar</button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
+                return ( <Usuarios /> )
             case 'equipos':
                 return (
                     <div className={contentClasses}>
@@ -113,66 +80,9 @@ const AdminPanel = () => {
                     </div>
                 )
             case 'estados':
-                return (
-                    <div className={contentClasses}>
-                        <h1 className="text-3xl font-bold mb-6">Estados del Sistema</h1>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                                <h3 className="font-semibold mb-4">Estado del Servidor</h3>
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                    <span>Operacional</span>
-                                </div>
-                                <p className={`${currentTheme.textSecondary} text-sm`}>Última actualización: hace 2 minutos</p>
-                            </div>
-                            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                                <h3 className="font-semibold mb-4">Base de Datos</h3>
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                    <span>Conectada</span>
-                                </div>
-                                <p className={`${currentTheme.textSecondary} text-sm`}>Tiempo de respuesta: 45ms</p>
-                            </div>
-                        </div>
-                    </div>
-                )
+                return ( <Estados /> )
             case 'roles':
-                return (
-                    <div className={contentClasses}>
-                        <h1 className="text-3xl font-bold mb-6">Gestión de Roles</h1>
-                        <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mb-4">
-                                Crear Rol
-                            </button>
-                            <div className="space-y-4">
-                                <div className={`p-4 ${currentTheme.border} border rounded-lg`}>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-semibold">Administrador</h3>
-                                            <p className={`${currentTheme.textSecondary} text-sm`}>Acceso completo al sistema</p>
-                                        </div>
-                                        <div className="flex space-x-2">
-                                            <button className="text-blue-600 hover:underline">Editar</button>
-                                            <button className="text-red-600 hover:underline">Eliminar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className={`p-4 ${currentTheme.border} border rounded-lg`}>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-semibold">Usuario</h3>
-                                            <p className={`${currentTheme.textSecondary} text-sm`}>Acceso limitado</p>
-                                        </div>
-                                        <div className="flex space-x-2">
-                                            <button className="text-blue-600 hover:underline">Editar</button>
-                                            <button className="text-red-600 hover:underline">Eliminar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
+                return ( <Roles /> )
             case 'resumenes':
                 return (
                     <div className={contentClasses}>

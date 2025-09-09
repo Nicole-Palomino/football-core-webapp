@@ -1,8 +1,8 @@
 import axiosInstance from "../axiosConfig"
 
-export const getCountUser = async () => {
+export const getAllStates = async () => {
     try {
-        const response = await axiosInstance.get('/users/stats/total')
+        const response = await axiosInstance.get('/estados/')
         return response.data
     } catch (error) {
         console.error("Error al obtener usuarios:", error)
@@ -10,26 +10,16 @@ export const getCountUser = async () => {
     }
 }
 
-export const getAllUsers = async () => {
+export const registerState = async ( stateData ) => {
     try {
-        const response = await axiosInstance.get('/users/')
-        return response.data
-    } catch (error) {
-        console.error("Error al obtener usuarios:", error)
-        throw error.response?.data || new Error("No se pudo obtener usuarios")
-    }
-}
-
-export const registerUser = async ( userData ) => {
-    try {
-        const response = await axiosInstance.post('/register-admin', userData, {
+        const response = await axiosInstance.post('/estados/', stateData, {
             headers: {
                 "Content-Type": "application/json",
             },
         })
         return response.data
     } catch (error) {
-        console.error("Error en registerUser:", error);
+        console.error("Error en registerState:", error);
         if (error.response) {
             throw new Error(error.response.data?.detail || "Error desconocido.");
         }
@@ -37,16 +27,16 @@ export const registerUser = async ( userData ) => {
     }
 }
 
-export const updateUser = async (userId, userData) => {
+export const updateState = async (stateId, stateData) => {
     try {
-        const response = await axiosInstance.put(`/users/admin/${userId}`, userData, {
+        const response = await axiosInstance.put(`/estados/${stateId}`, stateData, {
             headers: {
                 "Content-Type": "application/json",
             },
         })
         return response.data
     } catch (error) {
-        console.error("Error en updateUser:", error)
+        console.error("Error en updateState:", error)
         if (error.response) {
             throw new Error(error.response.data?.detail || "Error desconocido.")
         }
@@ -54,12 +44,12 @@ export const updateUser = async (userId, userData) => {
     }
 }
 
-export const deleteUser = async (userId) => {
+export const deleteState = async (stateId) => {
     try {
-        const response = await axiosInstance.delete(`/users/${userId}`)
+        const response = await axiosInstance.delete(`/estados/${stateId}`)
         return response.data
     } catch (error) {
-        console.error("Error en deleteUser:", error)
+        console.error("Error en deleteState:", error)
         if (error.response) {
             throw new Error(error.response.data?.detail || "Error desconocido.")
         }

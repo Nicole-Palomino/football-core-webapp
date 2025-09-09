@@ -3,14 +3,12 @@ import {
     Users, Users2, Trophy, BarChart3
 } from 'lucide-react'
 import { darkTheme, lightTheme } from '../../utils/themes'
-import { useQuery } from '@tanstack/react-query'
-import { getCountUser } from '../../services/api/usuarios'
 import LoadingSpinner from '../Loading/LoadingSpinner'
 import { useStats } from '../../hooks/useStats'
+import { useThemeMode } from '../../contexts/ThemeContext'
 
 const Dashboard = () => {
-    const [darkMode, setDarkMode] = useState(false)
-    const currentTheme = darkMode ? darkTheme : lightTheme
+    const { currentTheme } = useThemeMode()
     const contentClasses = `p-6 ${currentTheme.text}`
 
     const { users, teams, leagues, matches, isLoading, isError } = useStats()
