@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import {
-    LayoutDashboard, Users, Users2, Trophy, Settings, Shield, FileText, LogOut, Sun, Moon,
-    Menu, X, ChevronDown, BarChart3, UserCheck, Calendar, Activity
+    Settings, FileText, LogOut, Sun, Moon, Menu, X, ChevronDown, BarChart3,
 } from 'lucide-react'
-import { lightTheme, darkTheme } from '../utils/themes'
 import { menuItems } from '../utils/items'
 import { useAuth } from '../contexts/AuthContexts'
 import Dashboard from '../components/Dashboard/Dashboard'
@@ -11,6 +9,9 @@ import Usuarios from '../components/Dashboard/Usuarios'
 import { useThemeMode } from '../contexts/ThemeContext'
 import Estados from '../components/Dashboard/Estados'
 import Roles from '../components/Dashboard/Roles'
+import { getInitials } from '../utils/utils'
+import Ligas from '../components/Dashboard/Ligas'
+import Temporada from '../components/Dashboard/Temporada'
 
 const AdminPanel = () => {
 
@@ -21,15 +22,6 @@ const AdminPanel = () => {
     
     const { currentTheme, setDarkMode, darkMode } = useThemeMode()
 
-    const getInitials = (name) => {
-        if (!name) return ''
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-    }
-
     const renderContent = () => {
         const contentClasses = `p-6 ${currentTheme.text}`
 
@@ -38,6 +30,10 @@ const AdminPanel = () => {
                 return ( <Dashboard /> )
             case 'usuarios':
                 return ( <Usuarios /> )
+            case 'ligas':
+                return ( <Ligas /> )
+            case 'temporadas':
+                return ( <Temporada /> )
             case 'equipos':
                 return (
                     <div className={contentClasses}>

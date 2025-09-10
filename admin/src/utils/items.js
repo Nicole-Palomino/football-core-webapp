@@ -1,10 +1,13 @@
 import {
-    LayoutDashboard, Users, Users2, Trophy, Shield, FileText, Activity
+    LayoutDashboard, Users, Users2, Trophy, Shield, FileText, Activity,
+    Flag, ScrollText
 } from 'lucide-react'
 
 export const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
+    { id: 'ligas', label: 'Ligas', icon: Flag },
+    { id: 'temporadas', label: 'Temporadas', icon: ScrollText },
     { id: 'equipos', label: 'Equipos', icon: Users2 },
     { id: 'partidos', label: 'Partidos', icon: Trophy },
     { id: 'estados', label: 'Estados', icon: Activity },

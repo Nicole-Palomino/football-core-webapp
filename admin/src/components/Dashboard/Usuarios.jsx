@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { Alert, Snackbar } from '@mui/material'
 import { useUsers } from '../../hooks/useUsers'
 import {
     Plus, Edit, Trash2, Search, Filter, X, Eye, AlertTriangle, Check, User,
@@ -7,7 +8,7 @@ import {
 import LoadingSpinner from '../Loading/LoadingSpinner'
 import { useFunctions } from '../../hooks/useFunctions'
 import { useThemeMode } from '../../contexts/ThemeContext'
-import { Alert, Snackbar } from '@mui/material'
+import { formatDate } from '../../utils/utils'
 
 const Usuarios = () => {
     const { currentTheme } = useThemeMode()
@@ -179,16 +180,6 @@ const Usuarios = () => {
         )
     }
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        })
-    }
-
     const passwordValidation = modalType === "create"
         ? { required: "La contraseña es requerida", minLength: { value: 6, message: "Mínimo 6 caracteres" } }
         : { minLength: { value: 6, message: "Mínimo 6 caracteres" } }
@@ -354,32 +345,111 @@ const Usuarios = () => {
                 </div>
 
                 {/* Paginación */}
-                {totalPages > 1 && (
-                    <div className="flex justify-between items-center p-4 border-t border-gray-200">
-                        <span className={currentTheme.textSecondary}>
-                            Mostrando {paginatedUsers.length} de {filteredUsers.length} usuarios
-                        </span>
-
-                        <div className="flex space-x-2">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                            >
-                                Anterior
-                            </button>
-
-                            <span className="px-3 py-1">
-                                Página {currentPage} de {totalPages}
+                {filteredUsers.length > 0 && (
+                    <div className={`flex flex-col sm:flex-row justify-between items-center p-4 border-t ${currentTheme.border} gap-4`}>
+                        <div className="flex items-center space-x-2">
+                            <span className={`text-sm ${currentTheme.textSecondary}`}>
+                                Mostrando {((currentPage - 1) * usersPerPage) + 1} a {Math.min(currentPage * usersPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios
                             </span>
+                            {totalPages > 0 && (
+                                <span className={`text-sm ${currentTheme.textSecondary}`}>
+                                    • Página {currentPage} de {totalPages}
+                                </span>
+                            )}
+                        </div>
 
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                            >
-                                Siguiente
-                            </button>
+                        {/* Controles de paginación - Mostrar siempre que haya más de 1 página */}
+                        <div className="flex items-center space-x-2">
+                            {totalPages > 0 && (
+                                <>
+                                    {/* Botón Primera página */}
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="px-2 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                        title="Primera página"
+                                    >
+                                        ««
+                                    </button>
+
+                                    {/* Botón Anterior */}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    >
+                                        Anterior
+                                    </button>
+
+                                    {/* Números de página */}
+                                    <div className="hidden sm:flex space-x-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    className={`px-3 py-1 rounded-md text-sm ${
+                                                        pageNum === currentPage
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                    }`}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Botón Siguiente */}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    >
+                                        Siguiente
+                                    </button>
+
+                                    {/* Botón Última página */}
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        className="px-2 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                        title="Última página"
+                                    >
+                                        »»
+                                    </button>
+
+                                    {/* Ir a página específica - Solo en desktop */}
+                                    <div className="hidden lg:flex items-center space-x-2 ml-4">
+                                        <span className={`text-sm ${currentTheme.textSecondary}`}>Ir a:</span>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={totalPages}
+                                            value={currentPage}
+                                            onChange={(e) => {
+                                                const page = parseInt(e.target.value);
+                                                if (page >= 1 && page <= totalPages) {
+                                                    setCurrentPage(page);
+                                                }
+                                            }}
+                                            className={`w-16 px-2 py-1 text-sm rounded-md ${currentTheme.input} border ${currentTheme.border}`}
+                                        />
+                                        <span className={`text-sm ${currentTheme.textSecondary}`}>de {totalPages}</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
