@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import {
     Users, Users2, Trophy, BarChart3
 } from 'lucide-react'
-import { darkTheme, lightTheme } from '../../utils/themes'
 import LoadingSpinner from '../Loading/LoadingSpinner'
 import { useStats } from '../../hooks/useStats'
 import { useThemeMode } from '../../contexts/ThemeContext'
@@ -11,8 +10,8 @@ const Dashboard = () => {
     const { currentTheme } = useThemeMode()
     const contentClasses = `p-6 ${currentTheme.text}`
 
-    const { users, teams, leagues, matches, isLoading, isError } = useStats()
-
+    const { users, teams, leagues, matches, userStats, isLoading, isError } = useStats()
+    console.log(userStats)
     if (isLoading) {
         return (
             <LoadingSpinner />
@@ -69,21 +68,19 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                <h2 className="text-xl font-semibold mb-4">Actividad Reciente</h2>
-                <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Nuevo usuario registrado: Juan Pérez</span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span>Partido programado: Equipo A vs Equipo B</span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <span>Reporte generado: Estadísticas mensuales</span>
-                    </div>
+
+            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border mt-8`}>
+                <h2 className="text-xl font-semibold mb-4">Usuarios registrados por día</h2>
+                <div className="w-full h-80">
+                    <ResponsiveContainer>
+                    <LineChart data={Array.isArray(userStats) ? userStats : []}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="fecha" />
+                            <YAxis />
+                            <Tooltip />
+                            <Line type="monotone" dataKey="cantidad" stroke="#3b82f6" strokeWidth={2} />
+                        </LineChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
         </div>

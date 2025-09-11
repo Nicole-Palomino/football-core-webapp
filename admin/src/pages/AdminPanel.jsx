@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-    Settings, FileText, LogOut, Sun, Moon, Menu, X, ChevronDown, BarChart3,
+    Settings, LogOut, Sun, Moon, Menu, X, ChevronDown,
 } from 'lucide-react'
 import { menuItems } from '../utils/items'
 import { useAuth } from '../contexts/AuthContexts'
@@ -12,6 +12,9 @@ import Roles from '../components/Dashboard/Roles'
 import { getInitials } from '../utils/utils'
 import Ligas from '../components/Dashboard/Ligas'
 import Temporada from '../components/Dashboard/Temporada'
+import Equipos from '../components/Dashboard/Equipos'
+import Partidos from '../components/Dashboard/Partidos'
+import Resumenes from '../components/Dashboard/Resumenes'
 
 const AdminPanel = () => {
 
@@ -35,74 +38,15 @@ const AdminPanel = () => {
             case 'temporadas':
                 return ( <Temporada /> )
             case 'equipos':
-                return (
-                    <div className={contentClasses}>
-                        <h1 className="text-3xl font-bold mb-6">Gestión de Equipos</h1>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                                <h3 className="font-semibold mb-2">Equipo Alpha</h3>
-                                <p className={`${currentTheme.textSecondary} text-sm mb-4`}>15 miembros</p>
-                                <div className="flex space-x-2">
-                                    <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Ver</button>
-                                    <button className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700">Editar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
+                return ( <Equipos /> )
             case 'partidos':
-                return (
-                    <div className={contentClasses}>
-                        <h1 className="text-3xl font-bold mb-6">Gestión de Partidos</h1>
-                        <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold">Próximos Partidos</h2>
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                    Programar Partido
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                <div className={`p-4 ${currentTheme.border} border rounded-lg`}>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h3 className="font-semibold">Equipo A vs Equipo B</h3>
-                                            <p className={`${currentTheme.textSecondary} text-sm`}>Hoy, 15:00 - Estadio Central</p>
-                                        </div>
-                                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">Programado</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
+                return ( <Partidos /> )
             case 'estados':
                 return ( <Estados /> )
             case 'roles':
                 return ( <Roles /> )
             case 'resumenes':
-                return (
-                    <div className={contentClasses}>
-                        <h1 className="text-3xl font-bold mb-6">Resúmenes y Reportes</h1>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                                <FileText className="h-8 w-8 text-blue-500 mb-3" />
-                                <h3 className="font-semibold mb-2">Reporte Mensual</h3>
-                                <p className={`${currentTheme.textSecondary} text-sm mb-4`}>Estadísticas del último mes</p>
-                                <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-                                    Generar
-                                </button>
-                            </div>
-                            <div className={`${currentTheme.sidebar} p-6 rounded-lg shadow-sm ${currentTheme.border} border`}>
-                                <BarChart3 className="h-8 w-8 text-green-500 mb-3" />
-                                <h3 className="font-semibold mb-2">Análisis de Usuarios</h3>
-                                <p className={`${currentTheme.textSecondary} text-sm mb-4`}>Comportamiento y métricas</p>
-                                <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
-                                    Ver Reporte
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
+                return ( <Resumenes /> )
             default:
                 return (
                     <div className={contentClasses}>
@@ -132,10 +76,9 @@ const AdminPanel = () => {
                 </button>
             </div>
 
-            <div className="flex">
+            <div className="min-h-screen flex">
                 {/* Sidebar */}
-                <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 ${currentTheme.sidebar} ${currentTheme.border} border-r transition-transform duration-300 ease-in-out flex flex-col`}>
-
+                <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 ${currentTheme.sidebar} ${currentTheme.border} border-r transition-transform duration-300 ease-in-out flex flex-col h-screen overflow-y-auto`}>
                     {/* Logo/Header */}
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                         <h2 className={`text-xl font-bold ${currentTheme.text}`}>Panel</h2>
@@ -188,10 +131,10 @@ const AdminPanel = () => {
 
                             {userMenuOpen && (
                                 <div className={`absolute bottom-full left-0 right-0 mb-2 ${currentTheme.sidebar} ${currentTheme.border} border rounded-lg shadow-lg`}>
-                                    <button className={`w-full flex items-center space-x-3 px-3 py-2 rounded-t-lg ${currentTheme.hover} ${currentTheme.text}`}>
+                                    {/* <button className={`w-full flex items-center space-x-3 px-3 py-2 rounded-t-lg ${currentTheme.hover} ${currentTheme.text}`}>
                                         <Settings size={16} />
                                         <span>Configuración</span>
-                                    </button>
+                                    </button> */}
                                     <button 
                                         onClick={logout}
                                         className={`w-full flex items-center space-x-3 px-3 py-2 rounded-b-lg ${currentTheme.hover} text-red-600`}>
@@ -222,7 +165,7 @@ const AdminPanel = () => {
                 )}
 
                 {/* Main Content */}
-                <div className="flex-1 lg:ml-0">
+                <div className="flex-1 h-screen overflow-y-auto lg:ml-0">
                     {renderContent()}
                 </div>
             </div>

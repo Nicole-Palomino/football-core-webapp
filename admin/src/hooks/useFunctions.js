@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getAllRoles } from '../services/api/roles'
 import { getAllStates } from '../services/api/estados'
+import { getActiveTeams } from '../services/api/equipos'
 
 export const useFunctions = () => {
     const {
@@ -25,10 +26,22 @@ export const useFunctions = () => {
         cacheTime: 5 * 60 * 1000
     })
 
+    const {
+        data: activeteams,
+        isLoading: isLoadingActiveTeams,
+        isError: isErrorActiveTeams
+    } = useQuery({
+        queryKey: ['allActivesTeams'],
+        queryFn: getActiveTeams,
+        staleTime: Infinity,
+        cacheTime: 5 * 60 * 1000
+    })
+    
     return {
         allroles,
         allstates,
-        isLoading: isLoadingRoles|| isLoadingStates,
-        isError: isErrorRoles || isErrorStates
+        activeteams,
+        isLoading: isLoadingRoles|| isLoadingStates || isLoadingActiveTeams,
+        isError: isErrorRoles || isErrorStates || isErrorActiveTeams
     }
 }

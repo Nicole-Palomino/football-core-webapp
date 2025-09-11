@@ -1,16 +1,18 @@
-import { useState } from 'react'
-import { useThemeMode } from '../../contexts/ThemeContext'
+import { useState } from "react"
+import { useThemeMode } from "../../contexts/ThemeContext"
+import { useForm } from "react-hook-form"
+import { useFunctions } from "../../hooks/useFunctions"
+import { useLeagues } from "../../hooks/useLeagues"
+import { useTeams } from "../../hooks/useTeams"
 import {
-    Plus, Edit, Trash2, Search, Filter, X, Eye, AlertTriangle, Check, Trophy,
-    Globe, Image
+    Plus, Edit, Trash2, Search, Filter, X, Eye, AlertTriangle, Check, Shield,
+    MapPin, Image
 } from 'lucide-react'
-import { useForm } from 'react-hook-form'
-import { useLeagues } from '../../hooks/useLeagues'
-import LoadingSpinner from '../Loading/LoadingSpinner'
-import { formatDate } from '../../utils/utils'
-import { Alert, Snackbar } from '@mui/material'
+import LoadingSpinner from "../Loading/LoadingSpinner"
+import { formatDate } from "../../utils/utils"
+import { Alert, Snackbar } from "@mui/material"
 
-const Ligas = () => {
+const Equipos = () => {
 
     const { currentTheme } = useThemeMode()
     const [showModal, setShowModal] = useState(false)
@@ -18,31 +20,38 @@ const Ligas = () => {
 
     const { register, handleSubmit, formState: { errors }, reset } = useForm()
 
-    const [selectedLeague, setSelectedLeague] = useState(null)
+    const [selectedTeam, setSelectedTeam] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
-    const [filterCountry, setFilterCountry] = useState('todos')
+    const [filterLeague, setFilterLeague] = useState('todos')
+    const [filterStatus, setFilterStatus] = useState('todos')
     const [currentPage, setCurrentPage] = useState(1)
-    const leaguesPerPage = 10
+    const teamsPerPage = 10
     const contentClasses = `p-6 ${currentTheme.text}`
 
-    const { allleagues, isLoading, createLeague, updatedLeague, deletedLeague } = useLeagues()
+    const { allteams, isLoading, createTeam, updatedTeam, deletedTeam } = useTeams()
+    console.log(allteams)
+    const { allstates } = useFunctions()
+    const { allleagues } = useLeagues()
 
-    const filteredLeagues = (allleagues || []).filter(league => {
-        const matchesSearch = league.nombre_liga.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            league.pais.toLowerCase().includes(searchTerm.toLowerCase())
-        return matchesSearch
+    const filteredTeams = (allteams || []).filter(team => {
+        const matchesSearch = team.nombre_equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            team.estadio.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesLeague = filterLeague === 'todos' || team.liga?.nombre_liga === filterLeague
+        const matchesStatus = filterStatus === 'todos' || team.estado?.nombre_estado === filterStatus
+
+        return matchesSearch && matchesLeague && matchesStatus
     })
 
-    const totalPages = Math.ceil(filteredLeagues.length / leaguesPerPage) || 1
-    const paginatedLeagues = filteredLeagues.slice(
-        (currentPage - 1) * leaguesPerPage,
-        currentPage * leaguesPerPage
+    const totalPages = Math.ceil(filteredTeams.length / teamsPerPage) || 1
+    const paginatedTeams = filteredTeams.slice(
+        (currentPage - 1) * teamsPerPage,
+        currentPage * teamsPerPage
     )
 
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: "",
-        severity: "success", // success | error | warning | info
+        severity: "success",
     })
 
     const handleCloseSnackbar = () => {
@@ -50,12 +59,19 @@ const Ligas = () => {
     }
 
     const handleFormSubmit = (data) => {
+        // Convertir string IDs a números
+        const formattedData = {
+            ...data,
+            id_estado: parseInt(data.id_estado),
+            id_liga: parseInt(data.id_liga)
+        }
+
         if (modalType === 'create') {
-            createLeague.mutate(data, {
+            createTeam.mutate(formattedData, {
                 onSuccess: () => {
                     setSnackbar({
                         open: true,
-                        message: "Liga creada con éxito 🎉",
+                        message: "Equipo creado con éxito 🎉",
                         severity: "success",
                     })
                     closeModal()
@@ -63,17 +79,17 @@ const Ligas = () => {
                 onError: (error) => {
                     setSnackbar({
                         open: true,
-                        message: error.message || "Error al crear la liga",
+                        message: error.message || "Error al crear el equipo",
                         severity: "error",
                     })
                 }
             })
         } else if (modalType === 'edit') {
-            updatedLeague.mutate({ id_liga: selectedLeague.id_liga, data }, {
+            updatedTeam.mutate({ id_equipo: selectedTeam.id_equipo, data: formattedData }, {
                 onSuccess: () => {
                     setSnackbar({
                         open: true,
-                        message: "Liga actualizada con éxito 🎉",
+                        message: "Equipo actualizado con éxito 🎉",
                         severity: "success",
                     })
                     closeModal()
@@ -81,7 +97,7 @@ const Ligas = () => {
                 onError: (error) => {
                     setSnackbar({
                         open: true,
-                        message: error.message || "Error al actualizar la liga",
+                        message: error.message || "Error al actualizar el equipo",
                         severity: "error",
                     })
                 }
@@ -89,49 +105,51 @@ const Ligas = () => {
         }
     }
 
-    const openModal = (type, league = null) => {
+    const openModal = (type, team = null) => {
         setModalType(type)
-        setSelectedLeague(league)
+        setSelectedTeam(team)
         setShowModal(true)
 
         if (type === "create") {
             reset({
-                nombre_liga: "",
-                pais: "",
-                imagen_liga: "",
-                imagen_pais: "",
+                nombre_equipo: "",
+                estadio: "",
+                logo: "",
+                id_estado: 1,
+                id_liga: 1,
             })
-        } else if (type === "edit" && league) {
+        } else if (type === "edit" && team) {
             reset({
-                nombre_liga: league.nombre_liga,
-                pais: league.pais,
-                imagen_liga: league.imagen_liga,
-                imagen_pais: league.imagen_pais,
+                nombre_equipo: team.nombre_equipo,
+                estadio: team.estadio,
+                logo: team.logo,
+                id_estado: team.id_estado,
+                id_liga: team.id_liga,
             })
         }
     }
 
     const closeModal = () => {
         setShowModal(false)
-        setSelectedLeague(null)
+        setSelectedTeam(null)
         setModalType('')
 
-        // Resetear valores del formulario
         reset({
-            nombre_liga: '',
-            pais: '',
-            imagen_liga: '',
-            imagen_pais: ''
+            nombre_equipo: '',
+            estadio: '',
+            logo: '',
+            id_estado: 1,
+            id_liga: 1
         })
     }
 
     const handleDelete = () => {
-        if (!selectedLeague) return
-        deletedLeague.mutate(selectedLeague.id_liga, {
+        if (!selectedTeam) return
+        deletedTeam.mutate(selectedTeam.id_equipo, {
             onSuccess: () => {
                 setSnackbar({
                     open: true,
-                    message: "Liga eliminada con éxito 🎉",
+                    message: "Equipo eliminado con éxito 🎉",
                     severity: "success",
                 })
                 closeModal()
@@ -139,11 +157,26 @@ const Ligas = () => {
             onError: (error) => {
                 setSnackbar({
                     open: true,
-                    message: error.message || "Error al eliminar la liga",
+                    message: error.message || "Error al eliminar el equipo",
                     severity: "error",
                 })
             }
         })
+    }
+
+    const getStatusBadge = (estado) => {
+        const colorClasses = {
+            green: 'bg-green-100 text-green-800',
+            red: 'bg-red-100 text-red-800',
+            yellow: 'bg-yellow-100 text-yellow-800',
+            blue: 'bg-blue-100 text-blue-800'
+        }
+
+        return (
+            <span className={`${colorClasses[estado?.color] || colorClasses.green} px-2 py-1 rounded-full text-sm`}>
+                {estado?.nombre_estado || 'Sin estado'}
+            </span>
+        )
     }
 
     if (isLoading) {
@@ -155,35 +188,58 @@ const Ligas = () => {
     return (
         <div className={contentClasses}>
             <div className="flex justify-between items-center mb-6">
-                <h1 className={`text-3xl font-bold mb-6 ${currentTheme.text}`}>Gestión de Ligas</h1>
+                <h1 className={`text-3xl font-bold mb-6 ${currentTheme.text}`}>Gestión de Equipos</h1>
                 <button
                     onClick={() => openModal('create')}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
                 >
                     <Plus size={20} />
-                    <span>Nueva Liga</span>
+                    <span>Nuevo Equipo</span>
                 </button>
             </div>
 
             {/* Filtros y Búsqueda */}
             <div className={`${currentTheme.sidebar} rounded-lg shadow-sm ${currentTheme.border} border p-4 mb-6`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Buscar ligas..."
+                            placeholder="Buscar equipos..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className={`pl-10 pr-4 py-2 w-full rounded-lg ${currentTheme.input} ${currentTheme.border} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                         />
                     </div>
 
+                    <select
+                        value={filterLeague}
+                        onChange={(e) => setFilterLeague(e.target.value)}
+                        className={`px-4 py-2 rounded-lg ${currentTheme.input} ${currentTheme.border} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    >
+                        <option value="todos">Todas las ligas</option>
+                        {allleagues?.map(league => (
+                            <option key={league.id_liga} value={league.nombre_liga}>{league.nombre_liga}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className={`px-4 py-2 rounded-lg ${currentTheme.input} ${currentTheme.border} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    >
+                        <option value="todos">Todos los estados</option>
+                        {allstates?.map(state => (
+                            <option key={state.id_estado} value={state.nombre_estado}>{state.nombre_estado}</option>
+                        ))}
+                    </select>
+
                     <div className="flex justify-end">
                         <button
                             onClick={() => {
                                 setSearchTerm('')
-                                setCurrentPage(1)
+                                setFilterLeague('todos')
+                                setFilterStatus('todos')
                             }}
                             className={`px-4 py-2 rounded-lg ${currentTheme.hover} ${currentTheme.textSecondary} flex items-center space-x-2`}
                         >
@@ -194,16 +250,17 @@ const Ligas = () => {
                 </div>
             </div>
 
-            {/* Tabla de Ligas */}
+            {/* Tabla de Equipos */}
             <div className={`${currentTheme.sidebar} rounded-lg shadow-sm ${currentTheme.border} border`}>
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className={`${currentTheme.border} border-b`}>
+                                <th className="text-left p-4">ID</th>
+                                <th className="text-left p-4">Equipo</th>
+                                <th className="text-left p-4">Estadio</th>
                                 <th className="text-left p-4">Liga</th>
-                                <th className="text-left p-4">País</th>
-                                <th className="text-left p-4">Imagen Liga</th>
-                                <th className="text-left p-4">Imagen País</th>
+                                <th className="text-left p-4">Estado</th>
                                 <th className="text-left p-4">Creación</th>
                                 <th className="text-left p-4">Acciones</th>
                             </tr>
@@ -219,64 +276,68 @@ const Ligas = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : filteredLeagues.length === 0 ? (
+                            ) : filteredTeams.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="text-center p-8">
                                         <div className="flex flex-col items-center space-y-2">
-                                            <Trophy size={48} className="text-gray-400" />
-                                            <span className={currentTheme.textSecondary}>No se encontraron ligas</span>
+                                            <Shield size={48} className="text-gray-400" />
+                                            <span className={currentTheme.textSecondary}>No se encontraron equipos</span>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
-                                paginatedLeagues.map((league) => (
-                                    <tr key={league.id_liga} className={`${currentTheme.border} border-b ${currentTheme.hover}`}>
+                                paginatedTeams.map((team) => (
+                                    <tr key={team.id_equipo} className={`${currentTheme.border} border-b ${currentTheme.hover}`}>
                                         <td className="p-4">
                                             <div className="flex items-center space-x-3">
-                                                <span className="font-medium">{league.nombre_liga}</span>
+                                                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                                    {team.id_equipo}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center space-x-3">
+                                                {team.logo ? (
+                                                    <img
+                                                        src={team.logo}
+                                                        alt={team.nombre_equipo}
+                                                        className="w-8 h-8 rounded fit-content"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none'
+                                                            e.target.nextSibling.style.display = 'flex'
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                <div
+                                                    className={`w-8 h-8 bg-gradient-to-r from-blue-500 to-green-500 rounded flex items-center justify-center text-white text-sm font-semibold ${team.logo ? 'hidden' : 'flex'}`}
+                                                >
+                                                    <Shield size={16} />
+                                                </div>
+                                                <span className="font-medium">{team.nombre_equipo}</span>
                                             </div>
                                         </td>
 
                                         <td className="p-4">
                                             <div className="flex items-center space-x-2">
-                                                <span>{league.pais}</span>
+                                                <MapPin size={16} className="text-gray-400" />
+                                                <span>{team.estadio}</span>
                                             </div>
                                         </td>
 
                                         <td className="p-4">
-                                            {league.imagen_liga ? (
-                                                <img 
-                                                    src={league.imagen_liga} 
-                                                    alt={league.nombre_liga}
-                                                    className="w-12 h-14 rounded fit-content"
-                                                />
-                                            ) : (
-                                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                                    <Image size={16} className="text-gray-400" />
-                                                </div>
-                                            )}
+                                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                                                {team.liga?.nombre_liga || 'Sin liga'}
+                                            </span>
                                         </td>
 
-                                        <td className="p-4">
-                                            {league.imagen_pais ? (
-                                                <img 
-                                                    src={league.imagen_pais} 
-                                                    alt={league.pais}
-                                                    className="w-12 h-8 rounded fit-content"
-                                                />
-                                            ) : (
-                                                <div className="w-12 h-8 bg-gray-200 rounded flex items-center justify-center">
-                                                    <Globe size={16} className="text-gray-400" />
-                                                </div>
-                                            )}
-                                        </td>
+                                        <td className="p-4">{getStatusBadge(team.estado)}</td>
 
-                                        <td className="p-4 text-sm">{formatDate(league.created_at)}</td>
+                                        <td className="p-4 text-sm">{formatDate(team.created_at)}</td>
 
                                         <td className="p-4">
                                             <div className="flex space-x-2">
                                                 <button
-                                                    onClick={() => openModal('view', league)}
+                                                    onClick={() => openModal('view', team)}
                                                     className="text-blue-600 hover:text-blue-800 p-1 rounded"
                                                     title="Ver detalles"
                                                 >
@@ -284,7 +345,7 @@ const Ligas = () => {
                                                 </button>
 
                                                 <button
-                                                    onClick={() => openModal('edit', league)}
+                                                    onClick={() => openModal('edit', team)}
                                                     className="text-green-600 hover:text-green-800 p-1 rounded"
                                                     title="Editar"
                                                 >
@@ -292,7 +353,7 @@ const Ligas = () => {
                                                 </button>
 
                                                 <button
-                                                    onClick={() => openModal('delete', league)}
+                                                    onClick={() => openModal('delete', team)}
                                                     className="text-red-600 hover:text-red-800 p-1 rounded"
                                                     title="Eliminar"
                                                 >
@@ -308,11 +369,11 @@ const Ligas = () => {
                 </div>
 
                 {/* Paginación */}
-                {filteredLeagues.length > 0 && (
+                {filteredTeams.length > 0 && (
                     <div className={`flex flex-col sm:flex-row justify-between items-center p-4 border-t ${currentTheme.border} gap-4`}>
                         <div className="flex items-center space-x-2">
                             <span className={`text-sm ${currentTheme.textSecondary}`}>
-                                Mostrando {((currentPage - 1) * leaguesPerPage) + 1} a {Math.min(currentPage * leaguesPerPage, filteredLeagues.length)} de {filteredLeagues.length} ligas
+                                Mostrando {((currentPage - 1) * teamsPerPage) + 1} a {Math.min(currentPage * teamsPerPage, filteredTeams.length)} de {filteredTeams.length} equipos
                             </span>
                             {totalPages > 0 && (
                                 <span className={`text-sm ${currentTheme.textSecondary}`}>
@@ -321,9 +382,8 @@ const Ligas = () => {
                             )}
                         </div>
 
-                        {/* Controles de paginación */}
                         <div className="flex items-center space-x-2">
-                            {totalPages > 0 && (
+                            {totalPages > 1 && (
                                 <>
                                     <button
                                         onClick={() => setCurrentPage(1)}
@@ -399,10 +459,10 @@ const Ligas = () => {
                         {/* Header del Modal */}
                         <div className="flex justify-between items-center p-6 border-b border-gray-200">
                             <h3 className="text-lg font-semibold">
-                                {modalType === 'create' && 'Crear Liga'}
-                                {modalType === 'edit' && 'Editar Liga'}
-                                {modalType === 'delete' && 'Eliminar Liga'}
-                                {modalType === 'view' && 'Detalles de la Liga'}
+                                {modalType === 'create' && 'Crear Equipo'}
+                                {modalType === 'edit' && 'Editar Equipo'}
+                                {modalType === 'delete' && 'Eliminar Equipo'}
+                                {modalType === 'view' && 'Detalles del Equipo'}
                             </h3>
 
                             <button
@@ -415,37 +475,37 @@ const Ligas = () => {
 
                         {/* Contenido del Modal */}
                         <div className="p-6">
-                            {modalType === 'view' && selectedLeague && (
+                            {modalType === 'view' && selectedTeam && (
                                 <div className="space-y-4">
                                     <div className="flex items-center space-x-3 mb-4">
-                                        <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                                            {selectedLeague.imagen_liga ? (
-                                                <img 
-                                                    src={selectedLeague.imagen_liga} 
-                                                    alt={selectedLeague.nombre_liga}
-                                                    className="w-16 h-16 rounded-lg fit-content"
+                                        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                                            {selectedTeam.logo ? (
+                                                <img
+                                                    src={selectedTeam.logo}
+                                                    alt={selectedTeam.nombre_equipo}
+                                                    className="w-16 h-16 rounded-lg object-cover"
                                                 />
                                             ) : (
-                                                <Trophy size={24} className="text-white" />
+                                                <Shield size={24} className="text-white" />
                                             )}
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-lg">{selectedLeague.nombre_liga}</h4>
+                                            <h4 className="font-semibold text-lg">{selectedTeam.nombre_equipo}</h4>
                                             <p className={`${currentTheme.textSecondary} text-sm flex items-center space-x-1`}>
-                                                <Globe size={14} />
-                                                <span>{selectedLeague.pais}</span>
+                                                <MapPin size={14} />
+                                                <span>{selectedTeam.estadio}</span>
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">Imagen de la Liga</label>
-                                            {selectedLeague.imagen_liga ? (
-                                                <img 
-                                                    src={selectedLeague.imagen_liga} 
-                                                    alt={selectedLeague.nombre_liga}
-                                                    className="w-24 h-24 rounded-lg fit-content border"
+                                            <label className="block text-sm font-medium mb-2">Logo del Equipo</label>
+                                            {selectedTeam.logo ? (
+                                                <img
+                                                    src={selectedTeam.logo}
+                                                    alt={selectedTeam.nombre_equipo}
+                                                    className="w-24 h-24 rounded-lg object-cover border"
                                                 />
                                             ) : (
                                                 <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center border">
@@ -455,46 +515,43 @@ const Ligas = () => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium mb-2">Imagen del País</label>
-                                            {selectedLeague.imagen_pais ? (
-                                                <img 
-                                                    src={selectedLeague.imagen_pais} 
-                                                    alt={selectedLeague.pais}
-                                                    className="w-24 h-16 rounded fit-content border"
-                                                />
-                                            ) : (
-                                                <div className="w-24 h-16 bg-gray-200 rounded flex items-center justify-center border">
-                                                    <Globe size={20} className="text-gray-400" />
-                                                </div>
-                                            )}
+                                            <label className="block text-sm font-medium mb-1">Liga</label>
+                                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                                                {selectedTeam.liga?.nombre_liga || 'Sin liga'}
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Estado</label>
+                                            {getStatusBadge(selectedTeam.estado)}
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Fecha de Creación</label>
                                             <p className={`${currentTheme.textSecondary} text-sm`}>
-                                                {formatDate(selectedLeague.created_at)}
+                                                {formatDate(selectedTeam.created_at)}
                                             </p>
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Última Actualización</label>
                                             <p className={`${currentTheme.textSecondary} text-sm`}>
-                                                {selectedLeague.updated_at ? formatDate(selectedLeague.updated_at) : 'Nunca'}
+                                                {selectedTeam.updated_at ? formatDate(selectedTeam.updated_at) : 'Nunca'}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {modalType === 'delete' && selectedLeague && (
+                            {modalType === 'delete' && selectedTeam && (
                                 <div className="text-center">
                                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                                         <AlertTriangle className="h-6 w-6 text-red-600" />
                                     </div>
 
-                                    <h3 className="text-lg font-medium mb-2">¿Eliminar liga?</h3>
+                                    <h3 className="text-lg font-medium mb-2">¿Eliminar equipo?</h3>
                                     <p className={`${currentTheme.textSecondary} mb-6`}>
-                                        Esta acción no se puede deshacer. La liga "{selectedLeague.nombre_liga}" será eliminada permanentemente.
+                                        Esta acción no se puede deshacer. El equipo "{selectedTeam.nombre_equipo}" será eliminado permanentemente.
                                     </p>
 
                                     <div className="flex space-x-4 justify-center">
@@ -507,10 +564,10 @@ const Ligas = () => {
 
                                         <button
                                             onClick={handleDelete}
-                                            disabled={deletedLeague.isLoading}
+                                            disabled={deletedTeam.isLoading}
                                             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                                         >
-                                            {deletedLeague.isLoading ? 'Eliminando...' : 'Eliminar'}
+                                            {deletedTeam.isLoading ? 'Eliminando...' : 'Eliminar'}
                                         </button>
                                     </div>
                                 </div>
@@ -518,91 +575,106 @@ const Ligas = () => {
 
                             {(modalType === 'create' || modalType === 'edit') && (
                                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-                                    {/* Nombre de Liga */}
+                                    {/* Nombre del Equipo */}
                                     <div>
                                         <label className="block text-sm font-medium mb-1">
-                                            Nombre de la Liga <span className="text-red-500">*</span>
+                                            Nombre del Equipo <span className="text-red-500">*</span>
                                         </label>
                                         <input
-                                            {...register("nombre_liga", { 
-                                                required: "El nombre de la liga es requerido", 
-                                                minLength: { value: 2, message: "Mínimo 2 caracteres" } 
+                                            {...register("nombre_equipo", {
+                                                required: "El nombre del equipo es requerido",
+                                                minLength: { value: 2, message: "Mínimo 2 caracteres" }
                                             })}
-                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.nombre_liga ? 'border-red-500' : currentTheme.border}`}
-                                            placeholder="Ingrese el nombre de la liga"
+                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.nombre_equipo ? 'border-red-500' : currentTheme.border}`}
+                                            placeholder="Ingrese el nombre del equipo"
                                         />
-                                        {errors.nombre_liga && <p className="text-red-500 text-sm mt-1">{errors.nombre_liga.message}</p>}
+                                        {errors.nombre_equipo && <p className="text-red-500 text-sm mt-1">{errors.nombre_equipo.message}</p>}
                                     </div>
 
-                                    {/* País */}
+                                    {/* Estadio */}
                                     <div>
                                         <label className="block text-sm font-medium mb-1">
-                                            País <span className="text-red-500">*</span>
+                                            Estadio <span className="text-red-500">*</span>
                                         </label>
                                         <input
-                                            {...register("pais", { 
-                                                required: "El país es requerido", 
-                                                minLength: { value: 2, message: "Mínimo 2 caracteres" } 
+                                            {...register("estadio", {
+                                                required: "El estadio es requerido",
+                                                minLength: { value: 2, message: "Mínimo 2 caracteres" }
                                             })}
-                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.pais ? 'border-red-500' : currentTheme.border}`}
-                                            placeholder="Ingrese el país"
+                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.estadio ? 'border-red-500' : currentTheme.border}`}
+                                            placeholder="Ingrese el nombre del estadio"
                                         />
-                                        {errors.pais && <p className="text-red-500 text-sm mt-1">{errors.pais.message}</p>}
+                                        {errors.estadio && <p className="text-red-500 text-sm mt-1">{errors.estadio.message}</p>}
                                     </div>
 
-                                    {/* URL Imagen Liga */}
+                                    {/* URL Logo */}
                                     <div>
                                         <label className="block text-sm font-medium mb-1">
-                                            URL Imagen de la Liga
+                                            URL Logo del Equipo
                                         </label>
                                         <input
                                             type="url"
-                                            {...register("imagen_liga", {
-                                                pattern: { 
-                                                    value: /^(https?:\/\/)([\w.-]+)\.([a-z]{2,})([\/\w\.-]*)*\/?$/i, 
-                                                    message: "URL no válida" 
+                                            {...register("logo", {
+                                                pattern: {
+                                                    value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+                                                    message: "URL no válida"
                                                 }
                                             })}
-                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.imagen_liga ? 'border-red-500' : currentTheme.border}`}
-                                            placeholder="https://ejemplo.com/imagen.jpg"
+                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.logo ? 'border-red-500' : currentTheme.border}`}
+                                            placeholder="https://ejemplo.com/logo.jpg"
                                         />
-                                        {errors.imagen_liga && <p className="text-red-500 text-sm mt-1">{errors.imagen_liga.message}</p>}
+                                        {errors.logo && <p className="text-red-500 text-sm mt-1">{errors.logo.message}</p>}
                                     </div>
 
-                                    {/* URL Imagen País */}
+                                    {/* Estado */}
                                     <div>
                                         <label className="block text-sm font-medium mb-1">
-                                            URL Imagen del País
+                                            Estado <span className="text-red-500">*</span>
                                         </label>
-                                        <input
-                                            type="url"
-                                            {...register("imagen_pais", {
-                                                pattern: { 
-                                                    value: /^(https?:\/\/)([\w.-]+)\.([a-z]{2,})([\/\w\.-]*)*\/?$/i, 
-                                                    message: "URL no válida" 
-                                                }
-                                            })}
-                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.imagen_pais ? 'border-red-500' : currentTheme.border}`}
-                                            placeholder="https://ejemplo.com/bandera.jpg"
-                                        />
-                                        {errors.imagen_pais && <p className="text-red-500 text-sm mt-1">{errors.imagen_pais.message}</p>}
+                                        <select
+                                            {...register("id_estado", { required: "Debe seleccionar un estado" })}
+                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.id_estado ? 'border-red-500' : currentTheme.border}`}
+                                        >
+                                            <option value="">Seleccione un estado</option>
+                                            {allstates?.map(state => (
+                                                <option key={state.id_estado} value={state.id_estado}>{state.nombre_estado}</option>
+                                            ))}
+                                        </select>
+                                        {errors.id_estado && <p className="text-red-500 text-sm mt-1">{errors.id_estado.message}</p>}
+                                    </div>
+
+                                    {/* Liga */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">
+                                            Liga <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            {...register("id_liga", { required: "Debe seleccionar una liga" })}
+                                            className={`w-full px-3 py-2 rounded-lg ${currentTheme.input} border ${errors.id_liga ? 'border-red-500' : currentTheme.border}`}
+                                        >
+                                            <option value="">Seleccione una liga</option>
+                                            {allleagues?.map(league => (
+                                                <option key={league.id_liga} value={league.id_liga}>{league.nombre_liga}</option>
+                                            ))}
+                                        </select>
+                                        {errors.id_liga && <p className="text-red-500 text-sm mt-1">{errors.id_liga.message}</p>}
                                     </div>
 
                                     {/* Botones */}
                                     <div className="flex space-x-4 pt-6">
-                                        <button 
-                                            type="button" 
-                                            onClick={closeModal} 
+                                        <button
+                                            type="button"
+                                            onClick={closeModal}
                                             className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                                         >
                                             Cancelar
                                         </button>
-                                        <button 
-                                            type="submit" 
+                                        <button
+                                            type="submit"
                                             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"
                                         >
                                             <Check size={16} />
-                                            <span>{modalType === "create" ? "Crear Liga" : "Guardar Cambios"}</span>
+                                            <span>{modalType === "create" ? "Crear Equipo" : "Guardar Cambios"}</span>
                                         </button>
                                     </div>
                                 </form>
@@ -631,4 +703,4 @@ const Ligas = () => {
     )
 }
 
-export default Ligas
+export default Equipos

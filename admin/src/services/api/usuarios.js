@@ -66,3 +66,13 @@ export const deleteUser = async (userId) => {
         throw new Error("Error al conectar con el servidor.")
     }
 }
+
+export const getUsersByDate = async () => {
+    try {
+        const response = await axiosInstance.get("/users/stats/usuarios-por-dia")
+        return response.data
+    } catch (error) {
+        console.error("Error al obtener usuarios:", error)
+        throw error.response?.data || new Error("No se pudo obtener usuarios")
+    }
+}

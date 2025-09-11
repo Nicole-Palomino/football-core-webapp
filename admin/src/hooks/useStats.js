@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getCountUser } from '../services/api/usuarios'
+import { getCountUser, getUsersByDate } from '../services/api/usuarios'
 import { getCountTeams } from '../services/api/equipos'
 import { getCountLeagues } from '../services/api/ligas'
 import { getCountMatches } from '../services/api/partidos'
@@ -49,12 +49,24 @@ export const useStats = () => {
         cacheTime: 5 * 60 * 1000
     })
 
+    const {
+        data: userStats,
+        isLoading: isLoadingUserStats,
+        isError: isErrorUserStats
+    } = useQuery({
+        queryKey: ['countUserStats'],
+        queryFn: getUsersByDate,
+        staleTime: Infinity,
+        cacheTime: 5 * 60 * 1000
+    })
+
     return {
         users,
         teams,
         leagues,
         matches,
-        isLoading: isLoadingUsers || isLoadingTeams || isLoadingLeagues || isLoadingMatches,
-        isError: isErrorUsers || isErrorTeams || isErrorLeagues || isErrorMatches
+        userStats,
+        isLoading: isLoadingUsers || isLoadingTeams || isLoadingLeagues || isLoadingMatches || isLoadingUserStats,
+        isError: isErrorUsers || isErrorTeams || isErrorLeagues || isErrorMatches || isErrorUserStats
     }
 }
