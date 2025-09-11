@@ -1,28 +1,20 @@
 import { Navigate } from "react-router-dom"
-import { jwtDecode } from 'jwt-decode'
 import { useAuth } from '../contexts/AuthContexts'
 
-const isTokenValid = (token) => {
-    try {
-        const decoded = jwtDecode(token)
-        const currentTime = Date.now() / 1000
-        return decoded.exp > currentTime
-    } catch (error) {
-        return false
-    }
-}
-
 const PrivateRoute = ({ children }) => {
-    const { authToken, loading } = useAuth()
+    const { isAuthenticated, loading, user } = useAuth()
 
     if (loading) {
-        return null
+        return <div>Cargando...</div>
     }
 
-    if (!authToken || !isTokenValid(authToken)) {
-        return <Navigate to="/get-started" replace />
+    if (!isAuthenticated) {
+        return <Navigate to="/" replace />
     }
 
+    // if (user && !user.roles?.includes("Administrador")) {
+    //     return <Navigate to="/forbidden" replace />
+    // }
     return children
 }
 

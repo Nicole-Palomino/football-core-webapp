@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode"
 import { getToken, setToken, removeToken, setStoredUser, getStoredUser, removeStoredUser } from "../services/auth"
 import axiosInstance from '../services/axiosConfig'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext()
 
@@ -25,12 +26,14 @@ const fetchUser = async (token) => {
 
 export const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
+
     const [authToken, setAuthToken] = useState(() => {
         const token = getToken()
         return (token && isTokenValid(token)) ? token : null
     })
 
-    const { data: user, isLoading, isSuccess, isError, error } = useQuery({
+    const { data: user, isLoading, isSuccess } = useQuery({
         queryKey: ['user'],
         queryFn: () => fetchUser(authToken),
         enabled: !!authToken, // Solo se ejecuta si hay un token
@@ -50,29 +53,42 @@ export const AuthProvider = ({ children }) => {
     })
 
     useEffect(() => {
-        if (!authToken) {
-            logout()
+        if (authToken) {
+            queryClient.invalidateQueries({ queryKey: ['user'] })
         }
-    }, [authToken])
+    }, [authToken, queryClient])
 
+    // Login → guarda token y refresca usuario
     const login = async (token) => {
         setToken(token)
         setAuthToken(token)
-        await queryClient.invalidateQueries({ queryKey: ['user'] })
+        await queryClient.fetchQuery({
+            queryKey: ['user'],
+            queryFn: () => fetchUser(token),
+        })
     }
 
-    const logout = () => {
+    // Logout → limpia todo
+    const logout = async () => {
+        try {
+            await axiosInstance.post("/logout", null, { withCredentials: true })
+        } catch (error) {
+            console.error("Error al cerrar sesión en backend:", error)
+        }
+
         removeToken()
         removeStoredUser()
         setAuthToken(null)
         queryClient.removeQueries({ queryKey: ['user'] })
+
+        navigate('/get-started')
     }
 
     if (isLoading && authToken) {
         return <div>Cargando usuario...</div>
     }
 
-    const isAuthenticated = isSuccess && !!user
+    const isAuthenticated = !!authToken
 
     const value = {
         authToken,

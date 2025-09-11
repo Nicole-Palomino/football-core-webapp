@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContexts'
 import { useNavigate } from 'react-router-dom'
-import { FaUser } from 'react-icons/fa'
 import SignInForm from '../components/Forms/SignInForm'
 import { getCurrentUser, loginUser as loginService } from '../services/api/usuario'
 import { encryptData } from '../services/encryptionService'
-import { useTheme } from '@mui/material'
+import { useThemeMode } from '../contexts/ThemeContext'
+import { motion } from 'framer-motion'
+import { UserIcon } from '@heroicons/react/24/outline'
 
-const SignIn = ({ setValue }) => {
+const SignIn = ({ setActiveTab }) => {
 
     const { login } = useAuth()
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
     const [hover, setHover] = useState(false)
 
     const onSubmit = async (data) => {
@@ -20,7 +21,6 @@ const SignIn = ({ setValue }) => {
 
         try {
             const response = await loginService(data)
-            console.log(response)
             localStorage.setItem("token", response.access_token)
 
             const user = await getCurrentUser()
@@ -49,35 +49,64 @@ const SignIn = ({ setValue }) => {
     }
 
     return (
-        <div className='flex flex-col'>
-            <div className="font-bold font-subtitle text-center self-center text-xl sm:text-3xl uppercase"
-                style={{ color: theme.palette.primary.main }}>
-                bienvenido de nuevo
-            </div>
+        <div className="flex flex-col space-y-6">
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-center"
+            >
+                <h2 className={`text-2xl sm:text-3xl font-bold uppercase mb-3 ${currentTheme.text}`}>
+                    Bienvenido de Nuevo
+                </h2>
+                <p className={`text-sm sm:text-base ${currentTheme.textSecondary}`}>
+                    Nos alegra verte otra vez. ¡Accede a tu cuenta!
+                </p>
+                
+                {/* Decorative line */}
+                <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"
+                ></motion.div>
+            </motion.div>
 
-            <div className="font-bold font-subtitle text-center self-center text-md md:text-md"
-                style={{ color: theme.palette.text.primary }}>
-                Nos alegra verte otra vez. ¡Accede a tu cuenta!
-            </div>
-
-            <div className="mt-5">
+            {/* Form */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+            >
                 <SignInForm onSubmit={onSubmit} loading={loading} />
-            </div>
+            </motion.div>
 
-            <div className="flex justify-center items-center mt-6">
-                <button onClick={() => setValue(1)}
+            {/* Switch to Sign Up */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="flex justify-center items-center pt-4"
+            >
+                <motion.button 
+                    onClick={() => setActiveTab('signup')}
                     onMouseEnter={() => setHover(true)}
                     onMouseLeave={() => setHover(false)}
-                    className="inline-flex items-center font-subtitle text-sm text-center cursor-pointer"
-                    style={{
-                        color: hover ? theme.palette.primary.main : theme.palette.text.primary,
-                    }}>
-                    <span className="mr-2">
-                        <FaUser style={{ color: hover ? theme.palette.primary.main : theme.palette.text.primary }} />
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`group inline-flex items-center gap-2 text-sm font-medium cursor-pointer transition-all duration-300 px-4 py-2 rounded-lg ${currentTheme.hover}`}
+                >
+                    <UserIcon className={`w-4 h-4 transition-colors duration-300 ${
+                        hover ? 'text-blue-600' : currentTheme.textSecondary.replace('text-', 'text-')
+                    }`} />
+                    <span className={`transition-colors duration-300 ${
+                        hover ? 'text-blue-600' : currentTheme.textSecondary
+                    }`}>
+                        ¿No tienes cuenta? <span className="font-semibold">Regístrate aquí</span>
                     </span>
-                    <span>No tienes cuenta?</span>
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
         </div>
     )
 }

@@ -4,11 +4,13 @@ import Brightness7Icon from '@mui/icons-material/Brightness7'
 import { useThemeMode } from '../../contexts/ThemeContext'
 
 const ThemeToggleButton = () => {
-    const { mode, toggleTheme } = useThemeMode()
+    const { setDarkMode, darkMode } = useThemeMode()
 
     return (
-        <IconButton onClick={toggleTheme} color="inherit" sx={{ marginRight: 3 }}>
-            {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+        <IconButton 
+            onClick={() => setDarkMode(!darkMode)}
+            color="inherit" sx={{ marginRight: 3 }}>
+            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>
     )
 }

@@ -3,28 +3,24 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useTheme } from '@mui/material'
 import ThemeToggleButton from '../Buttons/ThemeToggleButton'
+import { useThemeMode } from '../../contexts/ThemeContext'
 
 const NavbarClient = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     return (
         <header
-            className='shadow-2xl relative z-50'
-            style={{
-                backgroundColor: theme.palette.background.paper,
-                borderBottom: `1px solid ${theme.palette.primary.dark}`,
-                backdropFilter: 'blur(8px)'
-            }}
+            className={`shadow-2xl relative z-50 ${currentTheme.navbar} ${currentTheme.border} border-b backdrop-blur-md`}
         >
             <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:p-6 lg:px-8">
                 {/* Logo */}
                 <div className="flex lg:flex-1">
-                    <Link to='/' className='flex items-center space-x-2'>
-                        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: theme.palette.text.primary }}>
-                            <span style={{ color: theme.palette.primary.main }}>F</span>OOT
-                            <span style={{ color: theme.palette.primary.main }}>B</span>ALL
-                            <span style={{ color: theme.palette.primary.main }}> C</span>ORE
+                    <Link to='/' className='flex items-center space-x-2 group'>
+                        <h1 className={`text-2xl md:text-3xl font-bold transition-all duration-300 group-hover:scale-105 ${currentTheme.text}`}>
+                            <span className={`${currentTheme.accent}`}>F</span>OOT
+                            <span className={`${currentTheme.accent}`}>B</span>ALL
+                            <span className={`${currentTheme.accent}`}> C</span>ORE
                         </h1>
                     </Link>
                 </div>
@@ -34,8 +30,7 @@ const NavbarClient = () => {
                     <button
                         type="button"
                         onClick={() => setMobileMenuOpen(true)}
-                        className="relative inline-flex items-center justify-center rounded-md p-2.5 hover:bg-opacity-50 transition-colors duration-200"
-                        style={{ color: theme.palette.text.primary }}
+                        className={`relative inline-flex items-center justify-center rounded-md p-2.5 transition-all duration-200 ${currentTheme.hover} ${currentTheme.text}`}
                     >
                         <motion.div
                             animate={mobileMenuOpen ? "open" : "closed"}
@@ -46,24 +41,24 @@ const NavbarClient = () => {
                                     closed: { rotate: 0, y: 0 },
                                     open: { rotate: 45, y: 8 }
                                 }}
-                                className="absolute w-6 h-0.5 rounded-full transform origin-center"
-                                style={{ top: 6, backgroundColor: theme.palette.text.primary }}
+                                className={`absolute w-6 h-0.5 rounded-full transform origin-center ${currentTheme.modal}`}
+                                style={{ top: 6 }}
                             />
                             <motion.span
                                 variants={{
                                     closed: { opacity: 1 },
                                     open: { opacity: 0 }
                                 }}
-                                className="absolute w-6 h-0.5 rounded-full"
-                                style={{ top: 12, backgroundColor: theme.palette.text.primary }}
+                                className={`absolute w-6 h-0.5 rounded-full ${currentTheme.modal}`}
+                                style={{ top: 12 }}
                             />
                             <motion.span
                                 variants={{
                                     closed: { rotate: 0, y: 0 },
                                     open: { rotate: -45, y: -8 }
                                 }}
-                                className="absolute w-6 h-0.5 rounded-full transform origin-center"
-                                style={{ top: 18, backgroundColor: theme.palette.text.primary }}
+                                className={`absolute w-6 h-0.5 rounded-full transform origin-center ${currentTheme.modal}`}
+                                style={{ top: 18 }}
                             />
                         </motion.div>
                     </button>
@@ -79,30 +74,25 @@ const NavbarClient = () => {
                         <Link
                             key={to}
                             to={to}
-                            className="text-lg font-medium transition-colors duration-300 relative group"
-                            style={{ color: theme.palette.text.primary }}
+                            className={`text-lg font-medium transition-all duration-300 relative group px-3 py-2 rounded-lg ${currentTheme.text} ${currentTheme.hover}`}
                         >
                             {label}
                             <span
-                                className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
-                                style={{ backgroundColor: theme.palette.primary.main }}
+                                className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 group-hover:w-3/4 transition-all duration-300 ${currentTheme.accent.replace('text-', 'bg-')}`}
                             />
                         </Link>
                     ))}
                 </div>
 
                 {/* Botón CTA desktop */}
-                <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+                <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-4">
                     <ThemeToggleButton />
                     <Link
                         to="/get-started"
-                        className="relative overflow-hidden px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                        style={{
-                            background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                            color: theme.custom.blanco
-                        }}
+                        className={`relative overflow-hidden px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${currentTheme.buttonPrimary} ${currentTheme.buttonPrimaryText} focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                     >
-                        Comenzar
+                        <span className="relative z-10">Comenzar</span>
+                        <div className={`absolute inset-0 -z-10 ${currentTheme.buttonPrimaryHover} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`}></div>
                     </Link>
                 </div>
             </nav>
@@ -116,12 +106,8 @@ const NavbarClient = () => {
             >
                 {/* Backdrop */}
                 <div
-                    className="absolute inset-0"
+                    className={`absolute inset-0 ${currentTheme.backdrop}`}
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                        backgroundColor: '#00000099',
-                        backdropFilter: 'blur(4px)',
-                    }}
                 />
 
                 {/* Panel del menú */}
@@ -129,66 +115,63 @@ const NavbarClient = () => {
                     initial={{ x: "100%" }}
                     animate={{ x: mobileMenuOpen ? "0%" : "100%" }}
                     transition={{ type: "tween", duration: 0.3 }}
-                    className="fixed right-0 top-0 h-auto w-full max-w-sm shadow-2xl z-50"
-                    style={{
-                        backgroundColor: theme.palette.background.default,
-                        borderLeft: `1px solid ${theme.palette.divider}`,
-                    }}
+                    className={`fixed right-0 top-0 h-full w-full max-w-sm shadow-2xl z-50 ${currentTheme.modal} ${currentTheme.border} border-l`}
                 >
                     {/* Header del menú móvil */}
-                    <div className="flex items-center justify-between p-6">
-                        <Link to="/" className='flex items-center space-x-2'>
-                            <h1 className="text-2xl font-bold" style={{ color: theme.palette.text.primary }}>
-                                <span style={{ color: theme.palette.primary.main }}>F</span>OOT
-                                <span style={{ color: theme.palette.primary.main }}>B</span>ALL
-                                <span style={{ color: theme.palette.primary.main }}> C</span>ORE
+                    <div className={`flex items-center justify-between p-6 ${currentTheme.border} border-b`}>
+                        <Link to="/" className='flex items-center space-x-2 group'>
+                            <h1 className={`text-2xl font-bold transition-all duration-300 group-hover:scale-105 ${currentTheme.text}`}>
+                                <span className={`${currentTheme.accent}`}>F</span>OOT
+                                <span className={`${currentTheme.accent}`}>B</span>ALL
+                                <span className={`${currentTheme.accent}`}> C</span>ORE
                             </h1>
                         </Link>
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(false)}
-                            className="rounded-md p-2.5 transition-colors duration-200"
+                            className={`rounded-md p-2.5 transition-all duration-200 ${currentTheme.hover} ${currentTheme.text}`}
                         >
                             <div className="w-6 h-6 relative">
                                 <span
-                                    className="absolute w-6 h-0.5 rounded-full transform rotate-45"
-                                    style={{ top: 12, backgroundColor: theme.palette.text.primary }}
+                                    className={`absolute w-6 h-0.5 rounded-full transform rotate-45 ${currentTheme.textSecondary}`}
+                                    style={{ top: 12 }}
                                 />
                                 <span
-                                    className="absolute w-6 h-0.5 rounded-full transform -rotate-45"
-                                    style={{ top: 12, backgroundColor: theme.palette.text.primary }}
+                                    className={`absolute w-6 h-0.5 rounded-full transform -rotate-45 ${currentTheme.textSecondary}`}
+                                    style={{ top: 12 }}
                                 />
                             </div>
                         </button>
                     </div>
 
                     {/* Contenido del menú */}
-                    <div className="px-6 py-6 space-y-2">
+                    <div className={`px-6 py-6 space-y-2 ${currentTheme.modal}`}>
                         {[
                             { to: '/services', label: 'SERVICIOS' },
                             { to: '/about-us', label: 'SOBRE NOSOTROS' },
                             { to: '/contact', label: 'CONTACTO' },
                         ].map(({ to, label }, i) => (
-                            <motion.a
+                            <motion.div
                                 key={to}
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: mobileMenuOpen ? 1 : 0, x: mobileMenuOpen ? 0 : 20 }}
                                 transition={{ delay: 0.1 * (i + 1) }}
-                                href={to}
-                                className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200 group"
-                                style={{ color: theme.palette.text.primary }}
-                                onClick={() => setMobileMenuOpen(false)}
                             >
-                                <div
-                                    className="w-2 h-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    style={{ backgroundColor: theme.palette.primary.main }}
-                                />
-                                {label}
-                            </motion.a>
+                                <Link
+                                    to={to}
+                                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200 group ${currentTheme.text} ${currentTheme.hover}`}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <div
+                                        className={`w-2 h-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${currentTheme.accent.replace('text-', 'bg-')}`}
+                                    />
+                                    {label}
+                                </Link>
+                            </motion.div>
                         ))}
 
                         {/* Separador */}
-                        <div className="my-6 border-t" style={{ borderColor: theme.palette.divider }} />
+                        <div className={`my-6 border-t ${currentTheme.border}`} />
 
                         {/* Botón de cambio de tema */}
                         <div className="px-2 flex justify-start">
@@ -205,10 +188,7 @@ const NavbarClient = () => {
                             <Link
                                 to="/get-started"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="w-full block text-center text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-                                style={{
-                                    background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                                }}
+                                className={`w-full block text-center px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentTheme.buttonPrimary} ${currentTheme.buttonPrimaryText} focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                             >
                                 Comenzar Gratis
                             </Link>

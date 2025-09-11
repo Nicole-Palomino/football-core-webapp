@@ -10,7 +10,7 @@ export const loginUser = async ( data ) => {
         params.append('username', data.email)
         params.append('password', data.password)
 
-        const response = await axiosInstance.post('/token', params, {
+        const response = await axiosInstance.post('/login', params, {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },

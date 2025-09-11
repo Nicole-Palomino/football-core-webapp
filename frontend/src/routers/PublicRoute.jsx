@@ -2,8 +2,11 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContexts'
 
 const PublicRoute = ({ children }) => {
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, loading } = useAuth()
 
+    if (loading) {
+        return null
+    }
     // Si el usuario está autenticado, redirige al dashboard
     if (isAuthenticated) {
         return <Navigate to="/dashboard" replace />

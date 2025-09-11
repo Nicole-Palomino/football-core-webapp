@@ -36,7 +36,6 @@ const AppRoutes = () => {
     return (
         <Routes>
             {/* Rutas públicas */}
-            <Route path="*" element={<div>404 - Página no encontrada</div>} />
             <Route path='/' element={<Suspense fallback={<LoadingPage />}><HomePage /> </Suspense>} />
             <Route path='/services' element={<Services />} />
             <Route path='/contact' element={<Contact />} />
@@ -70,6 +69,8 @@ const AppRoutes = () => {
                 <Route path='profile' element={<Suspense fallback={<LoadingPage />}><PageProfile /> </Suspense>} />
                 <Route path='settings' element={<Suspense fallback={<LoadingPage />}><PageSettings /> </Suspense>} />
             </Route>
+
+            <Route path="*" element={<div>404 - Página no encontrada</div>} />
         </Routes>
     )
 }

@@ -64,7 +64,7 @@ export const contactInfo = [
     {
         icon: EnvelopeIcon,
         title: "Email",
-        value: "contacto@footballcore.com",
+        value: "footballcoresoporte@gmail.com",
         description: "Respuesta en 24 horas",
         color: "from-blue-500 to-cyan-500"
     },
