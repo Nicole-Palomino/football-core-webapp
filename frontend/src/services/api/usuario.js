@@ -4,27 +4,17 @@ import { setToken, getToken } from '../auth'
 // -------------------------------------- usuarios --------------------------------------
 
 // iniciar sesión
-export const loginUser = async ( data ) => {
+export const loginUser = async ( { username, password } ) => {
     try {
-        const params = new URLSearchParams()
-        params.append('username', data.email)
-        params.append('password', data.password)
+        const formData = new URLSearchParams()
+        formData.append("username", username)
+        formData.append("password", password)
 
-        const response = await axiosInstance.post('/login', params, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
+        const { data } = await axiosInstance.post("/login", formData, {
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
         })
-
-        const { access_token } = response.data
-
-        if (!access_token) {
-            throw new Error("El servidor no devolvió un token de acceso")
-        }
-
-        setToken(access_token)
-
-        return response.data
+        
+        return data
     } catch (error) {
         throw new Error(error.response?.data?.detail || "Error al iniciar sesión")
     }
@@ -77,6 +67,27 @@ export const registerUser = async ( userData ) => {
 export const forgotUser = async ( userData ) => {
     try {
         const response = await axiosInstance.post('/request-password-reset', userData, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+
+        return response.data
+    } catch (error) {
+        console.error("Error en forgotUser:", error);
+
+        if (error.response) {
+            throw new Error(error.response.data?.detail || "Error desconocido.");
+        }
+
+        throw new Error("Error al conectar con el servidor.");
+    }
+}
+
+// verificar contraseña
+export const verifyUser = async ( userData ) => {
+    try {
+        const response = await axiosInstance.post('/verify-password-code', userData, {
             headers: {
                 "Content-Type": "application/json",
             },

@@ -1,14 +1,15 @@
-import { Box, Grid, useTheme } from '@mui/material'
+import { Box, Grid } from '@mui/material'
 import { Outlet } from 'react-router-dom'
 import NavbarUsers from '../components/Navbar/NavbarUsers'
+import { useThemeMode } from '../contexts/ThemeContext'
 
 const Dashboard = () => {
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     return (
         <Grid container spacing={0} 
+            className={`${currentTheme.background}`}
             sx={{ 
-                backgroundColor: theme.palette.background.default,
                 minHeight: "100vh",
                 height: "100vh",
                 width: "100%",

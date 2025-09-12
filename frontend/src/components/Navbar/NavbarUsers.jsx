@@ -1,16 +1,15 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from "react-router-dom"
-import { GiSoccerKick } from "react-icons/gi"
 import { XMarkIcon } from "@heroicons/react/24/outline"
-import { Avatar, Box, Tooltip, IconButton, Menu, MenuItem, ListItemIcon, ListItem, Divider, useTheme } from "@mui/material"
+import { Avatar, Box, Tooltip, IconButton, Menu, MenuItem, ListItemIcon, ListItem, Divider } from "@mui/material"
 import AccountCircleIcon from "@mui/icons-material/AccountCircle"
-import SettingsIcon from '@mui/icons-material/Settings'
 import Logout from "@mui/icons-material/Logout"
 import { Dialog, DialogPanel } from "@headlessui/react"
-import { decryptData } from '../../services/encryptionService'
 import { settings } from '../../utils/navbarUtils'
 import { useAuth } from '../../contexts/AuthContexts'
 import ThemeToggleButton from '../Buttons/ThemeToggleButton'
+import { useThemeMode } from '../../contexts/ThemeContext'
+import Swal from 'sweetalert2'
 
 const NavbarUsers = () => {
 
@@ -22,9 +21,9 @@ const NavbarUsers = () => {
 
     // datos de usuario
     const { user, logout } = useAuth()
-    const firstLetter = user?.usuario?.charAt(0).toUpperCase() || "F"
+    const firstLetter = user?.nombre?.charAt(0).toUpperCase() || "F"
     const correo = user?.correo || ""
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
     const navigate = useNavigate()
 
     const iconMap = {
@@ -61,16 +60,15 @@ const NavbarUsers = () => {
     }
 
     return (
-        <header className="shadow-md" style={{ backgroundColor: theme.palette.background.default }}>
-            <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8 border-b shadow-xl"
-                style={{ borderBottom: `1px solid ${theme.palette.primary.dark}` }}>
+        <header className={`shadow-md ${currentTheme.background}`}>
+            <nav className={`mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8 border-b shadow-xl ${currentTheme.border}`}>
                 {/* Logo */}
                 <div className="flex flex-1">
                     <Link to="/dashboard" className="flex items-center space-x-2">
-                        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: theme.palette.text.primary }}>
-                            <span style={{ color: theme.palette.primary.main }}>F</span>OOT
-                            <span style={{ color: theme.palette.primary.main }}>B</span>ALL
-                            <span style={{ color: theme.palette.primary.main }}> C</span>ORE
+                        <h1 className={`text-2xl md:text-3xl font-bold ${currentTheme.text}`}>
+                            <span className={currentTheme.accent}>F</span>OOT
+                            <span className={currentTheme.accent}>B</span>ALL
+                            <span className={currentTheme.accent}> C</span>ORE
                         </h1>
                     </Link>
                 </div>
@@ -85,13 +83,11 @@ const NavbarUsers = () => {
                         <Link
                             key={to}
                             to={to}
-                            className="text-lg font-medium transition-colors duration-300 relative group"
-                            style={{ color: theme.palette.text.primary }}
+                            className={`text-lg font-medium transition-colors duration-300 relative group ${currentTheme.text}`}
                         >
                             {label}
                             <span
-                                className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
-                                style={{ backgroundColor: theme.palette.primary.main }}
+                                className={`${currentTheme.accent} absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300`}
                             />
                         </Link>
                     ))}
@@ -103,7 +99,7 @@ const NavbarUsers = () => {
                         <ThemeToggleButton />
                         <Tooltip title={correo}>
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar sx={{ bgcolor: theme.palette.primary.dark, color: theme.custom.blanco }}>{firstLetter}</Avatar>
+                                <Avatar className={`${currentTheme.accent} text-white`}>{firstLetter}</Avatar>
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -117,9 +113,9 @@ const NavbarUsers = () => {
                             onClose={handleCloseUserMenu}>
                             {settings.map(({ name, path }) => (
                                 <MenuItem key={name} onClick={handleCloseUserMenu}>
-                                    <ListItemIcon>{React.cloneElement(iconMap[name], { style: { color: theme.custom.azulHover } })}</ListItemIcon>
+                                    <ListItemIcon>{React.cloneElement(iconMap[name], { className: currentTheme.accent })}</ListItemIcon>
                                     <ListItem>
-                                        <Link to={path} style={{ textDecoration: "none", color: theme.palette.text.primary, display: "block", width: "100%" }}>
+                                        <Link to={path} className={`no-underline ${currentTheme.text} block w-full`}>
                                             {name}
                                         </Link>
                                     </ListItem>
@@ -127,7 +123,7 @@ const NavbarUsers = () => {
                             ))}
                             {/* <Divider /> */}
                             <MenuItem onClick={() => { handleLogout(); handleCloseUserMenu(); }}>
-                                <ListItemIcon><Logout fontSize="small" sx={{ color: theme.custom.azulHover }} /></ListItemIcon>
+                                <ListItemIcon><Logout fontSize="small" className={currentTheme.accent} /></ListItemIcon>
                                 <ListItem>Cerrar Sesión</ListItem>
                             </MenuItem>
                         </Menu>
@@ -135,7 +131,7 @@ const NavbarUsers = () => {
                 </div>
 
                 {/* Menú móvil */}
-                <button className="lg:hidden" onClick={() => setMobileMenuOpen(true)} style={{ color: theme.palette.text.primary }}>
+                <button className={`lg:hidden ${currentTheme.text}`} onClick={() => setMobileMenuOpen(true)}>
                     ☰
                 </button>
             </nav>
@@ -143,17 +139,16 @@ const NavbarUsers = () => {
             {/* Menú lateral para móviles */}
             <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
                 <div className="fixed inset-0 z-10" />
-                <DialogPanel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-blue-900"
-                    style={{ backgroundColor: theme.palette.background.default }}>
+                <DialogPanel className={`fixed inset-y-0 right-0 z-10 w-full overflow-y-auto px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-blue-900 ${currentTheme.background}`}>
                     <div className="flex items-center justify-between">
-                        <Link to="/" className="flex items-center space-x-2" style={{ color: theme.palette.text.primary }}>
-                            <h1 className="text-2xl md:text-3xl font-bold" style={{ color: theme.palette.text.primary }}>
-                                <span style={{ color: theme.palette.primary.main }}>F</span>OOT
-                                <span style={{ color: theme.palette.primary.main }}>B</span>ALL
-                                <span style={{ color: theme.palette.primary.main }}> C</span>ORE
+                        <Link to="/" className={`flex items-center space-x-2 ${currentTheme.text}`}>
+                            <h1 className={`text-2xl md:text-3xl font-bold ${currentTheme.text}`}>
+                                <span className={currentTheme.accent}>F</span>OOT
+                                <span className={currentTheme.accent}>B</span>ALL
+                                <span className={currentTheme.accent}> C</span>ORE
                             </h1>
                         </Link>
-                        <button onClick={() => setMobileMenuOpen(false)} style={{ color: theme.palette.text.primary }}>
+                        <button onClick={() => setMobileMenuOpen(false)} className={currentTheme.text}>
                             <XMarkIcon className="size-6" />
                         </button>
                     </div>
@@ -166,30 +161,28 @@ const NavbarUsers = () => {
                             <Link
                                 key={to}
                                 to={to}
-                                className="block text-lg"
-                                style={{ color: theme.palette.text.primary }}
+                                className={`block text-lg ${currentTheme.text}`}
                             >
                                 {label}
                                 <span
-                                    className="absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300"
-                                    style={{ backgroundColor: theme.palette.primary.main }}
+                                    className={`${currentTheme.accent} absolute -bottom-1 left-0 w-0 h-0.5 group-hover:w-full transition-all duration-300`}
                                 />
                             </Link>
                         ))}
 
                         {/* Avatar en menú móvil */}
                         <div className="mt-6 flex items-center space-x-3">
-                            <Avatar sx={{ bgcolor: theme.palette.primary.dark }}>{firstLetter}</Avatar>
-                            <span className="text-lg" style={{ color: theme.palette.text.primary }}>{correo}</span>
+                            <Avatar className={`${currentTheme.accent} text-white`}>{firstLetter}</Avatar>
+                            <span className={`text-lg ${currentTheme.text}`}>{correo}</span>
                         </div>
                         <div className="mt-3 space-y-2">
                             <ThemeToggleButton />
                             {settings.map(({ name, path }) => (
-                                <Link key={name} to={path} className="block text-lg" style={{ color: theme.palette.text.primary }}>
+                                <Link key={name} to={path} className={`block text-lg ${currentTheme.text}`}>
                                     {name}
                                 </Link>
                             ))}
-                            <button onClick={handleLogout} className="block w-full text-left text-lg" style={{ color: theme.palette.text.primary }}>
+                            <button onClick={handleLogout} className={`block w-full text-left text-lg ${currentTheme.text}`}>
                                 Cerrar Sesión
                             </button>
                         </div>

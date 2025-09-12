@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Box, Grid, Tab, Tabs, useTheme } from '@mui/material'
+import { Box, Grid, Tab, Tabs } from '@mui/material'
 import { useAuth } from '../contexts/AuthContexts'
+import { useThemeMode } from '../contexts/ThemeContext'
 import MatchTabs from '../components/Dashboard/Match/MatchTabs'
 import LoadingSpinner from '../components/Loading/LoadingSpinner'
 import EmptyMessage from '../utils/empty'
@@ -10,7 +11,7 @@ const Match = () => {
 
     const [value, setValue] = useState(0)
     const { isAuthenticated } = useAuth()
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     const partidosPorJugar = usePartidosPorJugar()
     const partidosFinalizados = usePartidosFinalizados()
@@ -26,15 +27,9 @@ const Match = () => {
     const handleChange = (event, newValue) => { setValue(newValue) }
 
     return (
-        <Box sx={{ flexGrow: 1, backgroundColor: theme.palette.primary.dark }}>
+        <Box className={`flex-1 ${currentTheme.accent}`}>
             <Grid container
-                sx={{
-                    backgroundColor: theme.palette.background.default,
-                    minHeight: "100vh",
-                    paddingTop: "20px",
-                    justifyContent: "center",
-                    alignItems: "flex-start",
-                }}>
+                className={`min-h-screen pt-5 justify-center items-start ${currentTheme.background}`}>
                 <Grid item xs={12} md sx={{ display: { xs: "none", md: "block" } }} className="text-white"></Grid>
 
                 {/* contenido principal */}
@@ -51,7 +46,7 @@ const Match = () => {
                         height: "100%",
                         overflow: "hidden",
                         boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
-                        backgroundColor: theme.palette.background.paper,
+                        backgroundColor: currentTheme.background,
                         borderRadius: "20px",
                     }}>
                     <Box
@@ -69,10 +64,10 @@ const Match = () => {
                             centered
                             variant="fullWidth"
                             sx={{
-                                "& .MuiTabs-indicator": { backgroundColor: theme.palette.primary.dark },
-                                "& .MuiTab-root": { color: theme.palette.text.primary, fontFamily: 'cursive' },
+                                "& .MuiTabs-indicator": { backgroundColor: currentTheme.accent },
+                                "& .MuiTab-root": { color: currentTheme.text, fontFamily: 'cursive' },
                                 borderRadius: "10px 10px 0 0",
-                                "& .MuiTab-root.Mui-selected": { color: theme.palette.text.primary },
+                                "& .MuiTab-root.Mui-selected": { color: currentTheme.text },
                             }}>
                             <Tab label="Próximos Partidos" />
                             <Tab label="Partidos Finalizados" />

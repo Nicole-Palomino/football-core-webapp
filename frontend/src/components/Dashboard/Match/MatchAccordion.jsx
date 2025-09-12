@@ -1,11 +1,12 @@
-import { Accordion, AccordionSummary, AccordionDetails, Avatar, Typography, useTheme } from "@mui/material"
+import { Typography, Accordion, AccordionSummary, AccordionDetails, Avatar } from '@mui/material';
+import { useThemeMode } from '../../../contexts/ThemeContext';
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp"
 import MatchList from "./MatchList"
 import { useMemo } from "react"
 
 const MatchAccordion = ({ data, type }) => {
 
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode();
 
     const partidosPorLiga = useMemo(() => {
         const grouped = data.reduce((acc, partido) => {
@@ -28,29 +29,31 @@ const MatchAccordion = ({ data, type }) => {
     return (
         <>
             {ligas.map(([ligaId, { nombre_liga, logo_liga, partidos }]) => (
-                <Accordion key={ligaId} defaultExpanded sx={{ boxShadow: theme.palette.primary.dark }}>
+                <Accordion key={ligaId} defaultExpanded className={`rounded-lg mb-2.5 shadow-md ${currentTheme.background} ${currentTheme.text}`}
+sx={{
+    '&:before': {
+        display: 'none',
+    },
+}}>
                     <AccordionSummary
-                        expandIcon={<KeyboardArrowUp sx={{ color: theme.palette.text.primary }} />}
-                        sx={{
-                            backgroundColor: theme.palette.background.paper,
-                            color: theme.palette.text.primary,
-                            "& .MuiAccordionSummary-content": { alignItems: "center" },
-                            borderBottom: 1,
-                        }}>
-                        <Avatar alt={nombre_liga} src={logo_liga}
-                            sx={{
-                                width: 40,
-                                height: 40,
-                                marginRight: 3,
-                                backgroundColor: theme.palette.divider.secondary,
-                                '& img': {
-                                    objectFit: 'contain'
-                                }
-                            }} />
-                        <Typography sx={{ fontWeight: "bold", fontSize: "18px" }}>{nombre_liga}</Typography>
+                        expandIcon={<KeyboardArrowUp className={currentTheme.text} />}
+                        className={`rounded-lg transition-colors duration-300 ${currentTheme.sidebar}`}>
+                        <div className="flex items-center">
+                            <Avatar alt={nombre_liga} src={logo_liga}
+                                sx={{
+                                    width: 40,
+                                    height: 40,
+                                    marginRight: 3,
+                                    backgroundColor: 'transparent',
+                                    '& img': {
+                                        objectFit: 'contain'
+                                    }
+                                }} />
+                            <Typography className={`font-bold text-lg ${currentTheme.text}`}>{nombre_liga}</Typography>
+                        </div>
                     </AccordionSummary>
 
-                    <AccordionDetails sx={{ backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary }}>
+                    <AccordionDetails className={`rounded-b-lg p-4 ${currentTheme.background}`}>
                         <MatchList partidos={partidos} type={type} />
                     </AccordionDetails>
                 </Accordion>

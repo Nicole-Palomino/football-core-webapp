@@ -38,7 +38,7 @@ const SignUp = ({ setActiveTab }) => {
                 }
             })
 
-            setValue(0)
+            setActiveTab("signin")
         } catch (error) {
             Swal.fire({
                 icon: 'error',

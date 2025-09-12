@@ -96,6 +96,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated,
+        loading: isLoading,
     }
 
     return (

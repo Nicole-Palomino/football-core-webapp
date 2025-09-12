@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { useThemeMode } from '../../contexts/ThemeContext'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { UserIcon, EnvelopeIcon, LockClosedIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { UserIcon, EnvelopeIcon, LockClosedIcon, EyeIcon, CheckIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 const SignUpForm = ({ onSubmit, loading }) => {
 

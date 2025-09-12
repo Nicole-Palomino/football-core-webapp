@@ -1,7 +1,7 @@
-import { List, ListItem, Grid, Box, Typography, IconButton, Tooltip, Avatar, useTheme } from "@mui/material"
+import { List, ListItem, Grid, Box, Typography, IconButton, Tooltip, Avatar } from "@mui/material"
+import { useThemeMode } from '../../../contexts/ThemeContext'
 import InfoOutlined from "@mui/icons-material/InfoOutlined"
 import FavoriteStar from '../Favorites/FavoriteStar'
-import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates'
 import { useFavoritos } from '../../../hooks/FavoritosContext'
 import { formatFecha } from '../../../utils/helpers'
 import { useNavigate } from 'react-router-dom'
@@ -9,11 +9,13 @@ import LoadingFavorite from "../../Loading/LoadingFavorite"
 import React from "react"
 import SummarizeIcon from '@mui/icons-material/Summarize'
 import PhotoSizeSelectActualIcon from '@mui/icons-material/PhotoSizeSelectActual'
+import { TipsAndUpdatesOutlined } from "@mui/icons-material"
+import { formatOnlyTime } from "../../../utils/utils"
 
 const MatchList = React.memo(({ partidos, type }) => {
     const { loadingFavoritos } = useFavoritos()
     const navigate = useNavigate()
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     const onInfoClick = (team1_id, team2_id, partido_id) => {
         navigate(`/dashboard/${partido_id}`, {
@@ -46,7 +48,7 @@ const MatchList = React.memo(({ partidos, type }) => {
     }
 
     return (
-        <List sx={{ color: theme.palette.text.primary }}>
+        <List className={currentTheme.text}>
             {partidos.map((partido) => (
                 <ListItem
                     key={partido.id_partido}
@@ -117,11 +119,11 @@ const MatchList = React.memo(({ partidos, type }) => {
                             variant="body2"
                             sx={{
                                 fontSize: { xs: "11px", sm: "12px" },
-                                color: theme.palette.text.secondary,
+                                color: currentTheme.textSecondary,
                                 textAlign: "right"
                             }}
                         >
-                            {formatFecha(partido.dia)}
+                            {formatFecha(partido.dia)} - {formatOnlyTime(partido.hora)}
                         </Typography>
 
                         {/* Íconos dinámicos */}
@@ -134,7 +136,7 @@ const MatchList = React.memo(({ partidos, type }) => {
                                             partido.equipo_visita.nombre_equipo,
                                             partido.id_partido
                                         )}>
-                                            <InfoOutlined sx={{ color: theme.palette.text.primary }} />
+                                            <InfoOutlined className={currentTheme.text} />
                                         </IconButton>
                                     </Tooltip>
 
@@ -144,7 +146,7 @@ const MatchList = React.memo(({ partidos, type }) => {
                                             partido.equipo_visita.nombre_equipo,
                                             partido.id_partido
                                         )}>
-                                            <TipsAndUpdatesIcon sx={{ color: theme.custom.amarillo }} />
+                                            <TipsAndUpdatesOutlined className={currentTheme.text} />
                                         </IconButton>
                                     </Tooltip>
                                 </>
@@ -152,13 +154,13 @@ const MatchList = React.memo(({ partidos, type }) => {
                                 <>
                                     <Tooltip title="Resumen">
                                         <IconButton size="small" onClick={() => onResumenClick(partido.id_partido)}>
-                                            <SummarizeIcon sx={{ color: theme.custom.azulHover }} />
+                                            <SummarizeIcon className={currentTheme.accent} />
                                         </IconButton>
                                     </Tooltip>
 
                                     <Tooltip title="Imágenes">
                                         <IconButton size="small" onClick={() => onImagenesClick(partido.id_partido)}>
-                                            <PhotoSizeSelectActualIcon sx={{ color: theme.palette.text.primary }} />
+                                            <PhotoSizeSelectActualIcon className={currentTheme.text} />
                                         </IconButton>
                                     </Tooltip>
                                 </>
