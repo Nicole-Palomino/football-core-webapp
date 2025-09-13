@@ -22,7 +22,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.post("/", response_model=schemas.match.PartidoOut, dependencies=[Depends(get_current_admin_user)])
 async def create_match(
     partido: schemas.PartidoCreate, 
@@ -74,7 +74,7 @@ async def read_match_by_id(request: Request, partido_id: int, db: AsyncSession =
     logger.info(f"[ENCONTRADO] Partido con id={partido_id} consultado exitosamente por {client_ip}")
     return db_partido
 
-# finished
+# finished || used
 @router.get("/season/{season_id}", response_model=List[schemas.Partido])
 @limiter.limit("5/minute")
 async def get_matches_by_states_and_seasons(request: Request, season_id: int, db: AsyncSession = Depends(get_db)):
@@ -84,7 +84,7 @@ async def get_matches_by_states_and_seasons(request: Request, season_id: int, db
     logger.info(f"[ENCONTRADO] Partidos con id_season={season_id} consultado exitosamente")
     return await crud.crud_match.get_matches_by_season(db, season_id = season_id)
 
-# finished
+# finished || used
 @router.put("/{partido_id}", response_model=schemas.Partido, dependencies=[Depends(get_current_admin_user)])
 async def update_match(
     partido_id: int, 
@@ -108,7 +108,7 @@ async def update_match(
     except IntegrityError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error de integridad de datos. Verifique los IDs de las relaciones.")
 
-# finished 
+# finished || used
 @router.delete("/{partido_id}", status_code=status.HTTP_200_OK)
 async def delete_match(
     partido_id: int, 
@@ -126,7 +126,7 @@ async def delete_match(
     logger.info(f"[ENCONTRADO] Admin {admin_user.id_usuario} eliminó partido {partido_id}")
     return {"message": "Partido eliminado exitosamente"}
 
-# finished
+# finished || used
 @router.post("/upload-data", status_code=status.HTTP_200_OK,
             summary="Sube un archivo CSV o Excel para registrar partidos y estadísticas",
             response_model=Dict[str, Any], # Devolverá un resumen de los resultados
@@ -215,7 +215,7 @@ async def upload_matches(
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error interno: {e}")
     
-# finished
+# finished || used
 @router.get("/stats/total", response_model=int, status_code=status.HTTP_200_OK)
 async def get_total_matches(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(func.count()).select_from(models.Partido))

@@ -15,7 +15,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.post("/", response_model=schemas.Liga, dependencies=[Depends(get_current_admin_user)])
 async def create_ligues(
     liga: schemas.LigaCreate, 
@@ -29,7 +29,7 @@ async def create_ligues(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La liga ya existe")
     return await crud.create_liga(db=db, liga=liga)
 
-# finished
+# finished || used
 @router.get("/", response_model=list[schemas.Liga], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_ligues(request: Request, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -60,7 +60,7 @@ async def read_ligues(request: Request, liga_id: int, db: AsyncSession = Depends
     logger.info(f"[ENCONTRADO] Liga con id={liga_id} consultada exitosamente por {client_ip}")
     return db_liga
 
-# finished
+# finished || used
 @router.put("/{liga_id}", response_model=schemas.Liga, dependencies=[Depends(get_current_admin_user)])
 async def update_ligues(
     liga_id: int, 
@@ -80,7 +80,7 @@ async def update_ligues(
     logger.info(f"[ENCONTRADO] Liga con ID {liga_id} actualizada exitosamente.")
     return db_liga
 
-# finished
+# finished || used
 @router.delete("/{liga_id}", status_code=status.HTTP_200_OK)
 async def delete_ligues(
     liga_id: int, 
@@ -98,7 +98,7 @@ async def delete_ligues(
     logger.info(f"[ENCONTRADO] Admin {admin_user.id_usuario} eliminó liga {liga_id}")
     return {"message": "Liga eliminada exitosamente"}
 
-# finished
+# finished || used
 @router.get("/stats/total", response_model=int, status_code=status.HTTP_200_OK)
 async def get_total_ligues(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(func.count()).select_from(models.Liga))

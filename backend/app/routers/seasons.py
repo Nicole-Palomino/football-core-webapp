@@ -15,7 +15,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.post("/", response_model=schemas.Temporada, dependencies=[Depends(get_current_admin_user)])
 async def create_season(
     temporada: schemas.TemporadaCreate, 
@@ -29,7 +29,7 @@ async def create_season(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La temporada ya existe")
     return await crud.create_temporada(db=db, temporada=temporada)
 
-# finished
+# finished || used
 @router.get("/", response_model=list[schemas.Temporada], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_seasons(request: Request, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -60,7 +60,7 @@ async def read_seasons_by_id(request: Request, temporada_id: int, db: AsyncSessi
     logger.info(f"[ENCONTRADO] Temporada con id={temporada_id} consultada exitosamente por {client_ip}")
     return db_temporada
 
-# finished
+# finished || used
 @router.put("/{temporada_id}", response_model=schemas.Temporada, dependencies=[Depends(get_current_admin_user)])
 async def update_season(
     temporada_id: int, 
@@ -80,7 +80,7 @@ async def update_season(
     logger.info(f"[ENCONTRADO] Temporada con ID {temporada_id} actualizada exitosamente.")
     return db_temporada
 
-# finished
+# finished || used
 @router.delete("/{temporada_id}", status_code=status.HTTP_200_OK)
 async def delete_season(
     temporada_id: int, 

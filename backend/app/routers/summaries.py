@@ -1,14 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Annotated
+from typing import List
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, desc
 
 from app import schemas, crud
 from app.dependencies import get_db
 from app.schemas.summary import ResumenOut, ResumenCreate, ResumenUpdate
 from app.crud.crud_summary import crear_resumen, delete_resumen, listar_resumenes_por_partido, update_resumen, listar_resumenes, get_resumen
-from app.models.summary import ResumenEstadistico
 from app.core.security import get_current_admin_user, get_current_active_user
 from app.core.logger import logger
 from app.middlewares.rate_limit import limiter
@@ -20,7 +18,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.post("/", response_model=ResumenOut, dependencies=[Depends(get_current_admin_user)])
 async def create_summary(
     resumen: ResumenCreate, 
@@ -40,7 +38,7 @@ async def create_summary(
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error inesperado: {str(e)}")
 
-# finished
+# finished 
 @router.get("/partido/{id_partido}", response_model=list[ResumenOut])
 @limiter.limit("5/minute")
 async def get_resumenes_por_partido(
@@ -62,7 +60,7 @@ async def get_resumenes_por_partido(
     logger.info(f"[ENCONTRADO] Resumen con id_partido={id_partido} consultado exitosamente por {client_ip}")
     return resumenes
 
-# finished
+# finished || used
 @router.get("/", response_model=List[ResumenOut], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_summaries(
@@ -94,7 +92,7 @@ async def read_resumen_por_id(request: Request, resumen_id: int, db: AsyncSessio
     logger.info(f"[ENCONTRADO] Resumen con id={resumen_id} consultado exitosamente por {client_ip}")
     return resumen
 
-# finished
+# finished || used
 @router.put("/{resumen_id}", response_model=ResumenOut, dependencies=[Depends(get_current_admin_user)])
 async def update_summary(
     resumen_id: int, 
@@ -119,7 +117,7 @@ async def update_summary(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error de integridad de datos. Verifique los IDs de las relaciones.")
 
-# finished
+# finished || used
 @router.delete("/{resumen_id}", status_code=status.HTTP_200_OK)
 async def delete_summary(
     resumen_id: int, 

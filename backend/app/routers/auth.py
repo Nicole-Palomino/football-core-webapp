@@ -45,8 +45,8 @@ def set_refresh_cookie(resp: Response, raw_refresh: str):
 def clear_refresh_cookie(resp: Response):
     resp.delete_cookie(REFRESH_COOKIE_NAME, path="/refresh")
 
-# finished || tested
-@router.get("/users/me/", response_model=schemas.User)
+# finished || tested || used in admin
+@router.get("/users/me/")
 async def read_users_me(
     current_user: models.User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
@@ -61,9 +61,23 @@ async def read_users_me(
         .where(models.User.id_usuario == current_user.id_usuario)
     )
     user = result.scalars().first()
-    return current_user
 
-# finished || tested
+    roles = []
+    if user.rol:  # 👈 si existe relación con Rol
+        roles.append(user.rol.nombre_rol)
+
+    return {
+        "id_usuario": user.id_usuario,
+        "correo": user.correo,
+        "nombre": user.usuario,
+        "is_active": user.is_active,
+        "registro": user.registro,
+        "updated_at": user.updated_at,
+        "estado": user.estado,
+        "roles": roles
+    }
+
+# finished || tested || used in frontend
 @router.post("/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def register_user(
     user_create: schemas.UserCreate, 
@@ -88,10 +102,10 @@ async def register_user(
     except IntegrityError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
-# finished || tested
+# finished || tested || used in admin
 @router.post("/register-admin", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def register_user_admin(
-    user_create: schemas.user.UserCreate, 
+    user_create: schemas.user.UserCreateAdmin, 
     db: AsyncSession = Depends(get_db),
     current_user: schemas.User = Depends(get_current_admin_user)
 ):
@@ -114,7 +128,7 @@ async def register_user_admin(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Error al crear el usuario. Verifique los IDs de estado y rol.")
 
-# finished || tested
+# finished || tested || used in frontend
 @router.post("/request-password-reset")
 async def request_password_reset(
     request: schemas.PasswordRecoveryRequest, 
@@ -130,7 +144,7 @@ async def request_password_reset(
     await crud.set_user_verification_code(db, user)
     return {"message": "Código de verificación enviado. Revise la bandeja de entrada de su correo."}
 
-# finished || tested
+# finished || tested || used in frontend
 @router.post("/verify-password-code")
 async def verify_password_code(
     verification: schemas.PasswordVerification, 
@@ -155,7 +169,7 @@ async def verify_password_code(
     
     return {"message": "Código verificado exitosamente."}
 
-# finished || tested
+# finished || tested || used in frontend
 @router.post("/reset-password")
 async def reset_password(
     reset_data: schemas.PasswordReset, 
@@ -185,7 +199,7 @@ async def reset_password(
     
     return {"message": "Contraseña restablecida exitosamente."}
 
-# finished || tested
+# finished || tested || used in admin || used in frontend
 @router.post("/login")
 @limiter.limit("5/15minute")
 async def login(
@@ -223,7 +237,7 @@ async def login(
         "expires_in": 900
     }
 
-# finished || tested
+# finished || tested || used in admin || used in frontend
 @router.post("/refresh")
 async def refresh_token(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     raw_refresh = request.cookies.get(REFRESH_COOKIE_NAME)
@@ -243,12 +257,14 @@ async def refresh_token(request: Request, response: Response, db: AsyncSession =
     # Nuevo access token
     user = await crud_user.get_user(db, token_db.user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
 
     roles = [user.rol.nombre_rol] if getattr(user, "rol", None) else []
     access = create_access_token_for_user(user_id=user.id_usuario, email=user.correo, roles=roles)
 
     await db.commit()
+
+    await db.refresh(new_db_token)
 
     # Actualizar cookie
     set_refresh_cookie(response, raw_new)
@@ -267,7 +283,7 @@ async def refresh_token(request: Request, response: Response, db: AsyncSession =
         }
     }
 
-# finished || tested
+# finished || tested || used in admin || used in frontend
 @router.post("/logout")
 async def logout(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     raw_refresh = request.cookies.get(REFRESH_COOKIE_NAME)

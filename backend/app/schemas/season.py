@@ -11,7 +11,7 @@ class TemporadaCreate(TemporadaBase):
 
 class TemporadaUpdate(TemporadaBase):
     """Esquema para actualizar una Temporada existente."""
-    nombre_temporada: str | None = Field(None, min_length=1, max_length=20)
+    nombre_temporada: str = Field(..., min_length=1, max_length=20)
 
 class Temporada(TemporadaBase):
     """Esquema para devolver datos de Temporada (incluye ID y marcas de tiempo)."""

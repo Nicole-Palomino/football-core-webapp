@@ -53,6 +53,7 @@ app.add_middleware(SlowAPIMiddleware)
 origins = [
     "http://127.0.0.1:8000",
     "http://localhost:5173",
+    "http://localhost:5174",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
@@ -94,8 +95,11 @@ app.include_router(summaries.router)
 app.include_router(favorites.router)
 # finished
 app.include_router(analysis.router)
-
+# finished
 app.include_router(cluster.router)
+# finished
 app.include_router(predictions.router)
+# finished
 app.include_router(poisson.router)
+# finished
 app.include_router(clasification.router)

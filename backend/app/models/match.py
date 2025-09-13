@@ -34,6 +34,6 @@ class Partido(Base):
         "Equipo", foreign_keys=[id_equipo_visita], back_populates="partidos_visita", lazy="selectin"
     )
     estado = relationship("Estado", back_populates="partidos", lazy="selectin")
-    estadisticas = relationship("Estadistica", back_populates="partido", uselist=False, cascade="all, delete-orphan", lazy="noload")
+    estadisticas = relationship("Estadistica", back_populates="partido", uselist=False, cascade="all, delete-orphan", lazy="selectin")
     resumenes = relationship("ResumenEstadistico", back_populates="partido", cascade="all, delete-orphan", lazy="noload")
     favoritos = relationship("Favorito", back_populates="partido", cascade="all, delete-orphan")

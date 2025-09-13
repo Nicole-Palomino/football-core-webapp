@@ -93,6 +93,7 @@ async def get_matches_by_season(
             selectinload(models.Partido.equipo_local),
             selectinload(models.Partido.equipo_visita),
             selectinload(models.Partido.estado),
+            selectinload(models.Partido.estadisticas)
         )
         .where(
             models.Partido.id_temporada == season_id,

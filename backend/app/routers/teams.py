@@ -17,7 +17,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.get("/activos", response_model=list[schemas.Equipo], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def get_teams_actives(request: Request, db: AsyncSession = Depends(get_db)):
@@ -31,7 +31,7 @@ async def get_teams_actives(request: Request, db: AsyncSession = Depends(get_db)
     result = await db.execute(query)
     return result.scalars().all()
 
-# finished
+# finished || used
 @router.post("/", response_model=schemas.Equipo, dependencies=[Depends(get_current_admin_user)])
 async def create_team(
     equipo: schemas.EquipoCreate, 
@@ -60,7 +60,7 @@ async def create_team(
 
     return await crud.create_equipo(db=db, equipo=equipo)
 
-# finished
+# finished || used
 @router.get("/", response_model=list[schemas.Equipo], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_teams(request: Request, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -91,7 +91,7 @@ async def read_team_by_id(request: Request, equipo_id: int, db: AsyncSession = D
     logger.info(f"[ENCONTRADO] Equipo con id={equipo_id} consultado exitosamente por {client_ip}")
     return db_equipo
 
-# finished
+# finished || used
 @router.put("/{equipo_id}", response_model=schemas.Equipo, dependencies=[Depends(get_current_admin_user)])
 async def update_team(
     equipo_id: int, 
@@ -130,7 +130,7 @@ async def update_team(
     logger.info(f"[ENCONTRADO] Equipo con ID {equipo_id} actualizado exitosamente.")
     return db_equipo
 
-# finished
+# finished || used
 @router.delete("/{equipo_id}", status_code=status.HTTP_200_OK)
 async def delete_team(
     equipo_id: int, 
@@ -148,7 +148,7 @@ async def delete_team(
     logger.info(f"[ENCONTRADO] Admin {admin_user.id_usuario} eliminó equipo {equipo_id}")
     return {"message": "Equipo eliminado exitosamente"}
 
-# finished
+# finished || used
 @router.get("/stats/total", response_model=int, status_code=status.HTTP_200_OK)
 async def get_total_teams(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(func.count()).select_from(models.Equipo))

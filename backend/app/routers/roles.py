@@ -14,7 +14,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.post("/", response_model=schemas.Rol, dependencies=[Depends(get_current_admin_user)])
 async def create_roles_endpoint(
     rol: schemas.RolCreate, 
@@ -29,7 +29,7 @@ async def create_roles_endpoint(
         raise HTTPException(status_code=400, detail="El rol ya existe")
     return await crud.create_role(db=db, rol=rol)
 
-# finished
+# finished || used
 @router.get("/", response_model=list[schemas.Rol], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_roles_endpoint(request: Request, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -60,7 +60,7 @@ async def read_role_endpoint(request: Request, rol_id: int, db: AsyncSession = D
     logger.info(f"[ENCONTRADO] Rol con id={rol_id} consultado exitosamente por {client_ip}")
     return db_rol
 
-# finished
+# finished || used
 @router.put("/{rol_id}", response_model=schemas.Rol, dependencies=[Depends(get_current_admin_user)])
 async def update_roles_endpoint(
     rol_id: int, 
@@ -80,7 +80,7 @@ async def update_roles_endpoint(
     logger.info(f"[ENCONTRADO] Rol con ID {rol_id} actualizado exitosamente.")
     return db_rol
 
-# finished
+# finished || used
 @router.delete("/{rol_id}", status_code=status.HTTP_200_OK)
 async def delete_roles_endpoint(
     rol_id: int, 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class Rol(BaseModel):
@@ -20,6 +20,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Esquema para dar de alta un nuevo Usuario."""
     contrasena: str = Field(..., min_length=8)
+
+class UserCreateAdmin(UserBase):
+    """Esquema para dar de alta un nuevo Usuario desde el panel administrativo."""
+    contrasena: str = Field(..., min_length=8)
+    id_estado: int
+    id_rol: int
 
 class UserUpdate(BaseModel):
     """
@@ -50,6 +56,7 @@ class User(UserBase):
     codigo_verificacion: Optional[int] = None
     expiracion: Optional[datetime] = None
 
+    roles: List[str] = []
     rol: Rol 
     estado: Estado
 

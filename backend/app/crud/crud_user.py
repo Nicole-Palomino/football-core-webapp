@@ -111,7 +111,7 @@ async def create_user(db: AsyncSession, user: schemas.UserCreate):
     return user_with_relations
 
 # used in auth.py
-async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreate):
+async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreateAdmin):
     """
     Crea un nuevo Usuario administrador de forma asíncrona, permitiendo definir manualmente el rol y estado.
     """
@@ -129,8 +129,8 @@ async def create_user_admin(db: AsyncSession, user: schemas.user.UserCreate):
         usuario=user.usuario,
         correo=user.correo,
         contrasena=hashed_contrasena,
-        id_estado=DEFAULT_ESTADO,
-        id_rol=DEFAULT_ADMIN_ROL,
+        id_estado=user.id_estado,
+        id_rol=user.id_rol,
         registro=datetime.now(timezone.utc)
     )
     

@@ -14,7 +14,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished
+# finished || used
 @router.post("/", response_model=schemas.Estado, dependencies=[Depends(get_current_admin_user)])
 async def create_state(
     estado: schemas.EstadoCreate, 
@@ -28,7 +28,7 @@ async def create_state(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El estado ya existe")
     return await crud.create_estado(db=db, estado=estado)
 
-# finished
+# finished || used
 @router.get("/", response_model=list[schemas.Estado], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_states(request: Request, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -59,7 +59,7 @@ async def read_state_by_id(request: Request, estado_id: int, db: AsyncSession = 
     logger.info(f"[ENCONTRADO] Estado con id={estado_id} consultado exitosamente por {client_ip}")
     return db_estado
 
-# finished
+# finished || used
 @router.put("/{estado_id}", response_model=schemas.Estado, dependencies=[Depends(get_current_admin_user)])
 async def update_state(
     estado_id: int, 
@@ -79,7 +79,7 @@ async def update_state(
     logger.info(f"[ENCONTRADO] Estado con ID {estado_id} actualizado exitosamente.")
     return db_estado
 
-# finished
+# finished || used
 @router.delete("/{estado_id}", status_code=status.HTTP_200_OK)
 async def delete_state(
     estado_id: int, 

@@ -16,7 +16,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# finished || tested
+# finished || tested || used
 @router.get("/", response_model=list[schemas.User], dependencies=[Depends(get_current_admin_user)])
 @limiter.limit("5/minute")
 async def read_users(
@@ -99,7 +99,7 @@ async def update_user_endpoint(
             detail="Error de integridad de datos. Verifique los IDs de estado y rol, o unicidad de usuario/correo."
         )
 
-# finished || tested
+# finished || tested || used
 @router.put("/admin/{user_id}", dependencies=[Depends(get_current_admin_user)])
 async def update_admin_endpoint(
     user_id: int, 
@@ -133,7 +133,7 @@ async def update_admin_endpoint(
             detail="Error de integridad de datos. Verifique los IDs de estado y rol, o unicidad de usuario/correo."
         )
     
-# finished || tested
+# finished || tested || used
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(get_current_admin_user)])
 async def delete_user_endpoint(
     user_id: int, 
@@ -151,7 +151,7 @@ async def delete_user_endpoint(
     logger.info(f"Admin {admin_user.id_usuario} eliminó usuario {user_id}")
     return {"message": "Usuario eliminado exitosamente"}
 
-# finished || tested
+# finished || tested || used
 @router.get("/stats/total", response_model=int, status_code=status.HTTP_200_OK)
 async def get_total_users(db: AsyncSession = Depends(get_db)):
     """Devuelve el total de usuarios registrados"""
@@ -160,7 +160,7 @@ async def get_total_users(db: AsyncSession = Depends(get_db)):
     logger.info(f"Total de usuarios consultado: {total}")
     return total
 
-# finished || tested
+# finished || tested || used
 @router.get("/stats/usuarios-por-dia", status_code=status.HTTP_200_OK)
 async def stat_users_by_date(db: AsyncSession = Depends(get_db)):
     """Devuelve la cantidad de usuarios registrados por día"""
