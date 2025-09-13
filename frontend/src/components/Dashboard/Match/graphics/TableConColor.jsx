@@ -1,24 +1,16 @@
-import { useTheme } from '@mui/material'
 import React from 'react'
 import { formatFecha } from '../../../../utils/helpers'
+import { useThemeMode } from '../../../../contexts/ThemeContext'
 
-const TableConColor = ({ finalMatchesStats=[], equipo }) => {
-    const theme = useTheme()
+const TableConColor = ({ finalMatchesStats = [], equipo }) => {
+    const { currentTheme } = useThemeMode()
 
     return (
-        <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <div className="relative overflow-x-auto shadow-md sm:rounded-lg transition-all duration-300">
             <table
-                className="w-full text-sm text-left rtl:text-right"
-                style={{ color: theme.palette.text.secondary }}
+                className={`w-full text-sm text-left rtl:text-right ${currentTheme.textSecondary}`}
             >
-                <thead
-                    className="text-xs uppercase"
-                    style={{
-                        backgroundColor: theme.palette.primary.main,
-                        color: theme.custom.blanco,
-                        textAlign: 'center'
-                    }}
-                >
+                <thead className={`text-xs uppercase text-center ${currentTheme.tableHeader}`}>
                     <tr>
                         <th scope="col" className="px-1 py-2 font-bold whitespace-nowrap">Fecha</th>
                         <th scope="col" className="px-1 py-2 font-bold whitespace-nowrap">Local</th>
@@ -34,51 +26,27 @@ const TableConColor = ({ finalMatchesStats=[], equipo }) => {
                         return (
                             <tr
                                 key={index}
-                                className="border-b"
-                                style={{
-                                    backgroundColor: index % 2 === 0
-                                        ? theme.palette.background.paper
-                                        : theme.palette.background.default,
-                                    borderColor: theme.palette.divider.primary
-                                }}
+                                className={`border-b ${index % 2 === 0 ? currentTheme.tableRow : currentTheme.tableRowAlt} ${currentTheme.border}`}
                             >
                                 <td
-                                    className="px-1 py-2 text-center whitespace-nowrap"
-                                    style={{ color: theme.palette.text.primary }}
+                                    className={`px-1 py-2 text-center whitespace-nowrap ${currentTheme.accentLight}`}
                                 >
                                     {formatFecha(partido.Date)}
                                 </td>
                                 <td
-                                    className="px-1 py-2 text-center whitespace-nowrap"
-                                    style={{
-                                        fontWeight: esLocal ? '700' : '400',
-                                        backgroundColor: esLocal
-                                            ? theme.custom.amarillo
-                                            : 'transparent',
-                                        color: esLocal
-                                            ? '#000'
-                                            : theme.palette.text.primary,
-                                    }}
+                                    className={`px-1 py-2 text-center whitespace-nowrap ${esLocal ? `font-bold ${currentTheme.accentLight}` : currentTheme.text
+                                        }`}
                                 >
                                     {partido.HomeTeam}
                                 </td>
                                 <td
-                                    className="px-1 py-2 text-center whitespace-nowrap"
-                                    style={{
-                                        fontWeight: esVisitante ? '700' : '400',
-                                        backgroundColor: esVisitante
-                                            ? theme.custom.amarillo
-                                            : 'transparent',
-                                        color: esVisitante
-                                            ? '#000'
-                                            : theme.palette.text.primary,
-                                    }}
+                                    className={`px-1 py-2 text-center whitespace-nowrap ${esVisitante ? `font-bold ${currentTheme.accentLight}` : currentTheme.text
+                                        }`}
                                 >
                                     {partido.AwayTeam}
                                 </td>
                                 <td
-                                    className="px-1 py-2 text-center font-bold whitespace-nowrap"
-                                    style={{ color: theme.palette.text.primary }}
+                                    className={`px-1 py-2 text-center font-bold whitespace-nowrap ${currentTheme.text}`}
                                 >
                                     {partido.FTHG} - {partido.FTAG}
                                 </td>

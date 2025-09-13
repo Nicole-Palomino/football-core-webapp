@@ -1,13 +1,13 @@
 import { createContext, useContext, useCallback, useMemo } from 'react'
 import { getFavorites, addFavorite as apiAddFavorite, deleteFavorite as apiDeleteFavorite } from '../services/api/favorites'
-import { getStoredUser } from '../services/auth'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../contexts/AuthContexts';
 
 const FavoritosContext = createContext()
 
 export const FavoritosProvider = ({ children }) => {
     const queryClient = useQueryClient()
-    const user = getStoredUser()
+    const { user } = useAuth()
     const id_usuario = user?.id_usuario
 
     const {

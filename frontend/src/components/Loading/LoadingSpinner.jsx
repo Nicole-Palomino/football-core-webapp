@@ -1,24 +1,17 @@
-import { Box, CircularProgress, Typography, useTheme } from '@mui/material'
+import { useThemeMode } from '../../contexts/ThemeContext'
 
 const LoadingSpinner = () => {
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100vh",
-                width: "100%",
-            }}
-        >
-            <CircularProgress size={80} sx={{ color: theme.palette.primary.main }} />
-            <Typography mt={2} variant="h6" sx={{ color: theme.palette.primary.main }}>
+        <div className={`${currentTheme.background} min-h-screen flex flex-col items-center justify-center`}>
+            <div className="relative">
+                <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+            </div>
+            <h3 className={`${currentTheme.text} text-xl font-semibold mt-6 animate-pulse`}>
                 Cargando datos...
-            </Typography>
-        </Box>
+            </h3>
+        </div>
     )
 }
 

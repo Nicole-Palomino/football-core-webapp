@@ -1,16 +1,16 @@
-import { Avatar, Box, Chip, Container, Grid, IconButton, Paper, Tooltip, Typography, useTheme } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowBack, CalendarToday, HorizontalRule, Stadium } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { formatFecha } from '../../../utils/helpers'
 import { getMatcheByID } from '../../../services/api/matches'
 import CustomImage from '../Details/CustomImage'
+import { ArrowLeftIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline'
+import { useThemeMode } from '../../../contexts/ThemeContext'
 
 const MatchImage = () => {
 
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
     const { id_partido } = useParams()
     const navigate = useNavigate()
 
@@ -26,7 +26,7 @@ const MatchImage = () => {
         staleTime: 1000 * 60 * 15,
         cacheTime: 5 * 60 * 1000
     })
-
+    
     // Manejo de estados de carga combinados
     const isLoading = isLoadingMatch
     const isError = isErrorMatch
@@ -35,9 +35,11 @@ const MatchImage = () => {
 
     if (isError) {
         return (
-            <div>
-                <h2>Error al cargar datos:</h2>
-                {isErrorMatch && <p>Summary by ID: {errorMatch.message}</p>}
+            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6 max-w-md w-full text-center`}>
+                    <h2 className={`${currentTheme.text} text-xl font-bold mb-4`}>Error al cargar datos</h2>
+                    {isErrorMatch && <p className={`${currentTheme.textSecondary} text-sm`}>Match by ID: {errorMatch.message}</p>}
+                </div>
             </div>
         )
     }
@@ -45,56 +47,32 @@ const MatchImage = () => {
     const finalMatchDataAsArray = matchData
         ? (Array.isArray(matchData) ? matchData : [matchData])
         : []
-    
+
     const handleGoBack = () => navigate(-1)
 
     return (
-        <Box sx={{
-            minHeight: "100vh",
-        }}>
+        <div className={`min-h-screen ${currentTheme.background}`}>
             {/* Header con botón de regreso */}
-            <Box sx={{
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
-                backdropFilter: "blur(10px)",
-                borderBottom: "1px solid #333",
-                py: 1
-            }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ display: "flex", alignItems: "center", py: 1 }}>
-                        <Tooltip title="Regresar" arrow>
-                            <IconButton
-                                onClick={handleGoBack}
-                                sx={{
-                                    bgcolor: theme.palette.primary.dark,
-                                    border: "1px solid rgba(54, 143, 244, 0.3)",
-                                    mr: 2,
-                                    "&:hover": {
-                                        bgcolor: theme.palette.primary.main,
-                                        transform: "translateX(-2px)"
-                                    },
-                                    transition: "all 0.3s ease"
-                                }}
-                            >
-                                <ArrowBack sx={{ color: theme.custom.blanco }} />
-                            </IconButton>
-                        </Tooltip>
-                        <Typography
-                            variant="h5"
-                            sx={{
-                                color: theme.palette.text.primary,
-                                fontWeight: "bold",
-                                flexGrow: 1
-                            }}
+            <div className={`sticky top-0 z-50 backdrop-blur-xl ${currentTheme.card} border-b ${currentTheme.border}`}>
+                <div className="max-w-6xl mx-auto px-4 py-3">
+                    <div className="flex items-center gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleGoBack}
+                            className={`p-3 rounded-xl ${currentTheme.hover} ${currentTheme.border} border transition-all duration-200 group`}
+                            title="Regresar"
                         >
+                            <ArrowLeftIcon className={`w-5 h-5 ${currentTheme.text} group-hover:text-blue-500 transition-colors`} />
+                        </motion.button>
+                        <h1 className={`${currentTheme.text} text-xl md:text-2xl font-bold flex-1`}>
                             Detalles del Partido
-                        </Typography>
-                    </Box>
-                </Container>
-            </Box>
+                        </h1>
+                    </div>
+                </div>
+            </div>
 
-            <Container maxWidth="lg" sx={{ py: { xs: 1, md: 4 } }}>
+            <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
                 {finalMatchDataAsArray.map((partidoID, index) => (
                     <motion.div
                         key={index}
@@ -102,209 +80,111 @@ const MatchImage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                     >
-                        <Paper
-                            elevation={24}
-                            sx={{
-                                bgcolor: theme.palette.background.paper,
-                                borderRadius: 4,
-                                overflow: "hidden",
-                                boxShadow: "0 20px 40px rgba(54,143,244,0.1)"
-                            }}
-                        >
+                        <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl overflow-hidden shadow-2xl`}>
                             {/* Header - Liga */}
-                            <Box sx={{
-                                background: "linear-gradient(135deg, #368FF4 0%, #165AA6 100%)",
-                                py: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
-                            }}>
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        color: "white",
-                                        fontWeight: "bold",
-                                        fontSize: { xs: "1.2rem", md: "1.5rem" }
-                                    }}
-                                >
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-4 px-6">
+                                <h2 className="text-white text-xl md:text-2xl font-bold text-center">
                                     {partidoID.liga?.nombre_liga}
-                                </Typography>
-                            </Box>
+                                </h2>
+                            </div>
 
                             {/* Información del partido */}
-                            <Box sx={{ p: { xs: 1, md: 4 }, background: theme.palette.background.paper, }}>
+                            <div className="p-4 md:p-8">
                                 {/* Estadio y fecha */}
-                                <Box sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    gap: 2,
-                                    mb: 3,
-                                    flexWrap: "wrap"
-                                }}>
-                                    <Chip
-                                        icon={<Stadium />}
-                                        label={partidoID.equipo_local?.estadio}
-                                        sx={{
-                                            padding: "5px",
-                                            bgcolor: theme.palette.background.paper,
-                                            boxShadow: "0 5px 5px #888",
-                                            fontSize: "20px",
-                                            color: theme.palette.text.primary,
-                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
-                                        }}
-                                    />
-                                    <Chip
-                                        icon={<CalendarToday />}
-                                        label={formatFecha(partidoID.dia)}
-                                        sx={{
-                                            padding: "5px",
-                                            bgcolor: theme.palette.background.paper,
-                                            boxShadow: "0 5px 5px #888",
-                                            fontSize: "20px",
-                                            color: theme.palette.text.primary,
-                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
-                                        }}
-                                    />
-                                </Box>
+                                <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-xl px-4 py-2 shadow-lg`}
+                                    >
+                                        <BuildingOffice2Icon className="w-5 h-5 text-blue-500" />
+                                        <span className={`${currentTheme.text} font-medium`}>
+                                            {partidoID.equipo_local?.estadio}
+                                        </span>
+                                    </motion.div>
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-xl px-4 py-2 shadow-lg`}
+                                    >
+                                        <CalendarDaysIcon className="w-5 h-5 text-blue-500" />
+                                        <span className={`${currentTheme.text} font-medium`}>
+                                            {formatFecha(partidoID.dia)}
+                                        </span>
+                                    </motion.div>
+                                </div>
 
                                 {/* Equipos y marcador */}
-                                <Grid container spacing={2} alignItems="center" sx={{ mb: 4, justifyContent: { xs: 'center', md: 'space-between' } }}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center mb-8">
                                     {/* Equipo Local */}
-                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' } }}>
+                                    <div className="flex justify-center md:justify-start">
                                         <motion.div
                                             whileHover={{ scale: 1.05 }}
                                             transition={{ duration: 0.2 }}
+                                            className={`${currentTheme.card} ${currentTheme.border} border-2 rounded-2xl p-4 md:p-6 text-center min-w-[120px] md:min-w-[160px]`}
                                         >
-                                            <Box sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                alignItems: "center",
-                                                p: { xs: 1, md: 2 },
-                                                borderRadius: 2,
-                                                border: "2px solid #333",
-                                                minWidth: { xs: 80, md: 140 },
-                                            }}>
-                                                <Avatar
-                                                    alt={partidoID.equipo_local?.nombre_equipo}
+                                            <div className="w-12 h-12 md:w-20 md:h-20 mx-auto mb-3 rounded-full overflow-hidden bg-gray-100">
+                                                <img
                                                     src={partidoID.equipo_local?.logo}
-                                                    sx={{
-                                                        width: { xs: 35, md: 80 },
-                                                        height: { xs: 35, md: 80 },
-                                                        '& img': { objectFit: 'contain' },
-                                                    }}
+                                                    alt={partidoID.equipo_local?.nombre_equipo}
+                                                    className="w-full h-full object-contain"
                                                 />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        mt: 2,
-                                                        textAlign: "center",
-                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
-                                                        wordBreak: 'break-word',
-                                                    }}
-                                                >
-                                                    {partidoID.equipo_local?.nombre_equipo}
-                                                </Typography>
-                                            </Box>
+                                            </div>
+                                            <h3 className={`${currentTheme.text} font-bold text-sm md:text-lg break-words`}>
+                                                {partidoID.equipo_local?.nombre_equipo}
+                                            </h3>
                                         </motion.div>
-                                    </Grid>
+                                    </div>
 
                                     {/* Marcador */}
-                                    <Grid item xs={4} sm={4} md={4} sx={{ display: 'flex', justifyContent: 'center', }}>
-                                        <Box sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            p: { xs: 1, md: 3 },
-                                            minWidth: { xs: 'auto', md: 180 },
-                                        }}>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ color: theme.palette.primary.main, mb: 1, fontWeight: "bold", fontSize: { xs: '0.6rem', md: '0.9rem' } }}
-                                            >
-                                                RESULTADO
-                                            </Typography>
-                                            <Box sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: 0.5
-                                            }}>
-                                                <Typography
-                                                    sx={{ fontSize: { xs: "1.2rem", md: "3.5rem" }, color: theme.palette.text.primary, fontWeight: "bold" }}
-                                                >
-                                                    {partidoID.estadisticas?.FTHG ?? " "}
-                                                </Typography>
-                                                <HorizontalRule sx={{ color: theme.palette.primary.main, fontSize: { xs: "1rem", md: "3rem" } }} />
-                                                <Typography
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        fontWeight: "bold",
-                                                        fontSize: { xs: "1.2rem", md: "3.5rem" }
-                                                    }}
-                                                >
-                                                    {partidoID.estadisticas?.FTAG ?? " "}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </Grid>
+                                    <div className="flex justify-center order-first md:order-none">
+                                        <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-4 md:p-6 text-center min-w-[140px] md:min-w-[200px]`}>
+                                            <div className="text-xs md:text-sm font-bold text-blue-500 mb-2 uppercase tracking-wide">
+                                                Resultado
+                                            </div>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className={`${currentTheme.text} text-2xl md:text-5xl font-bold`}>
+                                                    {partidoID.estadisticas?.FTHG ?? ""}
+                                                </span>
+                                                <div className="w-4 h-0.5 bg-blue-500 mx-1"></div>
+                                                <span className={`${currentTheme.text} text-2xl md:text-5xl font-bold`}>
+                                                    {partidoID.estadisticas?.FTAG ?? ""}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {/* Equipo Visitante */}
-                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
+                                    <div className="flex justify-center md:justify-end">
                                         <motion.div
                                             whileHover={{ scale: 1.05 }}
                                             transition={{ duration: 0.2 }}
+                                            className={`${currentTheme.card} ${currentTheme.border} border-2 rounded-2xl p-4 md:p-6 text-center min-w-[120px] md:min-w-[160px]`}
                                         >
-                                            <Box sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                alignItems: "center",
-                                                p: { xs: 1, md: 2 },
-                                                borderRadius: 2,
-                                                // bgcolor: theme.palette.background.paper,
-                                                border: "2px solid #333",
-                                                minWidth: { xs: 80, md: 140 },
-                                            }}>
-                                                <Avatar
-                                                    alt={partidoID.equipo_visita?.nombre_equipo}
+                                            <div className="w-12 h-12 md:w-20 md:h-20 mx-auto mb-3 rounded-full overflow-hidden bg-gray-100">
+                                                <img
                                                     src={partidoID.equipo_visita?.logo}
-                                                    sx={{
-                                                        width: { xs: 35, md: 80 },
-                                                        height: { xs: 35, md: 80 },
-                                                        '& img': { objectFit: 'contain' },
-                                                    }}
+                                                    alt={partidoID.equipo_visita?.nombre_equipo}
+                                                    className="w-full h-full object-contain"
                                                 />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        mt: 2,
-                                                        textAlign: "center",
-                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
-                                                        wordBreak: 'break-word',
-                                                    }}
-                                                >
-                                                    {partidoID.equipo_visita?.nombre_equipo}
-                                                </Typography>
-                                            </Box>
+                                            </div>
+                                            <h3 className={`${currentTheme.text} font-bold text-sm md:text-lg break-words`}>
+                                                {partidoID.equipo_visita?.nombre_equipo}
+                                            </h3>
                                         </motion.div>
-                                    </Grid>
-                                </Grid>
+                                    </div>
+                                </div>
 
-                                <Box sx={{ width: '100%' }}>
-                                    <Box sx={{ borderBottom: 1, borderColor: '#333' }}>
-                                        <CustomImage 
-                                            id_partido={id_partido} />
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </Paper>
+                                {/* Custom Image Component */}
+                                <div className="w-full">
+                                    <div className={`border-t ${currentTheme.border} pt-6`}>
+                                        <CustomImage id_partido={id_partido} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
                 ))}
-            </Container>
-
-        </Box>
+            </div>
+        </div>
     )
 }
 

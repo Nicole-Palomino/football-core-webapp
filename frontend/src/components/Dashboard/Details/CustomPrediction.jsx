@@ -11,10 +11,34 @@ import {
 import TitleText from './TitleText'
 import MatchStatisticsBarChart from '../Match/graphics/MatchStatisticsBarChart'
 import PieChartsOne from '../Match/graphics/PieChartsOne'
+import {
+    TrophyIcon,
+    FireIcon,
+    ChartBarIcon,
+    DocumentArrowDownIcon,
+    FlagIcon,
+    ExclamationTriangleIcon,
+    CheckCircleIcon,
+    XCircleIcon
+} from '@heroicons/react/24/outline'
+import jsPDF from 'jspdf'
+import domtoimage from 'dom-to-image-more'
+import { motion } from 'framer-motion'
+import { useThemeMode } from '../../../contexts/ThemeContext'
+import { useRef, useState } from 'react'
 
 const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
+    const [activeSection, setActiveSection] = useState('overview')
+    const chartRefs = {
+        stats: useRef(null),
+        goals: useRef(null),
+        shots: useRef(null),
+        corners: useRef(null),
+        cards: useRef(null),
+        redCards: useRef(null)
+    }
 
     // 1. Consulta para Match Forecasts
     const {
@@ -30,6 +54,56 @@ const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
         cacheTime: 5 * 60 * 1000
     })
 
+    const downloadChart = async (chartRef, filename, currentTheme) => {
+        if (!chartRef.current) return
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartRef.current, {
+                quality: 1,
+                bgcolor: '#fff',
+                style: {
+                    transform: 'scale(2)',        // simula scale de html2canvas
+                    transformOrigin: 'top left'
+                }
+            })
+
+            const link = document.createElement('a')
+            link.download = `${filename}.png`
+            link.href = dataUrl
+            link.click()
+        } catch (error) {
+            console.error('Error downloading PNG:', error)
+        }
+    }
+
+    const downloadChartAsPDF = async (chartRef, filename, currentTheme) => {
+        if (!chartRef.current) return
+
+        try {
+            const dataUrl = await domtoimage.toPng(chartRef.current, {
+                quality: 1,
+                bgcolor: '#fff',
+                style: {
+                    transform: 'scale(2)',
+                    transformOrigin: 'top left'
+                }
+            })
+
+            const pdf = new jsPDF('p', 'mm', 'a4')
+            const imgWidth = 190
+            const img = new Image()
+            img.src = dataUrl
+
+            img.onload = () => {
+                const imgHeight = (img.height * imgWidth) / img.width
+                pdf.addImage(dataUrl, 'PNG', 10, 10, imgWidth, imgHeight)
+                pdf.save(`${filename}.pdf`)
+            }
+        } catch (error) {
+            console.error('Error downloading PDF:', error)
+        }
+    }
+
     const isLoading = isLoadingPrediction
     const isError = isErrorPrediction
 
@@ -37,396 +111,345 @@ const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
     if (isError) {
         return (
-            <div>
-                <h2>Error al cargar datos:</h2>
-                {isErrorPrediction && <p>Match Prediction: {errorPrediction.message}</p>}
+            <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6`}>
+                <h2 className={`${currentTheme.text} text-xl font-bold mb-2`}>Error al cargar datos</h2>
+                {isErrorPrediction && <p className={`${currentTheme.textSecondary}`}>Match Prediction: {errorPrediction.message}</p>}
             </div>
         )
     }
 
     const finalMatchesPrediction = matchesPrediction || []
 
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-            }}
+    const sections = [
+        { id: 'overview', name: 'Resumen', icon: ChartBarIcon },
+        { id: 'statistics', name: 'Estadísticas', icon: TrophyIcon },
+        { id: 'charts', name: 'Gráficos', icon: ChartBarIcon }
+    ]
+
+    const PredictionCard = ({ title, children, gradient, icon: Icon, chartRef, filename }) => (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className={`${currentTheme.card} ${currentTheme.border} border rounded-xl overflow-hidden shadow-lg`}
+            ref={chartRef}
         >
-            {finalMatchesPrediction ? (
-                <Fade in={true} timeout={1200}>
-                    <Box sx={{ width: "100%", mx: "auto", maxWidth: "1400px" }}>
-                        <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
-                            <Grid
-                                item
-                                xs={12}
-                                md={6}
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    minWidth: { md: 1000, xs: 'auto' }
-                                }}
+            <div className={`h-1 ${gradient}`}></div>
+            <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${currentTheme.hover}`}>
+                            <Icon className="w-6 h-6 text-blue-500" />
+                        </div>
+                        <h3 className={`${currentTheme.text} text-lg font-bold`}>{title}</h3>
+                    </div>
+                    {filename && (
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => downloadChart(chartRef, filename)}
+                                className="p-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                                title="Descargar PNG"
                             >
-                                <CustomAlertas
-                                    title='🤖 Esta sección utiliza un modelo de aprendizaje automático de Random Forest para predecir resultados. Se entrena con el historial de partidos, estadísticas de los equipos y datos de temporadas pasadas para ofrecer predicciones de regresión (resultados numéricos) y clasificación (categorías como "ganador" o "perdedor").'
-                                />
+                                PNG
+                            </button>
+                            <button
+                                onClick={() => downloadChartAsPDF(chartRef, filename)}
+                                className="p-1.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+                                title="Descargar PDF"
+                            >
+                                PDF
+                            </button>
+                        </div>
+                    )}
+                </div>
+                {children}
+            </div>
+        </motion.div>
+    )
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Resultado Final */}
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #5468E6, #E68A54)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={SportsIcon}
-                                                iconColor='#5468E6'
-                                                title='Resultado Final' />
-                                            <p className='font-bold text-xl' style={{ color: theme.palette.text.primary }}>
-                                                - {finalMatchesPrediction?.predicciones.resultado_final.descripcion}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
+    if (!finalMatchesPrediction || !finalMatchesPrediction.predicciones) {
+        return (
+            <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-8 text-center`}>
+                <ExclamationTriangleIcon className={`w-12 h-12 ${currentTheme.textSecondary} mx-auto mb-4`} />
+                <h3 className={`${currentTheme.text} text-lg font-medium mb-2`}>
+                    No hay predicciones disponibles
+                </h3>
+                <p className={`${currentTheme.textSecondary}`}>
+                    No se encontraron datos de predicción para este partido
+                </p>
+            </div>
+        )
+    }
 
-                                    {/* ¿Ambos marcan FT? */}
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #5468E6, #E68A54)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={ThumbsUpDownIcon}
-                                                iconColor='#5468E6'
-                                                title='¿Ambos marcan FT?' />
-                                            <p className='font-bold text-xl' style={{ color: theme.palette.text.primary }}>
-                                                - Probabilidad: {finalMatchesPrediction?.predicciones.ambos_marcan.probabilidad}%
-                                            </p>
-                                            <p style={{ color: theme.palette.text.secondary }}>
-                                                {finalMatchesPrediction?.predicciones.ambos_marcan.alta_probabilidad
-                                                    ? 'Alta probabilidad ✅'
-                                                    : 'Baja probabilidad ❌'}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+    return (
+        <div className="w-full max-w-7xl mx-auto">
+            {/* AI Info Alert */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+            >
+                <CustomAlertas
+                    title='🤖 Esta sección utiliza un modelo de aprendizaje automático de Random Forest para predecir resultados. Se entrena con el historial de partidos, estadísticas de los equipos y datos de temporadas pasadas para ofrecer predicciones de regresión (resultados numéricos) y clasificación (categorías como "ganador" o "perdedor").'
+                />
+            </motion.div>
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Resultado Medio Tiempo */}
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #F36248, #F3B748)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={SportsIcon}
-                                                iconColor='#F36248'
-                                                title='Resultado Medio Tiempo' />
-                                            <p className='font-bold text-xl' style={{ color: theme.palette.text.primary }}>
-                                                - {finalMatchesPrediction?.predicciones.resultado_medio_tiempo.descripcion}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
+            {/* Navigation Tabs */}
+            <div className="mb-6">
+                <div className="flex flex-wrap gap-2">
+                    {sections.map((section) => (
+                        <button
+                            key={section.id}
+                            onClick={() => setActiveSection(section.id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${activeSection === section.id
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : `${currentTheme.hover} ${currentTheme.text}`
+                                }`}
+                        >
+                            <section.icon className="w-4 h-4" />
+                            {section.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-                                    {/* ¿Ambos marcan HT? */}
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #F36248, #F3B748)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={ThumbsUpDownIcon}
-                                                iconColor='#F36248'
-                                                title='¿Ambos marcan HT?' />
-                                            <p className='font-bold text-xl' style={{ color: theme.palette.text.primary }}>
-                                                - Probabilidad: {finalMatchesPrediction?.predicciones.ambos_marcan_ht.probabilidad}%
-                                            </p>
-                                            <p style={{ color: theme.palette.text.secondary }}>
-                                                {finalMatchesPrediction?.predicciones.ambos_marcan_ht.alta_probabilidad
-                                                    ? 'Alta probabilidad ✅'
-                                                    : 'Baja probabilidad ❌'}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+            {/* Overview Section */}
+            {activeSection === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <PredictionCard
+                        title="Resultado Final"
+                        gradient="bg-gradient-to-r from-blue-500 to-purple-500"
+                        icon={TrophyIcon}
+                    >
+                        <div className="space-y-4">
+                            <div className={`p-4 rounded-lg ${currentTheme.hover}`}>
+                                <p className={`${currentTheme.text} text-xl font-bold`}>
+                                    {finalMatchesPrediction?.predicciones?.resultado_final?.descripcion || 'No disponible'}
+                                </p>
+                            </div>
+                        </div>
+                    </PredictionCard>
 
-                                <Grid className="grid grid-cols-1 gap-4 mt-5">
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #483ED2, #D2483E)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={FormatListBulletedIcon}
-                                                iconColor='#483ED2'
-                                                title='Estadísticas para el Partido' />
-                                            <MatchStatisticsBarChart estadisticas_esperadas={finalMatchesPrediction?.predicciones.estadisticas_esperadas} />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                    <PredictionCard
+                        title="Resultado Medio Tiempo"
+                        gradient="bg-gradient-to-r from-orange-500 to-red-500"
+                        icon={FireIcon}
+                    >
+                        <div className="space-y-4">
+                            <div className={`p-4 rounded-lg ${currentTheme.hover}`}>
+                                <p className={`${currentTheme.text} text-xl font-bold`}>
+                                    {finalMatchesPrediction?.predicciones?.resultado_medio_tiempo?.descripcion || 'No disponible'}
+                                </p>
+                            </div>
+                        </div>
+                    </PredictionCard>
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #73D933, #D99933)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={SportsSoccerIcon}
-                                                iconColor='#D99933'
-                                                title='Goles Esperados' />
-                                            <PieChartsOne
-                                                Data={[
-                                                    { id: 0, label: equipo_local, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.goles_local },
-                                                    { id: 1, label: equipo_visita, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.goles_visitante },
-                                                ]}
-                                            />
-                                        </CardContent>
-                                    </Card>
+                    <PredictionCard
+                        title="¿Ambos marcan FT?"
+                        gradient="bg-gradient-to-r from-green-500 to-teal-500"
+                        icon={CheckCircleIcon}
+                    >
+                        <div className="space-y-4">
+                            <div className={`p-4 rounded-lg ${currentTheme.hover}`}>
+                                <p className={`${currentTheme.text} text-xl font-bold mb-2`}>
+                                    Probabilidad: {finalMatchesPrediction?.predicciones?.ambos_marcan?.probabilidad || 0}%
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    {finalMatchesPrediction?.predicciones?.ambos_marcan?.alta_probabilidad ? (
+                                        <>
+                                            <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                                            <span className="text-green-500 font-medium">Alta probabilidad</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircleIcon className="w-5 h-5 text-red-500" />
+                                            <span className="text-red-500 font-medium">Baja probabilidad</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </PredictionCard>
 
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #73D933, #D99933)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={WhatshotIcon}
-                                                iconColor='#D99933'
-                                                title='Tiros al Arco' />
-                                            <PieChartsOne
-                                                Data={[
-                                                    { id: 0, label: equipo_local, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.tiros_arco_local },
-                                                    { id: 1, label: equipo_visita, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.tiros_arco_visitante },
-                                                ]}
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #1FAE7C, #AE1F50)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={GolfCourseIcon}
-                                                iconColor='#1FAE7C'
-                                                title='Tiros de Esquinas' />
-                                            <PieChartsOne
-                                                Data={[
-                                                    { id: 0, label: equipo_local, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.corners_local },
-                                                    { id: 1, label: equipo_visita, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.corners_visitante },
-                                                ]}
-                                            />
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #1FAE7C, #AE1F50)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={SquareIcon}
-                                                iconColor='#1FAE7C'
-                                                title='Tarjetas Amarillas' />
-                                            <PieChartsOne
-                                                Data={[
-                                                    { id: 0, label: equipo_local, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.amarillas_local },
-                                                    { id: 1, label: equipo_visita, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.amarillas_visitante },
-                                                ]}
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-
-                                <Grid className="grid grid-cols-1 gap-4 mt-5 mb-5">
-                                    <Card
-                                        sx={{
-                                            background: theme.palette.background.paper,
-                                            color: theme.palette.text.primary,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                            p: 3,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #EC0326, #0326EC)`
-                                            }
-                                        }}>
-                                        <CardContent>
-                                            <TitleText
-                                                icon={SquareIcon}
-                                                iconColor='#EC0326'
-                                                title='Tarjetas Rojas' />
-                                            <PieChartsOne
-                                                Data={[
-                                                    { id: 0, label: equipo_local, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.rojas_local },
-                                                    { id: 1, label: equipo_visita, value: finalMatchesPrediction?.predicciones.estadisticas_esperadas.rojas_visitante },
-                                                ]}
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-
-                                <CustomAlertas
-                                    title='🤖 Esta sección utiliza un modelo de aprendizaje automático de Random Forest para predecir resultados. Se entrena con el historial de partidos, estadísticas de los equipos y datos de temporadas pasadas para ofrecer predicciones de regresión (resultados numéricos) y clasificación (categorías como "ganador" o "perdedor").'
-                                />
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Fade>
-            ) : (
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                    <Typography variant="h6" color="#888">
-                        No hay predicciones disponibles
-                    </Typography>
-                </Box>
+                    <PredictionCard
+                        title="¿Ambos marcan HT?"
+                        gradient="bg-gradient-to-r from-purple-500 to-pink-500"
+                        icon={FlagIcon}
+                    >
+                        <div className="space-y-4">
+                            <div className={`p-4 rounded-lg ${currentTheme.hover}`}>
+                                <p className={`${currentTheme.text} text-xl font-bold mb-2`}>
+                                    Probabilidad: {finalMatchesPrediction?.predicciones?.ambos_marcan_ht?.probabilidad || 0}%
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    {finalMatchesPrediction?.predicciones?.ambos_marcan_ht?.alta_probabilidad ? (
+                                        <>
+                                            <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                                            <span className="text-green-500 font-medium">Alta probabilidad</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircleIcon className="w-5 h-5 text-red-500" />
+                                            <span className="text-red-500 font-medium">Baja probabilidad</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </PredictionCard>
+                </div>
             )}
-        </Box>
+
+            {/* Statistics Section */}
+            {activeSection === 'statistics' && (
+                <div className="space-y-6">
+                    <PredictionCard
+                        title="Estadísticas para el Partido"
+                        gradient="bg-gradient-to-r from-indigo-500 to-blue-500"
+                        icon={ChartBarIcon}
+                        chartRef={chartRefs.stats}
+                        filename="estadisticas-partido"
+                    >
+                        <MatchStatisticsBarChart
+                            estadisticas_esperadas={finalMatchesPrediction?.predicciones?.estadisticas_esperadas}
+                        />
+                    </PredictionCard>
+                </div>
+            )}
+
+            {/* Charts Section */}
+            {activeSection === 'charts' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <PredictionCard
+                        title="Goles Esperados"
+                        gradient="bg-gradient-to-r from-green-500 to-emerald-500"
+                        icon={ChartBarIcon}
+                        chartRef={chartRefs.goals}
+                        filename="goles-esperados"
+                    >
+                        <PieChartsOne
+                            Data={[
+                                {
+                                    id: 0,
+                                    label: equipo_local,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.goles_local || 0
+                                },
+                                {
+                                    id: 1,
+                                    label: equipo_visita,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.goles_visitante || 0
+                                },
+                            ]}
+                        />
+                    </PredictionCard>
+
+                    <PredictionCard
+                        title="Tiros al Arco"
+                        gradient="bg-gradient-to-r from-yellow-500 to-orange-500"
+                        icon={FireIcon}
+                        chartRef={chartRefs.shots}
+                        filename="tiros-al-arco"
+                    >
+                        <PieChartsOne
+                            Data={[
+                                {
+                                    id: 0,
+                                    label: equipo_local,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.tiros_arco_local || 0
+                                },
+                                {
+                                    id: 1,
+                                    label: equipo_visita,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.tiros_arco_visitante || 0
+                                },
+                            ]}
+                        />
+                    </PredictionCard>
+
+                    <PredictionCard
+                        title="Tiros de Esquinas"
+                        gradient="bg-gradient-to-r from-teal-500 to-cyan-500"
+                        icon={FlagIcon}
+                        chartRef={chartRefs.corners}
+                        filename="tiros-esquinas"
+                    >
+                        <PieChartsOne
+                            Data={[
+                                {
+                                    id: 0,
+                                    label: equipo_local,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.corners_local || 0
+                                },
+                                {
+                                    id: 1,
+                                    label: equipo_visita,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.corners_visitante || 0
+                                },
+                            ]}
+                        />
+                    </PredictionCard>
+
+                    <PredictionCard
+                        title="Tarjetas Amarillas"
+                        gradient="bg-gradient-to-r from-yellow-400 to-yellow-600"
+                        icon={ExclamationTriangleIcon}
+                        chartRef={chartRefs.cards}
+                        filename="tarjetas-amarillas"
+                    >
+                        <PieChartsOne
+                            Data={[
+                                {
+                                    id: 0,
+                                    label: equipo_local,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.amarillas_local || 0
+                                },
+                                {
+                                    id: 1,
+                                    label: equipo_visita,
+                                    value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.amarillas_visitante || 0
+                                },
+                            ]}
+                        />
+                    </PredictionCard>
+
+                    <div className="md:col-span-2">
+                        <PredictionCard
+                            title="Tarjetas Rojas"
+                            gradient="bg-gradient-to-r from-red-500 to-red-700"
+                            icon={XCircleIcon}
+                            chartRef={chartRefs.redCards}
+                            filename="tarjetas-rojas"
+                        >
+                            <PieChartsOne
+                                Data={[
+                                    {
+                                        id: 0,
+                                        label: equipo_local,
+                                        value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.rojas_local || 0
+                                    },
+                                    {
+                                        id: 1,
+                                        label: equipo_visita,
+                                        value: finalMatchesPrediction?.predicciones?.estadisticas_esperadas?.rojas_visitante || 0
+                                    },
+                                ]}
+                            />
+                        </PredictionCard>
+                    </div>
+                </div>
+            )}
+
+            {/* Bottom AI Info */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8"
+            >
+                <CustomAlertas
+                    title='🤖 Esta sección utiliza un modelo de aprendizaje automático de Random Forest para predecir resultados. Se entrena con el historial de partidos, estadísticas de los equipos y datos de temporadas pasadas para ofrecer predicciones de regresión (resultados numéricos) y clasificación (categorías como "ganador" o "perdedor").'
+                />
+            </motion.div>
+        </div>
     )
 }
 

@@ -1,25 +1,26 @@
 import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getMatcheByID } from '../../../services/api/matches'
-import {
-    Avatar, Box, Chip, Container, Grid, IconButton, Paper, Tab, Tabs, Tooltip, Typography, useTheme
-} from '@mui/material'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import {
-    HorizontalRule, Stadium, CalendarToday, ArrowBack,
-} from '@mui/icons-material'
 import { formatFecha } from '../../../utils/helpers'
-import { a11yProps, CustomTabPanel } from '../../../utils/a11yProps'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import CustomStats from '../Details/CustomStats'
 import CustomAnalysis from '../Details/CustomAnalysis'
+import { useThemeMode } from '../../../contexts/ThemeContext'
+import {
+    ArrowLeftIcon,
+    CalendarDaysIcon,
+    BuildingOfficeIcon,
+    ChartBarIcon,
+    DocumentTextIcon,
+} from '@heroicons/react/24/outline'
 
 const MatchDetail = () => {
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
     const { id_partido } = useParams()
     const location = useLocation()
-    const [value, setValue] = useState(0)
+    const [activeTab, setActiveTab] = useState(0)
     const navigate = useNavigate()
 
     const equipo_local = location.state?.equipo_local
@@ -48,9 +49,11 @@ const MatchDetail = () => {
 
     if (isError) {
         return (
-            <div>
-                <h2>Error al cargar datos:</h2>
-                {isErrorMatch && <p>Match by ID: {errorMatch.message}</p>}
+            <div className={`min-h-screen ${currentTheme.background} flex items-center justify-center`}>
+                <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 text-center`}>
+                    <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Error al cargar datos</h2>
+                    <p className={`${currentTheme.textSecondary}`}>Match by ID: {errorMatch.message}</p>
+                </div>
             </div>
         )
     }
@@ -59,305 +62,188 @@ const MatchDetail = () => {
         ? (Array.isArray(matchData) ? matchData : [matchData])
         : []
     
-    const handleChange = (_, newValue) => setValue(newValue)
     const handleGoBack = () => navigate(-1)
 
-    return (
-        <Box sx={{
-            minHeight: "100vh",
-        }}>
-            {/* Header con botón de regreso */}
-            <Box sx={{
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
-                backdropFilter: "blur(10px)",
-                borderBottom: "1px solid #333",
-                py: 1
-            }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ display: "flex", alignItems: "center", py: 1 }}>
-                        <Tooltip title="Regresar" arrow>
-                            <IconButton
-                                onClick={handleGoBack}
-                                sx={{
-                                    bgcolor: theme.palette.primary.dark,
-                                    border: "1px solid rgba(54, 143, 244, 0.3)",
-                                    mr: 2,
-                                    "&:hover": {
-                                        bgcolor: theme.palette.primary.main,
-                                        transform: "translateX(-2px)"
-                                    },
-                                    transition: "all 0.3s ease"
-                                }}
-                            >
-                                <ArrowBack sx={{ color: theme.custom.blanco }} />
-                            </IconButton>
-                        </Tooltip>
-                        <Typography
-                            variant="h5"
-                            sx={{
-                                color: theme.palette.text.primary,
-                                fontWeight: "bold",
-                                flexGrow: 1
-                            }}
-                        >
-                            Detalles del Partido
-                        </Typography>
-                    </Box>
-                </Container>
-            </Box>
+    const tabs = [
+        {
+            id: 0,
+            label: "Estadísticas",
+            icon: <ChartBarIcon className="w-5 h-5" />,
+            component: <CustomStats 
+                equipo_local={equipo_local}
+                equipo_visita={equipo_visita}
+                nombre_liga={nombre_liga}
+            />
+        },
+        {
+            id: 1,
+            label: "Análisis",
+            icon: <DocumentTextIcon className="w-5 h-5" />,
+            component: <CustomAnalysis 
+                equipo_local={equipo_local}
+                equipo_visita={equipo_visita}
+                nombre_liga={nombre_liga}
+            />
+        }
+    ]
 
-            <Container maxWidth="lg" sx={{ py: { xs: 1, md: 4 } }}>
+    return (
+        <div className={`min-h-screen ${currentTheme.background}`}>
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`sticky top-0 z-50 ${currentTheme.card} ${currentTheme.border} border-b backdrop-blur-xl bg-opacity-80`}
+            >
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center gap-4">
+                        <motion.button
+                            whileHover={{ scale: 1.05, x: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleGoBack}
+                            className={`flex items-center justify-center w-12 h-12 ${currentTheme.hover} ${currentTheme.border} border rounded-xl transition-all duration-300 group`}
+                        >
+                            <ArrowLeftIcon className={`w-5 h-5 ${currentTheme.text} group-hover:text-blue-500`} />
+                        </motion.button>
+                        <h1 className={`text-2xl font-bold ${currentTheme.text}`}>
+                            Detalles del Partido
+                        </h1>
+                    </div>
+                </div>
+            </motion.div>
+
+            <div className="container mx-auto px-4 py-8">
                 {finalMatchDataAsArray.map((partidoID, index) => (
                     <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="space-y-8"
                     >
-                        <Paper
-                            elevation={24}
-                            sx={{
-                                bgcolor: theme.palette.background.paper,
-                                borderRadius: 4,
-                                overflow: "hidden",
-                                boxShadow: "0 20px 40px rgba(54,143,244,0.1)"
-                            }}
-                        >
-                            {/* Header - Liga */}
-                            <Box sx={{
-                                background: "linear-gradient(135deg, #368FF4 0%, #165AA6 100%)",
-                                py: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
-                            }}>
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        color: "white",
-                                        fontWeight: "bold",
-                                        fontSize: { xs: "1.2rem", md: "1.5rem" }
-                                    }}
-                                >
+                        {/* Liga Header */}
+                        <div className={`${currentTheme.card} ${currentTheme.border} border rounded-3xl overflow-hidden shadow-xl`}>
+                            <div className="bg-gradient-to-r from-blue-500 to-purple-600 py-6">
+                                <h2 className="text-white text-2xl font-bold text-center">
                                     {partidoID.liga?.nombre_liga}
-                                </Typography>
-                            </Box>
+                                </h2>
+                            </div>
 
-                            {/* Información del partido */}
-                            <Box sx={{ p: { xs: 1, md: 4 }, background: theme.palette.background.paper, }}>
-                                {/* Estadio y fecha */}
-                                <Box sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    gap: 2,
-                                    mb: 3,
-                                    flexWrap: "wrap"
-                                }}>
-                                    <Chip
-                                        icon={<Stadium />}
-                                        label={partidoID.equipo_local?.estadio}
-                                        sx={{
-                                            padding: "5px",
-                                            bgcolor: theme.palette.background.paper,
-                                            boxShadow: "0 5px 5px #888",
-                                            fontSize: "20px",
-                                            color: theme.palette.text.primary,
-                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
-                                        }}
-                                    />
-                                    <Chip
-                                        icon={<CalendarToday />}
-                                        label={formatFecha(partidoID.dia)}
-                                        sx={{
-                                            padding: "5px",
-                                            bgcolor: theme.palette.background.paper,
-                                            boxShadow: "0 5px 5px #888",
-                                            fontSize: "20px",
-                                            color: theme.palette.text.primary,
-                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
-                                        }}
-                                    />
-                                </Box>
+                            {/* Match Info */}
+                            <div className="p-8">
+                                {/* Stadium and Date */}
+                                <div className="flex justify-center items-center gap-6 mb-8 flex-wrap">
+                                    <div className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-xl px-4 py-2 shadow-md`}>
+                                        <BuildingOfficeIcon className="w-5 h-5 text-blue-500" />
+                                        <span className={`${currentTheme.text} font-medium`}>
+                                            {partidoID.equipo_local?.estadio}
+                                        </span>
+                                    </div>
+                                    <div className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-xl px-4 py-2 shadow-md`}>
+                                        <CalendarDaysIcon className="w-5 h-5 text-blue-500" />
+                                        <span className={`${currentTheme.text} font-medium`}>
+                                            {formatFecha(partidoID.dia)}
+                                        </span>
+                                    </div>
+                                </div>
 
-                                {/* Equipos y marcador */}
-                                <Grid container spacing={2} alignItems="center" sx={{ mb: 4, justifyContent: { xs: 'center', md: 'space-between' } }}>
-                                    {/* Equipo Local */}
-                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' } }}>
-                                        <motion.div
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <Box sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                alignItems: "center",
-                                                p: { xs: 1, md: 2 },
-                                                borderRadius: 2,
-                                                // bgcolor: theme.palette.background.paper,
-                                                border: "2px solid #333",
-                                                minWidth: { xs: 80, md: 140 },
-                                            }}>
-                                                <Avatar
-                                                    alt={partidoID.equipo_local?.nombre_equipo}
-                                                    src={partidoID.equipo_local?.logo}
-                                                    sx={{
-                                                        width: { xs: 35, md: 90 },
-                                                        height: { xs: 35, md: 90 },
-                                                        '& img': { objectFit: 'contain' },
-                                                    }}
-                                                />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        mt: 2,
-                                                        textAlign: "center",
-                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
-                                                        wordBreak: 'break-word',
-                                                    }}
-                                                >
-                                                    {partidoID.equipo_local?.nombre_equipo}
-                                                </Typography>
-                                            </Box>
-                                        </motion.div>
-                                    </Grid>
+                                {/* Teams and Score */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mb-8">
+                                    {/* Home Team */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className={`${currentTheme.card} ${currentTheme.border} border-2 rounded-2xl p-6 text-center group hover:shadow-lg transition-all duration-300`}
+                                    >
+                                        <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gray-100">
+                                            <img 
+                                                src={partidoID.equipo_local?.logo}
+                                                alt={partidoID.equipo_local?.nombre_equipo}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <h3 className={`${currentTheme.text} font-bold text-lg break-words`}>
+                                            {partidoID.equipo_local?.nombre_equipo}
+                                        </h3>
+                                    </motion.div>
 
-                                    {/* Marcador */}
-                                    <Grid item xs={4} sm={4} md={4} sx={{ display: 'flex', justifyContent: 'center', }}>
-                                        <Box sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            p: { xs: 1, md: 3 },
-                                            // borderRadius: 2,
-                                            // bgcolor: theme.palette.background.paper ,
-                                            // border: "2px solid #368FF4",
-                                            minWidth: { xs: 'auto', md: 180 },
-                                        }}>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ color: theme.palette.primary.main, mb: 1, fontWeight: "bold", fontSize: { xs: '0.6rem', md: '0.9rem' } }}
+                                    {/* Score */}
+                                    <div className="text-center">
+                                        <div className={`${currentTheme.text} text-xs font-medium mb-2 text-blue-500`}>
+                                            RESULTADO
+                                        </div>
+                                        <div className="flex items-center justify-center gap-4">
+                                            <span className={`${currentTheme.text} text-4xl md:text-6xl font-bold`}>
+                                                {partidoID.estadisticas?.FTHG ?? " "}
+                                            </span>
+                                            <div className="w-8 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+                                            <span className={`${currentTheme.text} text-4xl md:text-6xl font-bold`}>
+                                                {partidoID.estadisticas?.FTAG ?? " "}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Away Team */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className={`${currentTheme.card} ${currentTheme.border} border-2 rounded-2xl p-6 text-center group hover:shadow-lg transition-all duration-300`}
+                                    >
+                                        <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gray-100">
+                                            <img 
+                                                src={partidoID.equipo_visita?.logo}
+                                                alt={partidoID.equipo_visita?.nombre_equipo}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <h3 className={`${currentTheme.text} font-bold text-lg break-words`}>
+                                            {partidoID.equipo_visita?.nombre_equipo}
+                                        </h3>
+                                    </motion.div>
+                                </div>
+
+                                {/* Tabs Navigation */}
+                                <div className={`${currentTheme.border} border-b mb-6`}>
+                                    <div className="flex justify-center">
+                                        {tabs.map((tab) => (
+                                            <motion.button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 transition-all duration-300 relative ${
+                                                    activeTab === tab.id
+                                                        ? `${currentTheme.text} border-b-2 border-blue-500`
+                                                        : `${currentTheme.textSecondary} hover:${currentTheme.text}`
+                                                }`}
                                             >
-                                                RESULTADO
-                                            </Typography>
-                                            <Box sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: 0.5
-                                            }}>
-                                                <Typography
-                                                    sx={{ fontSize: { xs: "1.2rem", md: "3.5rem" }, color: theme.palette.text.primary, fontWeight: "bold" }}
-                                                >
-                                                    {partidoID.estadisticas?.FTHG ?? " "}
-                                                </Typography>
-                                                <HorizontalRule sx={{ color: theme.palette.primary.main, fontSize: { xs: "1rem", md: "3rem" } }} />
-                                                <Typography
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        fontWeight: "bold",
-                                                        fontSize: { xs: "1.2rem", md: "3.5rem" }
-                                                    }}
-                                                >
-                                                    {partidoID.estadisticas?.FTAG ?? " "}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </Grid>
+                                                <div className={`${activeTab === tab.id ? 'text-blue-500' : currentTheme.textSecondary}`}>
+                                                    {tab.icon}
+                                                </div>
+                                                <span className={`font-semibold ${activeTab === tab.id ? 'text-blue-500' : currentTheme.text}`}>
+                                                    {tab.label}
+                                                </span>
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                    {/* Equipo Visitante */}
-                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
-                                        <motion.div
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <Box sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                alignItems: "center",
-                                                p: { xs: 1, md: 2 },
-                                                borderRadius: 2,
-                                                // bgcolor: theme.palette.background.paper,
-                                                border: "2px solid #333",
-                                                minWidth: { xs: 80, md: 140 },
-                                            }}>
-                                                <Avatar
-                                                    alt={partidoID.equipo_visita?.nombre_equipo}
-                                                    src={partidoID.equipo_visita?.logo}
-                                                    sx={{
-                                                        width: { xs: 35, md: 90 },
-                                                        height: { xs: 35, md: 90 },
-                                                        '& img': { objectFit: 'contain' },
-                                                    }}
-                                                />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        mt: 2,
-                                                        textAlign: "center",
-                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
-                                                        wordBreak: 'break-word',
-                                                    }}
-                                                >
-                                                    {partidoID.equipo_visita?.nombre_equipo}
-                                                </Typography>
-                                            </Box>
-                                        </motion.div>
-                                    </Grid>
-                                </Grid>
-
-                                {/* Tabs de contenido */}
-                                <Box sx={{ width: '100%' }}>
-                                    <Box sx={{ borderBottom: 1, borderColor: '#333' }}>
-                                        <Tabs
-                                            value={value}
-                                            onChange={handleChange}
-                                            aria-label="match details tabs"
-                                            variant="fullWidth"
-                                            sx={{
-                                                "& .MuiTabs-indicator": {
-                                                    backgroundColor: theme.palette.primary.main,
-                                                    height: 3
-                                                },
-                                                "& .MuiTab-root": {
-                                                    color: theme.palette.text.secondary,
-                                                    fontWeight: "bold",
-                                                    fontSize: { xs: "0.6rem", md: "1.1rem" }
-                                                },
-                                                "& .MuiTab-root.Mui-selected": {
-                                                    color: theme.palette.primary.main
-                                                }
-                                            }}
-                                        >
-                                            <Tab label="📊 Estadísticas" {...a11yProps(0)} />
-                                            <Tab label="📈 Análisis" {...a11yProps(1)} />
-                                        </Tabs>
-                                    </Box>
-
-                                    <CustomTabPanel value={value} index={0}>
-                                        <CustomStats 
-                                            equipo_local={equipo_local}
-                                            equipo_visita={equipo_visita}
-                                            nombre_liga={nombre_liga}/>
-                                    </CustomTabPanel>
-
-                                    <CustomTabPanel value={value} index={1}>
-                                        <CustomAnalysis 
-                                            equipo_local={equipo_local}
-                                            equipo_visita={equipo_visita}
-                                            nombre_liga={nombre_liga}/>
-                                    </CustomTabPanel>
-                                </Box>
-                            </Box>
-                        </Paper>
+                                {/* Tab Content */}
+                                <div className="min-h-[600px] flex justify-center items-start">
+                                    <motion.div
+                                        key={activeTab}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="w-full max-w-[1200px]"
+                                    >
+                                        {tabs[activeTab]?.component}
+                                    </motion.div>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
                 ))}
-            </Container>
-        </Box>
+            </div>
+        </div>
     )
 }
 

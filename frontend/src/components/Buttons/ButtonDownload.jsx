@@ -1,4 +1,5 @@
-import { Button } from '@mui/material'
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
 
 const ButtonDownload = ({ url, filename }) => {
     const handleDownload = async () => {
@@ -16,30 +17,15 @@ const ButtonDownload = ({ url, filename }) => {
     }
 
     return (
-        <Button
-            variant="contained"
-            sx={{
-                mt: 2,
-                background: "#FB7452",
-                color: "#fff",
-                fontSize: {
-                    xs: "0.8rem", // móviles
-                    sm: "0.9rem", // tablets
-                    md: "1rem",   // pantallas medianas
-                    lg: "1.1rem"  // pantallas grandes
-                },
-                padding: {
-                    xs: "6px 12px",
-                    sm: "8px 16px",
-                    md: "10px 20px",
-                    lg: "12px 24px"
-                }
-            }}
-            className="uppercase"
+        <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleDownload}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all duration-200 flex items-center gap-2 shadow-lg"
         >
-            Descargar Imagen
-        </Button>
+            <ArrowDownTrayIcon className="w-5 h-5" />
+            DESCARGAR IMAGEN
+        </motion.button>
     )
 }
 

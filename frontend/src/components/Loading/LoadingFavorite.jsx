@@ -1,41 +1,23 @@
-import { Box, CircularProgress, Typography } from '@mui/material'
+import { HeartIcon } from '@heroicons/react/24/solid'
 
 const LoadingFavorite = () => {
     return (
-        <Box sx={{
-            bgcolor: "#0a0a0a",
-            minHeight: "100vh",
-            background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
-        }}>
-            <Box sx={{ position: 'relative', mb: 4 }}>
-                <CircularProgress
-                    size={80}
-                    sx={{
-                        color: '#368FF4',
-                        filter: 'drop-shadow(0 0 20px #368FF4)'
-                    }}
-                />
-                <FavoriteIcon
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        color: '#FF1717',
-                        fontSize: 30
-                    }}
-                />
-            </Box>
-            <Typography
-                variant="h6"
-                sx={{
-                    color: '#368FF4',
-                    fontFamily: 'cursive',
-                    textShadow: '0 0 10px #368FF4'
-                }}>
-                Cargando tus partidos favoritos...
-            </Typography>
-        </Box>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+            <div className="text-center">
+                <div className="relative mb-8">
+                    <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                    <HeartIcon className="w-8 h-8 text-red-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                </div>
+                <h3 className="text-xl font-semibold text-blue-500 mb-2 animate-pulse">
+                    Cargando tus partidos favoritos...
+                </h3>
+                <div className="flex justify-center space-x-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+            </div>
+        </div>
     )
 }
 

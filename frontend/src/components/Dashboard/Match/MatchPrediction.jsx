@@ -1,23 +1,28 @@
-import { Avatar, Box, Chip, Container, Grid, IconButton, Paper, Tooltip, Typography, useTheme } from '@mui/material'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getMatcheByID } from '../../../services/api/matches'
 import { useQuery } from '@tanstack/react-query'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
-import {
-    HorizontalRule, Stadium, CalendarToday, ArrowBack,
-} from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { formatFecha } from '../../../utils/helpers'
 import CustomPrediction from '../Details/CustomPrediction'
+import {
+    ArrowLeftIcon,
+    MapPinIcon,
+    CalendarDaysIcon,
+    DocumentArrowDownIcon
+} from '@heroicons/react/24/outline'
+import { useThemeMode } from '../../../contexts/ThemeContext'
+import jsPDF from 'jspdf'
+import domtoimage from 'dom-to-image-more'
 
 const MatchPrediction = () => {
 
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
     const { id_partido } = useParams()
     const location = useLocation()
-    const [value, setValue] = useState(0)
     const navigate = useNavigate()
+    const contentRef = useRef(null)
 
     const equipo_local = location.state?.equipo_local
     const equipo_visita = location.state?.equipo_visita
@@ -45,9 +50,11 @@ const MatchPrediction = () => {
 
     if (isError) {
         return (
-            <div>
-                <h2>Error al cargar datos:</h2>
-                {isErrorMatch && <p>Match by ID: {errorMatch.message}</p>}
+            <div className={`${currentTheme.background} min-h-screen flex items-center justify-center`}>
+                <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6`}>
+                    <h2 className={`${currentTheme.text} text-xl font-bold mb-2`}>Error al cargar datos</h2>
+                    {isErrorMatch && <p className={`${currentTheme.textSecondary}`}>Match by ID: {errorMatch.message}</p>}
+                </div>
             </div>
         )
     }
@@ -58,264 +65,192 @@ const MatchPrediction = () => {
 
     const handleGoBack = () => navigate(-1)
 
-    return (
-        <Box sx={{
-            minHeight: "100vh",
-        }}>
-            {/* Header con botón de regreso */}
-            <Box sx={{
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
-                backdropFilter: "blur(10px)",
-                borderBottom: "1px solid #333",
-                py: 1
-            }}>
-                <Container maxWidth="lg">
-                    <Box sx={{ display: "flex", alignItems: "center", py: 1 }}>
-                        <Tooltip title="Regresar" arrow>
-                            <IconButton
-                                onClick={handleGoBack}
-                                sx={{
-                                    bgcolor: theme.palette.primary.dark,
-                                    border: "1px solid rgba(54, 143, 244, 0.3)",
-                                    mr: 2,
-                                    "&:hover": {
-                                        bgcolor: theme.palette.primary.main,
-                                        transform: "translateX(-2px)"
-                                    },
-                                    transition: "all 0.3s ease"
-                                }}
-                            >
-                                <ArrowBack sx={{ color: theme.custom.blanco }} />
-                            </IconButton>
-                        </Tooltip>
-                        <Typography
-                            variant="h5"
-                            sx={{
-                                color: theme.palette.text.primary,
-                                fontWeight: "bold",
-                                flexGrow: 1
-                            }}
-                        >
-                            Predicciones para el Partido
-                        </Typography>
-                    </Box>
-                </Container>
-            </Box>
+    const downloadAsPNG = async () => {
+        if (!statsRef.current) return
 
-            <Container maxWidth="lg" sx={{ py: { xs: 1, md: 4 } }}>
+        try {
+            const dataUrl = await domtoimage.toPng(statsRef.current, {
+                quality: 1,
+                bgcolor: currentTheme.background // mantiene el fondo de tu theme
+            })
+
+            const link = document.createElement('a')
+            link.download = `estadisticas-${equipo_local}-vs-${equipo_visita}.png`
+            link.href = dataUrl
+            link.click()
+        } catch (error) {
+            console.error('Error downloading PNG:', error)
+        }
+    }
+
+    const downloadAsPDF = async () => {
+        if (!statsRef.current) return
+
+        try {
+            const dataUrl = await domtoimage.toPng(statsRef.current, {
+                quality: 1,
+                bgcolor: currentTheme.background // aquí respeta el tema
+            })
+
+            const pdf = new jsPDF('p', 'mm', 'a4')
+            const imgProps = pdf.getImageProperties(dataUrl)
+            const pdfWidth = pdf.internal.pageSize.getWidth()
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+
+            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+            pdf.save(`estadisticas-${equipo_local}-vs-${equipo_visita}.pdf`)
+        } catch (error) {
+            console.error('Error downloading PDF:', error)
+        }
+    }
+
+    return (
+        <div className={`${currentTheme.background} min-h-screen`}>
+            {/* Header with back button */}
+            <div className={`sticky top-0 z-50 ${currentTheme.card} backdrop-blur-xl border-b ${currentTheme.border}`}>
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleGoBack}
+                                className={`p-2 rounded-xl ${currentTheme.hover} transition-colors duration-200`}
+                            >
+                                <ArrowLeftIcon className={`w-5 h-5 ${currentTheme.text}`} />
+                            </motion.button>
+                            <h1 className={`${currentTheme.text} text-xl font-bold`}>
+                                Predicciones del Partido
+                            </h1>
+                        </div>
+
+                        {/* Download buttons */}
+                        <div className="flex items-center gap-2">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={downloadAsPNG}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                            >
+                                <DocumentArrowDownIcon className="w-4 h-4" />
+                                <span className="hidden sm:inline">PNG</span>
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={downloadAsPDF}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                            >
+                                <DocumentArrowDownIcon className="w-4 h-4" />
+                                <span className="hidden sm:inline">PDF</span>
+                            </motion.button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 py-6" ref={contentRef}>
                 {finalMatchDataAsArray.map((partidoID, index) => (
                     <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
+                        className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl overflow-hidden shadow-xl`}
                     >
-                        <Paper
-                            elevation={24}
-                            sx={{
-                                bgcolor: theme.palette.background.paper,
-                                borderRadius: 4,
-                                overflow: "hidden",
-                                boxShadow: "0 20px 40px rgba(54,143,244,0.1)"
-                            }}
-                        >
-                            {/* Header - Liga */}
-                            <Box sx={{
-                                background: "linear-gradient(135deg, #368FF4 0%, #165AA6 100%)",
-                                py: 2,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center"
-                            }}>
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        color: "white",
-                                        fontWeight: "bold",
-                                        fontSize: { xs: "1.2rem", md: "1.5rem" }
-                                    }}
-                                >
+                        {/* League Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-4">
+                            <div className="text-center">
+                                <h2 className="text-white text-2xl font-bold">
                                     {partidoID.liga?.nombre_liga}
-                                </Typography>
-                            </Box>
+                                </h2>
+                            </div>
+                        </div>
 
-                            {/* Información del partido */}
-                            <Box sx={{ p: { xs: 1, md: 4 }, background: theme.palette.background.paper, }}>
-                                {/* Estadio y fecha */}
-                                <Box sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    gap: 2,
-                                    mb: 3,
-                                    flexWrap: "wrap"
-                                }}>
-                                    <Chip
-                                        icon={<Stadium />}
-                                        label={partidoID.equipo_local?.estadio}
-                                        sx={{
-                                            padding: "5px",
-                                            bgcolor: theme.palette.background.paper,
-                                            boxShadow: "0 5px 5px #888",
-                                            fontSize: "20px",
-                                            color: theme.palette.text.primary,
-                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
-                                        }}
-                                    />
-                                    <Chip
-                                        icon={<CalendarToday />}
-                                        label={formatFecha(partidoID.dia)}
-                                        sx={{
-                                            padding: "5px",
-                                            bgcolor: theme.palette.background.paper,
-                                            boxShadow: "0 5px 5px #888",
-                                            fontSize: "20px",
-                                            color: theme.palette.text.primary,
-                                            "& .MuiChip-icon": { color: theme.palette.primary.main }
-                                        }}
-                                    />
-                                </Box>
+                        {/* Match Info */}
+                        <div className="p-6">
+                            {/* Stadium and Date */}
+                            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${currentTheme.hover} ${currentTheme.border} border`}>
+                                    <MapPinIcon className="w-5 h-5 text-blue-500" />
+                                    <span className={`${currentTheme.text} font-medium`}>
+                                        {partidoID.equipo_local?.estadio}
+                                    </span>
+                                </div>
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${currentTheme.hover} ${currentTheme.border} border`}>
+                                    <CalendarDaysIcon className="w-5 h-5 text-blue-500" />
+                                    <span className={`${currentTheme.text} font-medium`}>
+                                        {formatFecha(partidoID.dia)}
+                                    </span>
+                                </div>
+                            </div>
 
-                                {/* Equipos y marcador */}
-                                <Grid container spacing={2} alignItems="center" sx={{ mb: 4, justifyContent: { xs: 'center', md: 'space-between' } }}>
-                                    {/* Equipo Local */}
-                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-start' } }}>
-                                        <motion.div
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <Box sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                alignItems: "center",
-                                                p: { xs: 1, md: 2 },
-                                                borderRadius: 2,
-                                                border: "2px solid #333",
-                                                minWidth: { xs: 80, md: 140 },
-                                            }}>
-                                                <Avatar
-                                                    alt={partidoID.equipo_local?.nombre_equipo}
-                                                    src={partidoID.equipo_local?.logo}
-                                                    sx={{
-                                                        width: { xs: 35, md: 80 },
-                                                        height: { xs: 35, md: 80 },
-                                                        '& img': { objectFit: 'contain' },
-                                                    }}
-                                                />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        mt: 2,
-                                                        textAlign: "center",
-                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
-                                                        wordBreak: 'break-word',
-                                                    }}
-                                                >
-                                                    {partidoID.equipo_local?.nombre_equipo}
-                                                </Typography>
-                                            </Box>
-                                        </motion.div>
-                                    </Grid>
+                            {/* Teams and Score */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center mb-8">
+                                {/* Home Team */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    className={`flex flex-col items-center p-6 rounded-xl ${currentTheme.hover} ${currentTheme.border} border-2`}
+                                >
+                                    <div className="w-20 h-20 mb-4 rounded-full overflow-hidden bg-gray-100">
+                                        <img
+                                            src={partidoID.equipo_local?.logo}
+                                            alt={partidoID.equipo_local?.nombre_equipo}
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                    <h3 className={`${currentTheme.text} text-lg font-bold text-center`}>
+                                        {partidoID.equipo_local?.nombre_equipo}
+                                    </h3>
+                                </motion.div>
 
-                                    {/* Marcador */}
-                                    <Grid item xs={4} sm={4} md={4} sx={{ display: 'flex', justifyContent: 'center', }}>
-                                        <Box sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            p: { xs: 1, md: 3 },
-                                            minWidth: { xs: 'auto', md: 180 },
-                                        }}>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ color: theme.palette.primary.main, mb: 1, fontWeight: "bold", fontSize: { xs: '0.6rem', md: '0.9rem' } }}
-                                            >
-                                                RESULTADO
-                                            </Typography>
-                                            <Box sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: 0.5
-                                            }}>
-                                                <Typography
-                                                    sx={{ fontSize: { xs: "1.2rem", md: "3.5rem" }, color: theme.palette.text.primary, fontWeight: "bold" }}
-                                                >
-                                                    {partidoID.estadisticas?.FTHG ?? " "}
-                                                </Typography>
-                                                <HorizontalRule sx={{ color: theme.palette.primary.main, fontSize: { xs: "1rem", md: "3rem" } }} />
-                                                <Typography
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        fontWeight: "bold",
-                                                        fontSize: { xs: "1.2rem", md: "3.5rem" }
-                                                    }}
-                                                >
-                                                    {partidoID.estadisticas?.FTAG ?? " "}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </Grid>
+                                {/* Score */}
+                                <div className="flex flex-col items-center py-8">
+                                    <span className={`${currentTheme.textSecondary} text-sm font-medium mb-2`}>
+                                        RESULTADO
+                                    </span>
+                                    <div className="flex items-center gap-4">
+                                        <span className={`${currentTheme.text} text-4xl font-bold`}>
+                                            {partidoID.estadisticas?.FTHG ?? " "}
+                                        </span>
+                                        <span className="text-blue-500 text-3xl">-</span>
+                                        <span className={`${currentTheme.text} text-4xl font-bold`}>
+                                            {partidoID.estadisticas?.FTAG ?? " "}
+                                        </span>
+                                    </div>
+                                </div>
 
-                                    {/* Equipo Visitante */}
-                                    <Grid item xs={4} sm={4} md={3} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
-                                        <motion.div
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <Box sx={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                alignItems: "center",
-                                                p: { xs: 1, md: 2 },
-                                                borderRadius: 2,
-                                                // bgcolor: theme.palette.background.paper,
-                                                border: "2px solid #333",
-                                                minWidth: { xs: 80, md: 140 },
-                                            }}>
-                                                <Avatar
-                                                    alt={partidoID.equipo_visita?.nombre_equipo}
-                                                    src={partidoID.equipo_visita?.logo}
-                                                    sx={{
-                                                        width: { xs: 35, md: 80 },
-                                                        height: { xs: 35, md: 80 },
-                                                        '& img': { objectFit: 'contain' },
-                                                    }}
-                                                />
-                                                <Typography
-                                                    variant="h6"
-                                                    sx={{
-                                                        color: theme.palette.text.primary,
-                                                        mt: 2,
-                                                        textAlign: "center",
-                                                        fontSize: { xs: "0.6rem", md: "1.1rem" },
-                                                        wordBreak: 'break-word',
-                                                    }}
-                                                >
-                                                    {partidoID.equipo_visita?.nombre_equipo}
-                                                </Typography>
-                                            </Box>
-                                        </motion.div>
-                                    </Grid>
-                                </Grid>
+                                {/* Away Team */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    className={`flex flex-col items-center p-6 rounded-xl ${currentTheme.hover} ${currentTheme.border} border-2`}
+                                >
+                                    <div className="w-20 h-20 mb-4 rounded-full overflow-hidden bg-gray-100">
+                                        <img
+                                            src={partidoID.equipo_visita?.logo}
+                                            alt={partidoID.equipo_visita?.nombre_equipo}
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                    <h3 className={`${currentTheme.text} text-lg font-bold text-center`}>
+                                        {partidoID.equipo_visita?.nombre_equipo}
+                                    </h3>
+                                </motion.div>
+                            </div>
 
-                                <Box sx={{ width: '100%' }}>
-                                    <Box sx={{ borderBottom: 1, borderColor: '#333' }}>
-                                        <CustomPrediction 
-                                            equipo_local={equipo_local}
-                                            equipo_visita={equipo_visita}
-                                            nombre_liga={nombre_liga}/>
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </Paper>
+                            {/* Predictions Section */}
+                            <div className={`border-t ${currentTheme.border} pt-6`}>
+                                <CustomPrediction
+                                    equipo_local={equipo_local}
+                                    equipo_visita={equipo_visita}
+                                    nombre_liga={nombre_liga}
+                                />
+                            </div>
+                        </div>
                     </motion.div>
                 ))}
-            </Container>
-        </Box>
+            </div>
+        </div>
     )
 }
 

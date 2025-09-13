@@ -1,10 +1,5 @@
 import { useState } from 'react'
 import { deleteFavorite } from '../services/api/favorites'
-import { Avatar, Box, Chip, CircularProgress, Container, Fade, Grid, IconButton, List, ListItem, Paper, Tooltip, Typography, useTheme } from '@mui/material'
-import {
-    Favorite as FavoriteIcon, FavoriteBorder as FavoriteBorderIcon, Schedule as ScheduleIcon,
-    InfoOutlined, Assessment as AssessmentIcon
-} from '@mui/icons-material'
 import { getStoredUser } from '../services/auth'
 import { formatFecha } from '../utils/helpers'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -13,29 +8,43 @@ import { useFavoritos } from '../hooks/FavoritosContext'
 import { useNavigate } from 'react-router-dom'
 import LoadingFavorite from '../components/Loading/LoadingFavorite'
 import Header from '../components/Forms/controls/Header'
+import {
+    HeartIcon,
+    InformationCircleIcon,
+    DocumentTextIcon,
+    ClockIcon
+} from '@heroicons/react/24/solid'
+import {
+    HeartIcon as HeartOutlineIcon
+} from '@heroicons/react/24/outline'
+import { useThemeMode } from '../contexts/ThemeContext'
 
 const Favorite = () => {
     const user = getStoredUser()
     const id_usuario = user?.id_usuario
     const queryClient = useQueryClient()
     const [hoveredItem, setHoveredItem] = useState(null)
+    const [loadingDelete, setLoadingDelete] = useState(null)
     const navigate = useNavigate()
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     const { favoritos: favoriteMatches, loadingFavoritos: isLoading, isError, error } = useFavoritos()
 
     const deleteFavoriteMutation = useMutation({
         mutationFn: (matchId) => deleteFavorite(matchId, id_usuario),
         onMutate: async (matchId) => {
+            setLoadingDelete(matchId)
             await queryClient.cancelQueries(['favorites', id_usuario])
             const previousFavorites = queryClient.getQueryData(['favorites', id_usuario])
             queryClient.setQueryData(['favorites', id_usuario], old => old?.filter(m => m.id_partido !== matchId))
             return { previousFavorites }
         },
         onSuccess: () => {
+            setLoadingDelete(null)
             queryClient.invalidateQueries({ queryKey: ['favorites', id_usuario] })
         },
         onError: (err, variables, context) => {
+            setLoadingDelete(null)
             queryClient.setQueryData(['favorites', id_usuario], context.previousFavorites)
             console.error("Error al eliminar favorito. Revertiendo:", err)
         },
@@ -54,40 +63,36 @@ const Favorite = () => {
         deleteFavoriteMutation.mutate(matchId)
     }
 
-    const getStatusColor = (status) => {
+    const getStatusConfig = (status) => {
         switch (status) {
             case 'Finalizado':
             case 'Histórico':
-                return '#FF4444'
-            case 'Por Jugar':
-                return '#368FF4'
+                return {
+                    color: 'bg-green-500',
+                    textColor: 'text-green-500',
+                    bgColor: 'bg-green-500/10',
+                    label: 'FINALIZADO',
+                    icon: DocumentTextIcon,
+                    actionLabel: 'Resumen'
+                }
+            case 'Programado':
+                return {
+                    color: 'bg-blue-500',
+                    textColor: 'text-blue-500',
+                    bgColor: 'bg-blue-500/10',
+                    label: 'PRÓXIMO',
+                    icon: InformationCircleIcon,
+                    actionLabel: 'Análisis'
+                }
             default:
-                return '#888888'
-        }
-    }
-
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'Finalizado':
-            case 'Histórico':
-                return <AssessmentIcon />
-            case 'Por Jugar':
-                return <InfoOutlined />
-            default:
-                return <ScheduleIcon />
-        }
-    }
-
-    const getStatusLabel = (status) => {
-        switch (status) {
-            case 'Finalizado':
-                return 'Resumen'
-            case 'Histórico':
-                return 'Resumen'
-            case 'Por Jugar':
-                return 'Información'
-            default:
-                return 'Info'
+                return {
+                    color: 'bg-gray-500',
+                    textColor: 'text-gray-500',
+                    bgColor: 'bg-gray-500/10',
+                    label: 'PROGRAMADO',
+                    icon: ClockIcon,
+                    actionLabel: 'Info'
+                }
         }
     }
 
@@ -99,76 +104,54 @@ const Favorite = () => {
 
     if (isError) {
         return (
-            <Box sx={{ color: 'red', textAlign: 'center', p: 4, backgroundColor: '#0e0f0f', minHeight: '100vh' }}>
-                <Typography variant="h5">Error al cargar los favoritos.</Typography>
-                <Typography variant="body1">{error.message}</Typography>
-            </Box>
+            <div className={`min-h-screen ${currentTheme.background} flex items-center justify-center p-4`}>
+                <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-8 text-center max-w-md w-full`}>
+                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                    <h2 className={`${currentTheme.text} text-2xl font-bold mb-2`}>Error al cargar favoritos</h2>
+                    <p className={`${currentTheme.textSecondary} text-sm`}>{error.message}</p>
+                </div>
+            </div>
         )
     }
 
     return (
-        <Box sx={{
-            minHeight: "100vh",
-            background: theme.palette.background.default
-        }}>
-            <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+        <div className={`min-h-screen ${currentTheme.background}`}>
+            <div className="max-w-6xl mx-auto px-4 py-6">
                 {/* Header */}
                 <Header
                     title='Mis Favoritos'
-                    subtitle={`${favoriteMatches.length} ${favoriteMatches.length === 1 ? 'partido favorito' : 'partidos favoritos'}`} />
+                    subtitle={`${favoriteMatches.length} ${favoriteMatches.length === 1 ? 'partido favorito' : 'partidos favoritos'}`}
+                />
 
-                {/* Matches Grid */}
+                {/* Matches List */}
                 {favoriteMatches.length === 0 ? (
-                    <Fade in={true} timeout={1500}>
-                        <Paper
-                            elevation={8}
-                            sx={{
-                                textAlign: 'center',
-                                py: 8,
-                                px: 4,
-                                bgcolor: 'rgba(255, 255, 255, 0.03)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: 4
-                            }}>
-                            <FavoriteBorderIcon
-                                sx={{
-                                    fontSize: 80,
-                                    color: '#333',
-                                    mb: 3,
-                                    opacity: 0.5
-                                }}
-                            />
-                            <Typography
-                                variant="h4"
-                                sx={{
-                                    color: '#666',
-                                    mb: 2,
-                                    fontWeight: 'bold'
-                                }}>
-                                No tienes favoritos aún
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                sx={{ color: '#888' }}>
-                                Agrega partidos a tus favoritos desde la lista principal para verlos aquí
-                            </Typography>
-                        </Paper>
-                    </Fade>
-                ) : (
-                    <Paper
-                        elevation={12}
-                        sx={{
-                            bgcolor: theme.palette.background.default,
-                            border: `1px solid ${theme.palette.text.secondary}`,
-                            borderRadius: 2,
-                            overflow: 'hidden'
-                        }}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-12 text-center`}
                     >
-                        <List sx={{ py: 0 }}>
+                        <div className="relative">
+                            <HeartOutlineIcon className="w-24 h-24 mx-auto mb-6 text-gray-400 opacity-50" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-full blur-xl"></div>
+                        </div>
+                        <h3 className={`${currentTheme.text} text-3xl font-bold mb-4`}>
+                            No tienes favoritos aún
+                        </h3>
+                        <p className={`${currentTheme.textSecondary} text-lg max-w-md mx-auto`}>
+                            Agrega partidos a tus favoritos desde la lista principal para verlos aquí
+                        </p>
+                    </motion.div>
+                ) : (
+                    <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl overflow-hidden`}>
+                        <div className="divide-y divide-gray-800">
                             {favoriteMatches.map((match, index) => {
                                 const partido = match.partido
                                 const status = partido.estado.nombre_estado
-                                const statusColor = getStatusColor(status)
+                                const statusConfig = getStatusConfig(status)
+                                const StatusIcon = statusConfig.icon
+                                const isHovered = hoveredItem === partido.id_partido
+                                const isDeleting = loadingDelete === partido.id_partido
 
                                 return (
                                     <motion.div
@@ -176,221 +159,125 @@ const Favorite = () => {
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ duration: 0.4, delay: index * 0.1 }}
+                                        onMouseEnter={() => setHoveredItem(partido.id_partido)}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        className={`p-4 transition-all duration-300 relative overflow-hidden group ${isHovered ? 'transform translate-x-2' : ''
+                                            }`}
                                     >
-                                        <ListItem
-                                            onMouseEnter={() => setHoveredItem(partido.id_partido)}
-                                            onMouseLeave={() => setHoveredItem(null)}
-                                            sx={{
-                                                width: '100%',
-                                                borderBottom: index < favoriteMatches.length - 1 ? "1px solid #333" : 'none',
-                                                py: 2,
-                                                px: 1,
-                                                bgcolor: hoveredItem === partido.id_partido ? 'rgba(54,143,244,0.05)' : 'transparent',
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    bgcolor: 'rgba(54,143,244,0.08)',
-                                                    transform: 'translateX(8px)'
-                                                }
-                                            }}
-                                        >
-                                            <Grid
-                                                container
-                                                alignItems="center"
-                                                sx={{
-                                                    width: '100%',
-                                                    flexWrap: { xs: 'wrap', sm: 'nowrap' }
-                                                }}
-                                            >
-                                                {/* Estado */}
-                                                <Grid item xs="auto" sx={{ ml: 3 }}>
-                                                    <Chip
-                                                        label={
-                                                            status === 'Histórico' ? 'HISTÓRICO' :
-                                                                status === 'Por Jugar' ? 'PRÓXIMO' :
-                                                                    'FINALIZADO'
-                                                        }
-                                                        size="small"
-                                                        sx={{
-                                                            bgcolor: statusColor,
-                                                            color: theme.custom.blanco,
-                                                            fontWeight: 'bold',
-                                                            fontSize: '0.65rem',
-                                                            minWidth: { xs: '60px', sm: '80px' }
-                                                        }}
-                                                    />
-                                                </Grid>
+                                        {/* Background gradient on hover */}
+                                        <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 transition-opacity duration-300 ${isHovered ? 'opacity-100' : ''
+                                            }`}></div>
 
-                                                {/* Equipos: este debe crecer y ocupar el espacio intermedio */}
-                                                <Grid item xs sx={{ minWidth: 0, mx: { xs: 2, sm: 10 } }}>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                        {/* Local */}
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                                justifyContent: 'space-between'
-                                                            }}
-                                                        >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
-                                                                <Avatar
-                                                                    alt={partido.equipo_local.nombre_equipo}
+                                        <div className="relative z-10 flex items-center justify-between">
+                                            {/* Left Section: Status Badge */}
+                                            <div className="flex-shrink-0">
+                                                <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${statusConfig.color} text-white`}>
+                                                    {statusConfig.label}
+                                                </div>
+                                            </div>
+
+                                            {/* Center Section: Teams */}
+                                            <div className="flex-1 mx-6 min-w-0">
+                                                <div className="space-y-3">
+                                                    {/* Home Team */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                                                <img
                                                                     src={partido.equipo_local.logo}
-                                                                    sx={{ width: 30, height: 30, '& img': { objectFit: 'contain' } }}
+                                                                    alt={partido.equipo_local.nombre_equipo}
+                                                                    className="w-full h-full object-contain"
                                                                 />
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    sx={{
-                                                                        color: theme.palette.text.primary,
-                                                                        fontSize: { xs: '12px', sm: '14px' },
-                                                                        overflow: 'hidden',
-                                                                        textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap',
-                                                                        flex: 1,
-                                                                        minWidth: 0
-                                                                    }}
-                                                                >
-                                                                    {partido.equipo_local.nombre_equipo}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    fontSize: { xs: '12px', sm: '14px' },
-                                                                    color: theme.palette.text.primary,
-                                                                    fontWeight: 'bold',
-                                                                    minWidth: '30px',
-                                                                    textAlign: 'center',
-                                                                }}
-                                                            >
-                                                                {partido.estadisticas?.FTHG ?? '-'}
-                                                            </Typography>
-                                                        </Box>
+                                                            </div>
+                                                            <span className={`${currentTheme.text} font-medium text-sm truncate`}>
+                                                                {partido.equipo_local.nombre_equipo}
+                                                            </span>
+                                                        </div>
+                                                        <div className={`${currentTheme.text} font-bold text-lg min-w-[32px] text-center`}>
+                                                            {partido.estadisticas?.FTHG ?? '-'}
+                                                        </div>
+                                                    </div>
 
-                                                        {/* Visitante */}
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1,
-                                                                justifyContent: 'space-between'
-                                                            }}
-                                                        >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
-                                                                <Avatar
-                                                                    alt={partido.equipo_visita.nombre_equipo}
+                                                    {/* Away Team */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                                                <img
                                                                     src={partido.equipo_visita.logo}
-                                                                    sx={{ width: 30, height: 30, '& img': { objectFit: 'contain' } }}
+                                                                    alt={partido.equipo_visita.nombre_equipo}
+                                                                    className="w-full h-full object-contain"
                                                                 />
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    sx={{
-                                                                        color: theme.palette.text.primary,
-                                                                        fontSize: { xs: '12px', sm: '14px' },
-                                                                        overflow: 'hidden',
-                                                                        textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap',
-                                                                        flex: 1,
-                                                                        minWidth: 0
-                                                                    }}
-                                                                >
-                                                                    {partido.equipo_visita.nombre_equipo}
-                                                                </Typography>
-                                                            </Box>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    color: theme.palette.text.primary,
-                                                                    fontSize: { xs: '12px', sm: '14px' },
-                                                                    fontWeight: 'bold',
-                                                                    minWidth: '30px',
-                                                                    textAlign: 'center',
-                                                                }}
-                                                            >
-                                                                {partido.estadisticas?.FTAG ?? '-'}
-                                                            </Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </Grid>
+                                                            </div>
+                                                            <span className={`${currentTheme.text} font-medium text-sm truncate`}>
+                                                                {partido.equipo_visita.nombre_equipo}
+                                                            </span>
+                                                        </div>
+                                                        <div className={`${currentTheme.text} font-bold text-lg min-w-[32px] text-center`}>
+                                                            {partido.estadisticas?.FTAG ?? '-'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                                {/* Fecha / Liga */}
-                                                <Grid item xs="auto" sx={{ mx: { xs: 2, sm: 10 } }}>
-                                                    <Box sx={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontSize: { xs: '12px', sm: '14px' },
-                                                                color: theme.palette.primary.light,
-                                                                fontWeight: 'bold',
-                                                                display: 'block',
-                                                                mb: 0.5
-                                                            }}
-                                                        >
-                                                            {partido.liga.nombre_liga}
-                                                        </Typography>
-                                                        <Typography variant="caption" sx={{ color: theme.palette.text.primary, fontSize: '11px' }}>
-                                                            {formatFecha(partido.dia)}
-                                                        </Typography>
-                                                    </Box>
-                                                </Grid>
+                                            {/* Right Section: League & Date */}
+                                            <div className="flex flex-col items-center text-center mr-6">
+                                                <div className="text-blue-400 text-xs font-bold mb-1">
+                                                    {partido.liga.nombre_liga}
+                                                </div>
+                                                <div className={`${currentTheme.textSecondary} text-xs`}>
+                                                    {formatFecha(partido.dia)}
+                                                </div>
+                                            </div>
 
-                                                {/* Acciones */}
-                                                <Grid item xs="auto" sx={{ ml: 'auto' }}>
-                                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                        <Tooltip title={getStatusLabel(status)} arrow>
-                                                            <IconButton
-                                                                onClick={() =>
-                                                                    handleInfoClick(
-                                                                        partido.equipo_local.nombre_equipo,
-                                                                        partido.equipo_visita.nombre_equipo,
-                                                                        partido.id_partido
-                                                                    )
-                                                                }
-                                                                sx={{
-                                                                    color: statusColor,
-                                                                    bgcolor: `${statusColor}20`,
-                                                                    '&:hover': {
-                                                                        bgcolor: `${statusColor}30`,
-                                                                        transform: 'scale(1.1)'
-                                                                    },
-                                                                    transition: 'all 0.3s ease'
-                                                                }}
-                                                            >
-                                                                {getStatusIcon(status)}
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title="Quitar de favoritos" arrow>
-                                                            <IconButton
-                                                                onClick={() => handleRemoveFavorite(partido.id_partido)}
-                                                                disabled={deleteFavoriteMutation.isLoading}
-                                                                sx={{
-                                                                    color: '#FF1717',
-                                                                    '&:hover': {
-                                                                        bgcolor: 'rgba(255, 23, 23, 0.2)',
-                                                                        transform: 'scale(1.1)'
-                                                                    },
-                                                                    transition: 'all 0.3s ease'
-                                                                }}
-                                                            >
-                                                                {deleteFavoriteMutation.isLoading ? (
-                                                                    <CircularProgress size={20} sx={{ color: '#FF1717' }} />
-                                                                ) : (
-                                                                    <FavoriteIcon />
-                                                                )}
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Box>
-                                                </Grid>
-                                            </Grid>
-                                        </ListItem>
+                                            {/* Action Buttons */}
+                                            <div className="flex items-center gap-2">
+                                                {/* Info Button */}
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => handleInfoClick(
+                                                        partido.equipo_local.nombre_equipo,
+                                                        partido.equipo_visita.nombre_equipo,
+                                                        partido.id_partido
+                                                    )}
+                                                    className={`p-2.5 rounded-lg ${statusConfig.bgColor} ${currentTheme.hover} transition-colors duration-200 group/btn`}
+                                                    title={statusConfig.actionLabel}
+                                                >
+                                                    <StatusIcon className={`w-4 h-4 ${statusConfig.textColor}`} />
+                                                </motion.button>
+
+                                                {/* Remove Favorite Button */}
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => handleRemoveFavorite(partido.id_partido)}
+                                                    disabled={isDeleting}
+                                                    className="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors duration-200 group/btn"
+                                                    title="Quitar de favoritos"
+                                                >
+                                                    {isDeleting ? (
+                                                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    ) : (
+                                                        <HeartIcon className="w-4 h-4 text-red-500" />
+                                                    )}
+                                                </motion.button>
+                                            </div>
+                                        </div>
+
+                                        {/* Match Status Indicator */}
+                                        {status === "Finalizado" && (
+                                            <div className="absolute top-3 right-3">
+                                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 )
                             })}
-                        </List>
-                    </Paper>
+                        </div>
+                    </div>
                 )}
-            </Container>
-        </Box>
+            </div>
+        </div>
     )
 }
 

@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import PublicRoute from './PublicRoute'
-import { FavoritosProvider } from '../hooks/FavoritosContext'
 import PrivateRoute from './PrivateRoute'
 import LoadingPage from '../components/Loading/LoadingPage'
 import { MatchesProvider } from '../contexts/MatchesContext'
@@ -46,23 +45,21 @@ const AppRoutes = () => {
 
             {/* Rutas privadas con layout de Dashboard */}
             <Route path='/dashboard' element={
-                <FavoritosProvider>
-                    <MatchesProvider>
-                        <PrivateRoute>
-                            <Suspense fallback={<LoadingPage />}>
-                                <Dashboard />
-                            </Suspense>
-                        </PrivateRoute>
-                    </MatchesProvider>
-                </FavoritosProvider>
+                <MatchesProvider>
+                    <PrivateRoute>
+                        <Suspense fallback={<LoadingPage />}>
+                            <Dashboard />
+                        </Suspense>
+                    </PrivateRoute>
+                </MatchesProvider>
             }>
                 <Route index element={
                     <Match />
                 } />
                 <Route path=':id_partido' element={<Suspense fallback={<LoadingPage />}><MatchDetail /> </Suspense>} />
                 <Route path='predicciones/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchPrediction /> </Suspense>} />
-                <Route path='imagenes/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchImage /> </Suspense>} />
                 <Route path='summary/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchSummary /> </Suspense>} />
+                <Route path='imagenes/:id_partido' element={<Suspense fallback={<LoadingPage />}><MatchImage /> </Suspense>} />
                 <Route path='favorites' element={<Suspense fallback={<LoadingPage />}> <Favorite /> </Suspense>} />
                 <Route path='analysis' element={<Suspense fallback={<LoadingPage />}> <Analysis /> </Suspense>} />
                 <Route path='forecasts' element={<Suspense fallback={<LoadingPage />}> <Forecasts /> </Suspense>} />

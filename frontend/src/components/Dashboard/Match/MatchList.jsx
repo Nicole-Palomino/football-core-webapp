@@ -1,15 +1,17 @@
-import { List, ListItem, Grid, Box, Typography, IconButton, Tooltip, Avatar } from "@mui/material"
 import { useThemeMode } from '../../../contexts/ThemeContext'
-import InfoOutlined from "@mui/icons-material/InfoOutlined"
 import FavoriteStar from '../Favorites/FavoriteStar'
 import { useFavoritos } from '../../../hooks/FavoritosContext'
 import { formatFecha } from '../../../utils/helpers'
 import { useNavigate } from 'react-router-dom'
 import LoadingFavorite from "../../Loading/LoadingFavorite"
+import {
+    InformationCircleIcon,
+    LightBulbIcon,
+    DocumentTextIcon,
+    PhotoIcon
+} from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
 import React from "react"
-import SummarizeIcon from '@mui/icons-material/Summarize'
-import PhotoSizeSelectActualIcon from '@mui/icons-material/PhotoSizeSelectActual'
-import { TipsAndUpdatesOutlined } from "@mui/icons-material"
 import { formatOnlyTime } from "../../../utils/utils"
 
 const MatchList = React.memo(({ partidos, type }) => {
@@ -48,128 +50,153 @@ const MatchList = React.memo(({ partidos, type }) => {
     }
 
     return (
-        <List className={currentTheme.text}>
-            {partidos.map((partido) => (
-                <ListItem
+        <div className="space-y-1">
+            {partidos.map((partido, index) => (
+                <motion.div
                     key={partido.id_partido}
-                    sx={{
-                        fontFamily: "cursive",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        borderBottom: "1px solid rgba(255,255,255,0.1)",
-                        py: 1,
-                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-4 
+                           hover:shadow-lg transition-all duration-300 group relative overflow-hidden`}
                 >
-                    {/* Equipos */}
-                    <Grid
-                        container
-                        spacing={2}
-                        alignItems="center"
-                        wrap="nowrap"
-                        sx={{ flex: 1, minWidth: 0 }}
-                    >
-                        <Grid item xs="auto">
-                            <FavoriteStar partidoId={partido.id_partido} />
-                        </Grid>
+                    {/* Background gradient on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    <div className="relative z-10 flex items-center justify-between">
+                        {/* Left section: Favorite + Teams */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {/* Favorite Star */}
+                            <motion.div
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex-shrink-0"
+                            >
+                                <FavoriteStar partidoId={partido.id_partido} />
+                            </motion.div>
 
-                        <Grid
-                            item
-                            xs
-                            sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}
-                        >
-                            {/* Local */}
-                            <Box sx={{
-                                display: "grid",
-                                gridTemplateColumns: "auto 1fr auto",
-                                alignItems: "center",
-                                gap: 1
-                            }}>
-                                <Avatar alt={partido.equipo_local.nombre_equipo} src={partido.equipo_local.logo} sx={{ width: 30, height: 30, "& img": { objectFit: "contain" } }} />
-                                <Typography noWrap sx={{ fontSize: { xs: "12px", sm: "13px" }, fontWeight: 500 }}>
-                                    {partido.equipo_local.nombre_equipo}
-                                </Typography>
-                                <Typography noWrap sx={{ fontWeight: "bold", textAlign: "right", fontSize: { xs: "12px", sm: "13px" }, minWidth: "28px" }}>
-                                    {partido.estadisticas?.FTHG ?? " "}
-                                </Typography>
-                            </Box>
+                            {/* Teams Container */}
+                            <div className="flex-1 min-w-0 space-y-2">
+                                {/* Home Team */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                            <img 
+                                                src={partido.equipo_local.logo} 
+                                                alt={partido.equipo_local.nombre_equipo}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <span className={`${currentTheme.text} font-medium text-sm truncate`}>
+                                            {partido.equipo_local.nombre_equipo}
+                                        </span>
+                                    </div>
+                                    <div className={`${currentTheme.text} font-bold text-lg min-w-[28px] text-center`}>
+                                        {partido.estadisticas?.FTHG ?? ""}
+                                    </div>
+                                </div>
 
-                            {/* Visitante */}
-                            <Box sx={{
-                                display: "grid",
-                                gridTemplateColumns: "auto 1fr auto",
-                                alignItems: "center",
-                                gap: 1
-                            }}>
-                                <Avatar alt={partido.equipo_visita.nombre_equipo} src={partido.equipo_visita.logo} sx={{ width: 30, height: 30, "& img": { objectFit: "contain" } }} />
-                                <Typography noWrap sx={{ fontSize: { xs: "12px", sm: "13px" }, fontWeight: 500 }}>
-                                    {partido.equipo_visita.nombre_equipo}
-                                </Typography>
-                                <Typography noWrap sx={{ fontWeight: "bold", textAlign: "right", fontSize: { xs: "12px", sm: "13px" }, minWidth: "28px" }}>
-                                    {partido.estadisticas?.FTAG ?? " "}
-                                </Typography>
-                            </Box>
-                        </Grid>
-                    </Grid>
+                                {/* Away Team */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                            <img 
+                                                src={partido.equipo_visita.logo} 
+                                                alt={partido.equipo_visita.nombre_equipo}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <span className={`${currentTheme.text} font-medium text-sm truncate`}>
+                                            {partido.equipo_visita.nombre_equipo}
+                                        </span>
+                                    </div>
+                                    <div className={`${currentTheme.text} font-bold text-lg min-w-[28px] text-center`}>
+                                        {partido.estadisticas?.FTAG ?? ""}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    {/* Fecha + acciones */}
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.5 }}>
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                fontSize: { xs: "11px", sm: "12px" },
-                                color: currentTheme.textSecondary,
-                                textAlign: "right"
-                            }}
-                        >
-                            {formatFecha(partido.dia)} - {formatOnlyTime(partido.hora)}
-                        </Typography>
+                        {/* Right section: Date + Actions */}
+                        <div className="flex flex-col items-end gap-2 ml-4">
+                            {/* Date & Time */}
+                            <div className="text-right">
+                                <div className={`${currentTheme.textSecondary} text-xs font-medium`}>
+                                    {formatFecha(partido.dia)}
+                                </div>
+                                <div className={`${currentTheme.textSecondary} text-xs`}>
+                                    {formatOnlyTime(partido.hora)}
+                                </div>
+                            </div>
 
-                        {/* Íconos dinámicos */}
-                        <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1">
                             {type === "por-jugar" ? (
-                                <>
-                                    <Tooltip title="Análisis">
-                                        <IconButton size="small" onClick={() => onInfoClick(
-                                            partido.equipo_local.nombre_equipo,
-                                            partido.equipo_visita.nombre_equipo,
-                                            partido.id_partido
-                                        )}>
-                                            <InfoOutlined className={currentTheme.text} />
-                                        </IconButton>
-                                    </Tooltip>
+                                    <>
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => onInfoClick(
+                                                partido.equipo_local.nombre_equipo,
+                                                partido.equipo_visita.nombre_equipo,
+                                                partido.id_partido
+                                            )}
+                                            className={`p-2 rounded-lg ${currentTheme.hover} transition-colors duration-200 group/btn`}
+                                            title="Análisis"
+                                        >
+                                            <InformationCircleIcon className={`w-4 h-4 ${currentTheme.textSecondary} group-hover/btn:text-blue-500 transition-colors`} />
+                                        </motion.button>
 
-                                    <Tooltip title="Predicciones">
-                                        <IconButton size="small" onClick={() => onPrediccionClick(
-                                            partido.equipo_local.nombre_equipo,
-                                            partido.equipo_visita.nombre_equipo,
-                                            partido.id_partido
-                                        )}>
-                                            <TipsAndUpdatesOutlined className={currentTheme.text} />
-                                        </IconButton>
-                                    </Tooltip>
-                                </>
-                            ) : (
-                                <>
-                                    <Tooltip title="Resumen">
-                                        <IconButton size="small" onClick={() => onResumenClick(partido.id_partido)}>
-                                            <SummarizeIcon className={currentTheme.accent} />
-                                        </IconButton>
-                                    </Tooltip>
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => onPrediccionClick(
+                                                partido.equipo_local.nombre_equipo,
+                                                partido.equipo_visita.nombre_equipo,
+                                                partido.id_partido
+                                            )}
+                                            className={`p-2 rounded-lg ${currentTheme.hover} transition-colors duration-200 group/btn`}
+                                            title="Predicciones"
+                                        >
+                                            <LightBulbIcon className={`w-4 h-4 ${currentTheme.textSecondary} group-hover/btn:text-yellow-500 transition-colors`} />
+                                        </motion.button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => onResumenClick(partido.id_partido)}
+                                            className={`p-2 rounded-lg ${currentTheme.hover} transition-colors duration-200 group/btn`}
+                                            title="Resumen"
+                                        >
+                                            <DocumentTextIcon className={`w-4 h-4 ${currentTheme.textSecondary} group-hover/btn:text-green-500 transition-colors`} />
+                                        </motion.button>
 
-                                    <Tooltip title="Imágenes">
-                                        <IconButton size="small" onClick={() => onImagenesClick(partido.id_partido)}>
-                                            <PhotoSizeSelectActualIcon className={currentTheme.text} />
-                                        </IconButton>
-                                    </Tooltip>
-                                </>
-                            )}
-                        </Box>
-                    </Box>
-                </ListItem>
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => onImagenesClick(partido.id_partido)}
+                                            className={`p-2 rounded-lg ${currentTheme.hover} transition-colors duration-200 group/btn`}
+                                            title="Imágenes"
+                                        >
+                                            <PhotoIcon className={`w-4 h-4 ${currentTheme.textSecondary} group-hover/btn:text-purple-500 transition-colors`} />
+                                        </motion.button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Match Status Indicator */}
+                    {type === "finalizados" && (
+                        <div className="absolute top-2 right-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        </div>
+                    )}
+                </motion.div>
             ))}
-        </List>
+        </div>
     )
 })
 

@@ -51,40 +51,50 @@ frontend/
 
 ## 🔑 Características Principales
 
-- **Interfaz de Usuario Moderna**
-  - Diseño responsive
-  - Temas claros y oscuros
-  - Animaciones fluidas
+### Visualización de Datos
+- Estadísticas en tiempo real
+- Gráficos interactivos
+- Tablas de posiciones
+- Calendarios de partidos
 
-- **Gestión de Estado**
-  - Contextos de React
-  - Estado local eficiente
-  - Caché de datos
+### Gestión de Equipos
+- Perfiles de equipos
+- Plantillas de jugadores
+- Estadísticas por equipo
+- Historial de partidos
 
-- **Navegación**
-  - Rutas protegidas
-  - Navegación fluida
-  - Breadcrumbs
+### Seguimiento de Ligas
+- Múltiples ligas
+- Temporadas activas
+- Clasificaciones
+- Resultados en vivo
 
-- **Integración con API**
-  - Llamadas HTTP optimizadas
-  - Manejo de errores
-  - Loading states
+### Experiencia de Usuario
+- Diseño responsive
+- Temas claros y oscuros
+- Animaciones fluidas
+- Navegación intuitiva
 
 ## 🔒 Seguridad
 
-- Autenticación JWT
-- Protección de rutas
+### Autenticación
+- JWT (JSON Web Tokens)
+- Persistencia de sesión
+- Rutas protegidas
+
+### Protección de Datos
 - Validación de formularios
 - Sanitización de datos
+- Manejo de errores
+- Rate limiting
 
 ## 📱 Responsive Design
 
 La aplicación está optimizada para:
-- Dispositivos móviles
-- Tablets
-- Escritorio
-- Pantallas grandes
+- Dispositivos móviles (>320px)
+- Tablets (>768px)
+- Escritorio (>1024px)
+- Pantallas grandes (>1440px)
 
 ## 🧪 Testing
 
@@ -100,30 +110,10 @@ Con coverage:
 npm run test:coverage
 ```
 
-## 📦 Build y Despliegue
+## 📝 Contribuir
 
-1. Construir para producción:
-```bash
-npm run build
-```
-
-2. Preview de la build:
-```bash
-npm run preview
-```
-
-## 🤝 Contribuir
-
-1. Haz fork del proyecto
+1. Fork el repositorio
 2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
-
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
-
-## 👥 Autores
-
-- Nicole Palomino Alvarado

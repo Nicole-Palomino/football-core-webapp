@@ -1,19 +1,28 @@
-import { Box, Card, CardContent, Fade, Grid, Typography, useTheme } from '@mui/material'
 import { combinarAnalisisYPrediccion, getAnalyticsCluster, getPoisson, getPredictionCluster } from '../../../services/functions'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import { useQuery } from '@tanstack/react-query'
-import {
-    Assessment as AssessmentIcon, DataSaverOff as DataSaverOffIcon, TableChart as TableChartIcon, 
-    SportsSoccer as SportsSoccerIcon, Scoreboard as ScoreboardIcon, Whatshot as WhatshotIcon,
-    Square as SquareIcon
-} from '@mui/icons-material'
-import TitleText from './TitleText'
 import CustomAlertas from './CustomAlertas'
 import EntreEquipos from './EntreEquipos'
+import {
+    ChartBarIcon,
+    DocumentChartBarIcon,
+    TableCellsIcon,
+    ArrowDownTrayIcon,
+    InformationCircleIcon,
+    TrophyIcon,
+    FireIcon,
+    RectangleStackIcon
+} from '@heroicons/react/24/outline'
+import jsPDF from 'jspdf'
+import { motion } from 'framer-motion'
+import { useThemeMode } from '../../../contexts/ThemeContext'
+import { useRef } from 'react'
+import domtoimage from 'dom-to-image-more'
 
 const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
+    const analysisRef = useRef(null)
 
     // 1. Consulta para Poisson
     const {
@@ -52,14 +61,54 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
     const isLoading = isLoadingPoisson || isLoadingCluster
     const isError = isErrorPoisson || isErrorCluster
 
+    const downloadAsPNG = async () => {
+        if (!analysisRef.current) return
+
+        try {
+            const dataUrl = await domtoimage.toPng(analysisRef.current, {
+                quality: 1,
+                bgcolor: '#ffffff' // fondo blanco opcional
+            })
+            const link = document.createElement('a')
+            link.download = `analisis-${equipo_local}-vs-${equipo_visita}.png`
+            link.href = dataUrl
+            link.click()
+        } catch (error) {
+            console.error('Error downloading PNG:', error)
+        }
+    }
+
+    const downloadAsPDF = async () => {
+        if (!analysisRef.current) return
+
+        try {
+            const dataUrl = await domtoimage.toPng(analysisRef.current, {
+                quality: 1,
+                bgcolor: '#ffffff'
+            })
+
+            const pdf = new jsPDF('p', 'mm', 'a4')
+            const imgProps = pdf.getImageProperties(dataUrl)
+            const pdfWidth = pdf.internal.pageSize.getWidth()
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+
+            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+            pdf.save(`analisis-${equipo_local}-vs-${equipo_visita}.pdf`)
+        } catch (error) {
+            console.error('Error downloading PDF:', error)
+        }
+    }
+
     if (isLoading) return <LoadingSpinner />
 
     if (isError) {
         return (
-            <div>
-                <h2>Error al cargar datos:</h2>
-                {isErrorPoisson && <p>Match Poisson: {errorPoisson.message}</p>}
-                {isErrorCluster && <p>Match Cluster: {errorCluster.message}</p>}
+            <div className={`min-h-[400px] ${currentTheme.background} flex items-center justify-center`}>
+                <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 text-center`}>
+                    <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Error al cargar datos</h2>
+                    {isErrorPoisson && <p className={`${currentTheme.textSecondary} mb-2`}>Match Poisson: {errorPoisson.message}</p>}
+                    {isErrorCluster && <p className={`${currentTheme.textSecondary}`}>Match Cluster: {errorCluster.message}</p>}
+                </div>
             </div>
         )
     }
@@ -68,474 +117,349 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
     const finalMatchCluster = clusterData || []
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-            }}
-        >
+        <div className="flex justify-center items-center w-full">
             {finalMatchPoisson ? (
-                <Fade in={true} timeout={1200}>
-                    <Box sx={{ width: "100%", mx: "auto", maxWidth: "1400px" }}>
-                        <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
-                            <Grid
-                                item
-                                xs={12}
-                                md={6}
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    minWidth: { md: 1000, xs: 'auto' }
-                                }}
-                            >
-                                <Typography
-                                    className='uppercase'
-                                    sx={{
-                                        color: 'white',
-                                        mb: 4,
-                                        textAlign: 'center',
-                                        fontFamily: 'cursive',
-                                        background: 'linear-gradient(45deg, #201DBE, #49FD58)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        fontSize: { xs: 18, md: 33 }
-                                    }}>
-                                    Análisis Probabilístico (Modelo de Poisson)
-                                </Typography>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="w-full mx-auto max-w-[1200px]"
+                >
+                    {/* Download Actions */}
+                    <div className="flex justify-end gap-2 mb-6">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={downloadAsPNG}
+                            className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
+                        >
+                            <ArrowDownTrayIcon className="w-4 h-4" />
+                            <span className={`text-sm font-medium ${currentTheme.text}`}>PNG</span>
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={downloadAsPDF}
+                            className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
+                        >
+                            <ArrowDownTrayIcon className="w-4 h-4" />
+                            <span className={`text-sm font-medium ${currentTheme.text}`}>PDF</span>
+                        </motion.button>
+                    </div>
 
+                    <div ref={analysisRef} className={`${currentTheme.background} p-6 rounded-2xl`}>
+                        {/* Poisson Analysis Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            className="space-y-6"
+                        >
+                            <div className="text-center mb-8">
+                                <h2 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+                                    Análisis Probabilístico (Modelo de Poisson)
+                                </h2>
                                 <CustomAlertas
                                     title='📈 Este análisis ha sido desarrollado utilizando el modelo estadístico Poisson, basado en datos históricos y rendimiento de los equipos.'
                                 />
+                            </div>
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* goles esperados */}
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #4995FD, #E7AD8C)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={AssessmentIcon}
-                                                iconColor='#4995FD'
-                                                title='Goles Esperados' />
-                                            <EntreEquipos
-                                                equipo_local={equipo_local}
-                                                equipo_visita={equipo_visita}
-                                                item_local={finalMatchPoisson?.goles_esperados?.local}
-                                                item_visita={finalMatchPoisson?.goles_esperados?.visitante} />
-                                        </CardContent>
-                                    </Card>
+                            {/* Expected Goals & Probabilities */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Goles esperados */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                                            <ChartBarIcon className="w-6 h-6 text-blue-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Goles Esperados</h3>
+                                    </div>
+                                    <EntreEquipos
+                                        equipo_local={equipo_local}
+                                        equipo_visita={equipo_visita}
+                                        item_local={finalMatchPoisson?.goles_esperados?.local}
+                                        item_visita={finalMatchPoisson?.goles_esperados?.visitante}
+                                    />
+                                </motion.div>
 
-                                    {/* probabilidades */}
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #E17C34, #34E1D4)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={DataSaverOffIcon}
-                                                iconColor='#E17C34'
-                                                title='Probabilidades 1X2' />
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-around' }}>
-                                                <Box>
-                                                    <Typography sx={{ color: '#368FF4', textAlign: 'center', fontWeight: 600, fontSize: { xs: 20, md: 30 } }}>
-                                                        {finalMatchPoisson?.probabilidades_1x2.local}%
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary, textAlign: 'center' }}>
-                                                        {equipo_local}
-                                                    </Typography>
-                                                </Box>
-                                                <Box>
-                                                    <Typography sx={{ color: '#E17C34', textAlign: 'center', fontWeight: 600, fontSize: { xs: 20, md: 30 } }}>
-                                                        {finalMatchPoisson?.probabilidades_1x2.empate}%
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary, textAlign: 'center' }}>
-                                                        Empate
-                                                    </Typography>
-                                                </Box>
-                                                <Box>
-                                                    <Typography sx={{ color: '#FF4444', textAlign: 'center', fontWeight: 600, fontSize: { xs: 20, md: 30 } }}>
-                                                        {finalMatchPoisson?.probabilidades_1x2?.visita}%
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary, textAlign: 'center' }}>
-                                                        {equipo_visita}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                                {/* Probabilidades 1X2 */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-pink-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-orange-500/20 rounded-lg">
+                                            <TrophyIcon className="w-6 h-6 text-orange-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Probabilidades 1X2</h3>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                        <div className="space-y-2">
+                                            <div className="text-2xl md:text-3xl font-bold text-blue-500">
+                                                {finalMatchPoisson?.probabilidades_1x2?.local}%
+                                            </div>
+                                            <div className={`text-sm ${currentTheme.textSecondary} truncate`}>
+                                                {equipo_local}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="text-2xl md:text-3xl font-bold text-orange-500">
+                                                {finalMatchPoisson?.probabilidades_1x2?.empate}%
+                                            </div>
+                                            <div className={`text-sm ${currentTheme.textSecondary}`}>
+                                                Empate
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="text-2xl md:text-3xl font-bold text-red-500">
+                                                {finalMatchPoisson?.probabilidades_1x2?.visita}%
+                                            </div>
+                                            <div className={`text-sm ${currentTheme.textSecondary} truncate`}>
+                                                {equipo_visita}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
 
-                                <Grid className="grid grid-cols-1 gap-4 mt-5">
-                                    {/* probabilidades */}
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #FB7452, #D9FB52)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={TableChartIcon}
-                                                iconColor='#FB7452'
-                                                title='Matriz de Resultados Exactos' />
-                                            {finalMatchPoisson?.matriz_scores_exactos && (
-                                                <Box sx={{ overflowX: 'auto' }}>
-                                                    <Box component="table" sx={{ borderCollapse: 'collapse', width: '100%', minWidth: 400 }}>
-                                                        <thead>
-                                                            <tr>
-                                                                <th style={{ color: theme.palette.text.primary, padding: '4px', fontSize: 'clamp(12px, 2vw, 20px)', textAlign: 'center' }}>Local \ Visita</th>
-                                                                {Object.keys(finalMatchPoisson.matriz_scores_exactos[0]).map((col) => (
-                                                                    <th key={col} style={{ color: theme.palette.text.primary, padding: '4px', fontSize: 'clamp(12px, 2vw, 20px)', textAlign: 'center' }}>
-                                                                        {col}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {Object.entries(finalMatchPoisson.matriz_scores_exactos).map(([golesLocal, row]) => (
-                                                                <tr key={golesLocal}>
-                                                                    <td style={{ color: theme.palette.primary.main, padding: '4px', fontSize: 'clamp(12px, 2vw, 20px)', textAlign: 'center' }}>{golesLocal}</td>
-                                                                    {Object.entries(row).map(([golesVisita, prob]) => (
-                                                                        <td key={golesVisita} style={{ color: theme.palette.text.secondary, padding: '4px', fontSize: 'clamp(12px, 2vw, 20px)', textAlign: 'center' }}>
-                                                                            {prob.toFixed(1)}%
-                                                                        </td>
-                                                                    ))}
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </Box>
-                                                </Box>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                            {/* Matriz de Resultados */}
+                            <motion.div
+                                whileHover={{ scale: 1.01 }}
+                                className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden`}
+                            >
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-teal-400 rounded-t-2xl"></div>
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-green-500/20 rounded-lg">
+                                        <TableCellsIcon className="w-6 h-6 text-green-500" />
+                                    </div>
+                                    <h3 className={`text-lg font-bold ${currentTheme.text}`}>Matriz de Resultados Exactos</h3>
+                                </div>
+                                {finalMatchPoisson?.matriz_scores_exactos && (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr>
+                                                    <th className={`${currentTheme.text} p-2 text-center text-sm font-semibold`}>Local \ Visita</th>
+                                                    {Object.keys(finalMatchPoisson.matriz_scores_exactos[0]).map((col) => (
+                                                        <th key={col} className={`${currentTheme.text} p-2 text-center text-sm font-semibold`}>
+                                                            {col}
+                                                        </th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Object.entries(finalMatchPoisson.matriz_scores_exactos).map(([golesLocal, row]) => (
+                                                    <tr key={golesLocal} className={`${currentTheme.hover} hover:bg-opacity-50`}>
+                                                        <td className={`text-blue-500 p-2 text-center font-semibold text-sm`}>{golesLocal}</td>
+                                                        {Object.entries(row).map(([golesVisita, prob]) => (
+                                                            <td key={golesVisita} className={`${currentTheme.textSecondary} p-2 text-center text-sm`}>
+                                                                {prob.toFixed(1)}%
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </motion.div>
 
-                                <Typography
-                                    className='uppercase'
-                                    sx={{
-                                        color: 'white',
-                                        mb: 4,
-                                        mt: 4,
-                                        textAlign: 'center',
-                                        fontFamily: 'cursive',
-                                        background: 'linear-gradient(45deg, #201DBE, #49FD58)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        fontSize: { xs: 18, md: 33 }
-                                    }}>
+                        {/* K-Means Analysis Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, delay: 0.4 }}
+                            className="space-y-6 mt-12"
+                        >
+                            <div className="text-center mb-8">
+                                <h2 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent mb-4">
                                     Predicción basada en Clustering K-Means
-                                </Typography>
-
+                                </h2>
                                 <CustomAlertas
                                     title='🤖 Este análisis utiliza K-Means, un algoritmo de machine learning no supervisado, para agrupar equipos según su rendimiento histórico.'
                                 />
+                            </div>
 
-                                <Grid className="grid grid-cols-1 gap-4">
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #D20419, #D2BD04)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={SportsSoccerIcon}
-                                                iconColor='#D2BD04'
-                                                title='Resumen del Partido' />
-                                            <p className="text-md whitespace-pre-line" style={{ color: theme.palette.text.primary }}>{finalMatchCluster?.descripcion_cluster_predicho}</p>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                            {/* Match Summary */}
+                            <motion.div
+                                whileHover={{ scale: 1.01 }}
+                                className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden`}
+                            >
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-400 rounded-t-2xl"></div>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                                        <DocumentChartBarIcon className="w-6 h-6 text-purple-500" />
+                                    </div>
+                                    <h3 className={`text-lg font-bold ${currentTheme.text}`}>Resumen del Partido</h3>
+                                </div>
+                                {/* {finalMatchCluster?.descripcion_cluster_predicho && (
+                                    <p className={`${currentTheme.text} text-sm leading-relaxed whitespace-pre-line`}>
+                                        {finalMatchCluster.descripcion_cluster_predicho}
+                                    </p>
+                                )} */}
+                            </motion.div>
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #88EA3D, #3D88EA)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={SportsSoccerIcon}
-                                                iconColor='#3D88EA'
-                                                title='Goles Esperados FT' />
-                                            <EntreEquipos
-                                                equipo_local={equipo_local}
-                                                equipo_visita={equipo_visita}
-                                                item_local={finalMatchCluster?.prediccion.predicciones.goles_esperados_local}
-                                                item_visita={finalMatchCluster?.prediccion.predicciones.goles_esperados_visitante} />
-                                        </CardContent>
-                                    </Card>
+                            {/* Predictions Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Goles Esperados FT */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-green-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                                            <TrophyIcon className="w-6 h-6 text-blue-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Goles Esperados FT</h3>
+                                    </div>
+                                    <EntreEquipos
+                                        equipo_local={equipo_local}
+                                        equipo_visita={equipo_visita}
+                                        item_local={finalMatchCluster?.prediccion?.predicciones?.goles_esperados_local}
+                                        item_visita={finalMatchCluster?.prediccion?.predicciones?.goles_esperados_visitante}
+                                    />
+                                </motion.div>
 
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #DD4C32, #C3DD32)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={SportsSoccerIcon}
-                                                iconColor='#DD4C32'
-                                                title='Goles Esperados HT' />
-                                            <EntreEquipos
-                                                equipo_local={equipo_local}
-                                                equipo_visita={equipo_visita}
-                                                item_local={finalMatchCluster?.prediccion.predicciones.goles_ht_local}
-                                                item_visita={finalMatchCluster?.prediccion.predicciones.goles_ht_visitante} />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                                {/* Goles Esperados HT */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-yellow-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-orange-500/20 rounded-lg">
+                                            <TrophyIcon className="w-6 h-6 text-orange-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Goles Esperados HT</h3>
+                                    </div>
+                                    <EntreEquipos
+                                        equipo_local={equipo_local}
+                                        equipo_visita={equipo_visita}
+                                        item_local={finalMatchCluster?.prediccion?.predicciones?.goles_ht_local}
+                                        item_visita={finalMatchCluster?.prediccion?.predicciones?.goles_ht_visitante}
+                                    />
+                                </motion.div>
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #E62D58, #BB2DE6)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={ScoreboardIcon}
-                                                iconColor='#E62D58'
-                                                title='Ambos marcan' />
-                                            <div className="flex justify-center items-center">
-                                                <div className="w-full bg-gray-200 rounded-full dark:bg-gray-700">
-                                                    <div className="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style={{ width: `${Math.round(clusterData?.prediccion.predicciones.ambos_marcan * 100)}%` }}>
-                                                        {Math.round(finalMatchCluster?.prediccion.predicciones.ambos_marcan * 100)}%
-                                                    </div>
+                                {/* Ambos marcan */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-purple-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-pink-500/20 rounded-lg">
+                                            <FireIcon className="w-6 h-6 text-pink-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Ambos marcan</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
+                                                <div
+                                                    className="bg-gradient-to-r from-pink-500 to-purple-600 h-3 rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-2"
+                                                    style={{ width: `${Math.round((finalMatchCluster?.prediccion?.predicciones?.ambos_marcan || 0) * 100)}%` }}
+                                                >
+                                                    <span className="text-white text-xs font-bold">
+                                                        {Math.round((finalMatchCluster?.prediccion?.predicciones?.ambos_marcan || 0) * 100)}%
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-center mt-4">
-                                                Probabilidad de ambos marcan: {Math.round(finalMatchCluster?.prediccion.predicciones.ambos_marcan * 100)}%
-                                            </p>
-                                        </CardContent>
-                                    </Card>
+                                        </div>
+                                        <p className={`text-center text-sm ${currentTheme.textSecondary}`}>
+                                            Probabilidad de ambos marcan: {Math.round((finalMatchCluster?.prediccion?.predicciones?.ambos_marcan || 0) * 100)}%
+                                        </p>
+                                    </div>
+                                </motion.div>
 
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #C1A066, #9F66C1)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={WhatshotIcon}
-                                                iconColor='#9F66C1'
-                                                title='Tiros al Arco' />
-                                            <EntreEquipos
-                                                equipo_local={equipo_local}
-                                                equipo_visita={equipo_visita}
-                                                item_local={finalMatchCluster?.prediccion.predicciones.tiros_arco_local}
-                                                item_visita={finalMatchCluster?.prediccion.predicciones.tiros_arco_visitante} />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                                {/* Tiros al Arco */}
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-cyan-500/20 rounded-lg">
+                                            <FireIcon className="w-6 h-6 text-cyan-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Tiros al Arco</h3>
+                                    </div>
+                                    <EntreEquipos
+                                        equipo_local={equipo_local}
+                                        equipo_visita={equipo_visita}
+                                        item_local={finalMatchCluster?.prediccion?.predicciones?.tiros_arco_local}
+                                        item_visita={finalMatchCluster?.prediccion?.predicciones?.tiros_arco_visitante}
+                                    />
+                                </motion.div>
+                            </div>
 
-                                <Grid className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #F44B75, #4B75F4)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={SquareIcon}
-                                                iconColor='#F44B75'
-                                                title='Disciplinas Local' />
-                                            <EntreEquipos
-                                                equipo_local='Amarillas'
-                                                equipo_visita='Rojas'
-                                                item_local={finalMatchCluster?.prediccion.predicciones.amarillas_local}
-                                                item_visita={finalMatchCluster?.prediccion.predicciones.rojas_local} />
-                                        </CardContent>
-                                    </Card>
+                            {/* Disciplinary Actions */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-orange-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-yellow-500/20 rounded-lg">
+                                            <RectangleStackIcon className="w-6 h-6 text-yellow-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Disciplinas Local</h3>
+                                    </div>
+                                    <EntreEquipos
+                                        equipo_local='Amarillas'
+                                        equipo_visita='Rojas'
+                                        item_local={finalMatchCluster?.prediccion?.predicciones?.amarillas_local}
+                                        item_visita={finalMatchCluster?.prediccion?.predicciones?.rojas_local}
+                                    />
+                                </motion.div>
 
-                                    <Card
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #C6C22E, #2E7FC6)`
-                                            }
-                                        }}>
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={SquareIcon}
-                                                iconColor='#2E7FC6'
-                                                title='Disciplinas Visitante' />
-                                            <EntreEquipos
-                                                equipo_local='Amarillas'
-                                                equipo_visita='Rojas'
-                                                item_local={finalMatchCluster?.prediccion.predicciones.amarillas_visitante}
-                                                item_visita={finalMatchCluster?.prediccion.predicciones.rojas_visitante} />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                
+                                <motion.div
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-6 relative overflow-hidden group transition-all duration-300`}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-pink-400 rounded-t-2xl"></div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-red-500/20 rounded-lg">
+                                            <RectangleStackIcon className="w-6 h-6 text-red-500" />
+                                        </div>
+                                        <h3 className={`text-lg font-bold ${currentTheme.text}`}>Disciplinas Visitante</h3>
+                                    </div>
+                                    <EntreEquipos
+                                        equipo_local='Amarillas'
+                                        equipo_visita='Rojas'
+                                        item_local={finalMatchCluster?.prediccion?.predicciones?.amarillas_visitante}
+                                        item_visita={finalMatchCluster?.prediccion?.predicciones?.rojas_visitante}
+                                    />
+                                </motion.div>
+                            </div>
+
+                            <div className="mt-8">
                                 <CustomAlertas
                                     title='🤖 Este análisis utiliza K-Means, un algoritmo de machine learning no supervisado, para agrupar equipos según su rendimiento histórico.'
                                 />
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Fade>
+                            </div>
+                        </motion.div>
+                    </div>
+                </motion.div>
             ) : (
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                    <Typography variant="h6" color="#888">
+                <div className={`text-center py-12 ${currentTheme.card} ${currentTheme.border} border rounded-2xl`}>
+                    <InformationCircleIcon className={`w-16 h-16 mx-auto mb-4 ${currentTheme.textSecondary}`} />
+                    <h3 className={`text-xl font-semibold ${currentTheme.text} mb-2`}>
                         No hay análisis disponible
-                    </Typography>
-                </Box>
+                    </h3>
+                    <p className={`${currentTheme.textSecondary}`}>
+                        Los datos de análisis no están disponibles para este partido
+                    </p>
+                </div>
             )}
-        </Box>
+        </div>
     )
 }
 

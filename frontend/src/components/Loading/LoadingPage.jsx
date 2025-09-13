@@ -1,25 +1,25 @@
-import { Box, CircularProgress, Typography, useTheme } from '@mui/material'
+import { useThemeMode } from '../../contexts/ThemeContext'
 
 const LoadingPage = () => {
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100vh",
-                width: "100%",
-                backgroundColor: theme.palette.background.default,
-            }}
-        >
-            <CircularProgress size={80} sx={{ color: theme.palette.primary.main }} />
-            <Typography mt={2} variant="h6" sx={{ color: theme.palette.text.primary }}>
+        <div className={`${currentTheme.background} min-h-screen flex flex-col items-center justify-center`}>
+            <div className="relative mb-8">
+                <div className="w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+            <h1 className={`${currentTheme.text} text-2xl font-bold tracking-wider animate-pulse`}>
                 BIENVENIDOS A FOOTBALL CORE
-            </Typography>
-        </Box>
+            </h1>
+            <div className="mt-4 flex space-x-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+        </div>
     )
 }
 

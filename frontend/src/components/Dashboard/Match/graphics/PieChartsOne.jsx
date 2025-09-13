@@ -1,8 +1,13 @@
 import PieArcLabel from './PieArcLabel'
+import { useThemeMode } from '../../../../contexts/ThemeContext'
 
 const PieChartsOne = ({ Data }) => {
+    const { currentTheme } = useThemeMode()
+    
     return (
-        <PieArcLabel data={Data} />
+        <div className={`rounded-lg transition-all duration-300 hover:shadow-lg ${currentTheme.card}`}>
+            <PieArcLabel data={Data} />
+        </div>
     )
 }
 

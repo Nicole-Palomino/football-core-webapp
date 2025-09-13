@@ -13,6 +13,7 @@ const white = '#ffffff'
 export const lightTheme = createTheme({
     // Fondos principales
     background: 'bg-gray-50',
+    backgroundSecondary: "bg-blue-100",
     sidebar: 'bg-white',
     modal: 'bg-white',
     navbar: 'bg-white/95',
@@ -23,6 +24,7 @@ export const lightTheme = createTheme({
     textSecondary: 'text-gray-600',
     textMuted: 'text-gray-500',
     textInverse: 'text-white',
+    title: "text-blue-700", 
     
     // Bordes
     border: 'border-gray-200',
@@ -167,6 +169,7 @@ export const lightTheme = createTheme({
 export const darkTheme = createTheme({
     // Fondos principales
     background: 'bg-gray-900',
+    backgroundSecondary: "bg-blue-900/40",
     sidebar: 'bg-gray-800',
     modal: 'bg-gray-800',
     navbar: 'bg-gray-900/95',
@@ -177,6 +180,7 @@ export const darkTheme = createTheme({
     textSecondary: 'text-gray-300',
     textMuted: 'text-gray-400',
     textInverse: 'text-gray-900',
+    title: "text-blue-300",
     
     // Bordes
     border: 'border-gray-700',

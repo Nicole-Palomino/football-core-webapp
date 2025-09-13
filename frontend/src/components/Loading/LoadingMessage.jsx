@@ -1,43 +1,21 @@
-import { Box, Fade, Typography, useTheme } from '@mui/material'
-import { Analytics as AnalyticsIcon } from '@mui/icons-material'
+import { ChartBarIcon } from '@heroicons/react/24/outline'
+import { useThemeMode } from '../../contexts/ThemeContext'
 
 const LoadingMessage = () => {
-    const theme = useTheme()
+    const { currentTheme } = useThemeMode()
 
     return (
-        <Fade in={true} timeout={1500}>
-            <Box
-                sx={{
-                    textAlign: 'center',
-                    py: 10,
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: 2,
-                    border: `1px solid ${theme.palette.text.secondary}`
-                }}>
-                <AnalyticsIcon
-                    sx={{
-                        fontSize: 100,
-                        color: '#333',
-                        mb: 3,
-                        opacity: 0.5
-                    }}
-                />
-                <Typography
-                    variant="h4"
-                    sx={{
-                        color: '#666',
-                        mb: 2,
-                        fontFamily: 'cursive'
-                    }}>
-                    Selecciona equipos para analizar
-                </Typography>
-                <Typography
-                    variant="body1"
-                    sx={{ color: '#888' }}>
-                    Elige una liga y dos equipos para ver el análisis estadístico completo
-                </Typography>
-            </Box>
-        </Fade>
+        <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-12 text-center`}>
+            <div className="animate-bounce mb-6">
+                <ChartBarIcon className="w-24 h-24 text-gray-400 mx-auto opacity-50" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-600 mb-4">
+                Selecciona equipos para analizar
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+                Elige una liga y dos equipos para ver el análisis estadístico completo
+            </p>
+        </div>
     )
 }
 

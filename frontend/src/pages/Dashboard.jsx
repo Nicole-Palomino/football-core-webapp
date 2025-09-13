@@ -1,4 +1,3 @@
-import { Box, Grid } from '@mui/material'
 import { Outlet } from 'react-router-dom'
 import NavbarUsers from '../components/Navbar/NavbarUsers'
 import { useThemeMode } from '../contexts/ThemeContext'
@@ -7,39 +6,19 @@ const Dashboard = () => {
     const { currentTheme } = useThemeMode()
 
     return (
-        <Grid container spacing={0} 
-            className={`${currentTheme.background}`}
-            sx={{ 
-                minHeight: "100vh",
-                height: "100vh",
-                width: "100%",
-                margin: 0,
-                padding: 0,
-                display: "flex",
-                justifyContent: "center", 
-                overflow: "hidden",
-            }}>
-                <Grid item xs={12} md sx={{ display: { xs: "none", md: "block" } }}></Grid>
+        <div className={`flex justify-center w-full min-h-screen h-screen m-0 p-0 overflow-hidden ${currentTheme.background}`}>
+            <div className="hidden md:block"></div>
 
-                {/* seccion principal */}
-                <Grid item xs={12} md={10} 
-                    sx={{ 
-                        minHeight: '100vh', 
-                        height: '100%', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        overflowY: "auto", 
-                        maxWidth: "1200px",
-                        width: "100%",
-                    }}>
-                    <NavbarUsers />
-                    <Box sx={{ flexGrow: 1 }}>
-                        <Outlet />
-                    </Box>
-                </Grid>
+            {/* seccion principal */}
+            <div className="flex flex-col w-full md:w-10/12 max-w-[1200px] min-h-screen h-full overflow-y-auto">
+                <NavbarUsers />
+                <div className="flex-grow">
+                    <Outlet />
+                </div>
+            </div>
 
-                <Grid item xs={12} md sx={{ display: { xs: "none", md: "block" } }}></Grid>
-        </Grid>
+            <div className="hidden md:block"></div>
+        </div>
     )
 }
 

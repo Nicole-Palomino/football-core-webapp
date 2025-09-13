@@ -7,11 +7,13 @@ import TitleText from './TitleText'
 import ButtonDownload from '../../Buttons/ButtonDownload'
 import { useQuery } from '@tanstack/react-query'
 import TableChartIcon from '@mui/icons-material/TableChart'
+import { ChartBarIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useThemeMode } from '../../../contexts/ThemeContext'
 
 const CustomImage = ({ id_partido }) => {
 
-    const theme = useTheme()
-    const [open, setOpen] = useState(false)
+    const { currentTheme } = useThemeMode()
     const [openImage, setOpenImage] = useState(null)
 
     const {
@@ -34,151 +36,196 @@ const CustomImage = ({ id_partido }) => {
 
     if (isError) {
         return (
-            <div>
-                <h2>Error al cargar datos:</h2>
-                {isErrorImage && <p>Summary by ID: {errorImage.message}</p>}
+            <div className="flex flex-col items-center justify-center p-8">
+                <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6 max-w-md w-full text-center`}>
+                    <h2 className={`${currentTheme.text} text-lg font-bold mb-4`}>Error al cargar datos</h2>
+                    {isErrorImage && <p className={`${currentTheme.textSecondary} text-sm`}>Summary by ID: {errorImage.message}</p>}
+                </div>
             </div>
         )
     }
 
     const finalMatchesSummaries = matchImage || []
 
-    const handleOpen = (url) => {
-        setOpen(true)
-        setOpenImage(url)
+    const handleOpen = (url, title) => {
+        setOpenImage({url, title})
     }
 
     const handleClose = () => {
-        setOpen(false)
         setOpenImage(null)
     }
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-            }}
-        >
-            {finalMatchesSummaries ? (
-                <Fade in={true} timeout={1200}>
-                    <Box sx={{ width: "100%", mx: "auto", maxWidth: "1400px" }}>
-                        <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center', width: '100%' }}>
-                            <Grid
-                                item
-                                xs={12}
-                                md={6}
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    minWidth: { md: 1000, xs: 'auto' }
-                                }}
-                            >
-                                <Typography
-                                    className='uppercase'
-                                    sx={{
-                                        color: 'white',
-                                        mb: 4,
-                                        textAlign: 'center',
-                                        fontFamily: 'cursive',
-                                        background: 'linear-gradient(45deg, #201DBE, #49FD58)',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        fontSize: { xs: 18, md: 33 }
-                                    }}>
+        <div className="flex justify-center items-center w-full">
+            {finalMatchesSummaries.length > 0 ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1.2 }}
+                    className="w-full mx-auto max-w-6xl"
+                >
+                    <div className="w-full flex justify-center">
+                        <div className="w-full md:w-4/5 lg:w-3/5 flex flex-col">
+                            {/* Título principal */}
+                            <div className="text-center mb-8">
+                                <h2 className="text-lg md:text-3xl font-bold uppercase bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 bg-clip-text text-transparent mb-6">
                                     Resumen Estadístico
-                                </Typography>
-
+                                </h2>
                                 <CustomAlertas
                                     title='Este tipo de visualización facilita comprender qué equipo dominó más en ataque, cómo se distribuyeron los tiros a portería y el impacto de las transiciones en el desarrollo del partido.'
                                 />
+                            </div>
 
-                                <Grid className="grid grid-cols-1 gap-4 mt-5">
-                                    <Card
-                                        key={finalMatchesSummaries[0]?.id_resumen}
-                                        sx={{
-                                            width: '100%',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: 1,
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            mt: 2,
-                                            '&::before': {
-                                                content: '""',
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                right: 0,
-                                                height: '4px',
-                                                background: `linear-gradient(90deg, #FB7452, #D9FB52)`
-                                            }
-                                        }}
+                            {finalMatchesSummaries.map((resumen, index) => {
+                                // Creamos un arreglo con las tres imágenes disponibles
+                                const images = [
+                                    { url: resumen.url_imagen, label: "Dashboard" },
+                                    { url: resumen.url_mvp, label: "MVP" },
+                                    { url: resumen.url_shotmap, label: "Shotmap" }
+                                ]
+
+                                return (
+                                    <motion.div
+                                        key={resumen.id_resumen}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.5, delay: index * 0.2 }}
+                                        className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl bg-opacity-50 mt-6 relative`}
                                     >
-                                        <CardContent sx={{ p: 3, overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                                            <TitleText
-                                                icon={TableChartIcon}
-                                                iconColor='#FB7452'
-                                                title={'Resumen Estadístico'}
-                                            />
+                                        {/* Barra superior */}
+                                        <div className="h-1 bg-gradient-to-r from-orange-500 to-yellow-400"></div>
 
-                                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2 }}>
-                                                {finalMatchesSummaries.map((resumen, index) => (
-                                                    <Box key={resumen.id_resumen} sx={{ mb: 4, textAlign: 'center' }}>
-                                                        {/* Imagen del resumen */}
-                                                        <img
-                                                            src={resumen.url_imagen}
-                                                            alt={resumen.nombre}
-                                                            style={{ maxWidth: "100%", borderRadius: "8px", cursor: "pointer" }}
-                                                            onClick={() => handleOpen(resumen.url_imagen)}
-                                                        />
+                                        <div className="p-6">
+                                            {/* Header */}
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="p-2 rounded-xl bg-orange-500/20">
+                                                    <ChartBarIcon className="w-6 h-6 text-orange-500" />
+                                                </div>
+                                                <h3 className={`${currentTheme.text} text-xl font-bold`}>
+                                                    {resumen.nombre}
+                                                </h3>
+                                            </div>
 
-                                                        {/* Dialog para la imagen grande */}
-                                                        <Dialog open={open && openImage === resumen.url_imagen} onClose={handleClose} maxWidth="lg">
-                                                            <DialogContent sx={{ p: 0 }}>
-                                                                <img
-                                                                    src={resumen.url_imagen}
-                                                                    alt={resumen.nombre}
-                                                                    style={{ width: "100%", height: "auto", borderRadius: "8px" }}
-                                                                />
-                                                            </DialogContent>
-                                                        </Dialog>
-
-                                                        {/* Fecha del resumen */}
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{ mt: 1, fontStyle: 'italic', color: theme.palette.text.secondary }}
+                                            {/* Iteramos sobre cada imagen */}
+                                            <div className="space-y-10">
+                                                {images.map((img, i) => (
+                                                    img.url && (
+                                                        <motion.div
+                                                            key={i}
+                                                            whileHover={{ scale: 1.02 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                            className="text-center"
                                                         >
-                                                            Creado: {new Date(resumen.created_at).toLocaleDateString()}
-                                                        </Typography>
+                                                            <div
+                                                                className="relative group cursor-pointer rounded-xl overflow-hidden shadow-lg"
+                                                                onClick={() => handleOpen(img.url, img.label)}
+                                                            >
+                                                                <img
+                                                                    src={img.url}
+                                                                    alt={img.label}
+                                                                    className="w-full h-auto rounded-xl transition-transform duration-300 group-hover:brightness-110"
+                                                                />
+                                                                {/* Overlay on hover */}
+                                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+                                                                    <span className="text-white font-semibold text-sm bg-black/50 px-4 py-2 rounded-lg">
+                                                                        Click para ampliar
+                                                                    </span>
+                                                                </div>
+                                                            </div>
 
-                                                        {/* Botón de descarga */}
-                                                        <ButtonDownload
-                                                            url={resumen.url_imagen}
-                                                            filename={`dashboard_${resumen.id_partido}.png`}
-                                                        />
-                                                    </Box>
+                                                            {/* Footer */}
+                                                            <div className="mt-4 space-y-2">
+                                                                <p className={`${currentTheme.textSecondary} text-sm italic`}>
+                                                                    {img.label} • Creado: {new Date(resumen.created_at).toLocaleDateString('es-ES')}
+                                                                </p>
+                                                                <div className="flex justify-center">
+                                                                    <ButtonDownload
+                                                                        url={img.url}
+                                                                        filename={`${img.label}_${resumen.id_partido}.png`}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    )
                                                 ))}
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Fade>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </motion.div>
             ) : (
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                    <Typography variant="h6" color="#888">
-                        No hay Resumen estadístico
-                    </Typography>
-                </Box>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                    <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 max-w-md mx-auto`}>
+                        <ChartBarIcon className={`w-16 h-16 ${currentTheme.textSecondary} mx-auto mb-4`} />
+                        <h3 className={`${currentTheme.text} text-xl font-semibold mb-2`}>
+                            No hay datos disponibles
+                        </h3>
+                        <p className={`${currentTheme.textSecondary}`}>
+                            No hay resumen estadístico disponible para este partido
+                        </p>
+                    </div>
+                </motion.div>
             )}
-        </Box>
+
+            {/* Modal para imagen ampliada */}
+            <AnimatePresence>
+                {openImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-2 md:p-4"
+                        onClick={handleClose}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ duration: 0.3, type: "spring", damping: 25 }}
+                            className="relative w-full h-full max-w-7xl max-h-[95vh] flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-4 px-2">
+                                <h3 className="text-white font-bold text-lg md:text-xl truncate flex-1">
+                                    {openImage.title}
+                                </h3>
+                                <motion.button
+                                    whileHover={{ scale: 1.1, rotate: 90 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={handleClose}
+                                    className="p-2 ml-4 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors flex-shrink-0"
+                                >
+                                    <XMarkIcon className="w-6 h-6" />
+                                </motion.button>
+                            </div>
+
+                            <div className="flex-1 overflow-auto rounded-xl bg-white/5 backdrop-blur-sm border border-white/20">
+                                <div className="min-h-full flex items-center justify-center p-4">
+                                    <motion.img
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.1 }}
+                                        src={openImage.url}
+                                        alt={`${openImage.title} ampliado`}
+                                        className="max-w-full h-auto rounded-lg shadow-2xl"
+                                        style={{ maxHeight: 'none', objectFit: 'contain' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-4 text-center">
+                                <p className="text-white/70 text-sm">
+                                    Usa scroll para ver la imagen completa • Click fuera para cerrar
+                                </p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     )
 }
 
