@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getAllSummaries = async () => {
     try {
-        const response = await axiosInstance.get('/resumenes/')
+        const response = await axiosInstance.get('resumenes/')
         return response.data
     } catch (error) {
         console.error("Error al obtener resúmenes:", error)
@@ -12,7 +12,7 @@ export const getAllSummaries = async () => {
 
 export const registerSummary = async (summaryData) => {
     try {
-        const response = await axiosInstance.post('/resumenes/', summaryData, {
+        const response = await axiosInstance.post('resumenes/', summaryData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -36,7 +36,7 @@ export const updateSummary = async (summaryId, summaryData) => {
             id_partido: rest.id_partido ? Number(rest.id_partido) : undefined
         }
 
-        const response = await axiosInstance.put(`/resumenes/${summaryId}`, payload)
+        const response = await axiosInstance.put(`resumenes/${summaryId}`, payload)
         return response.data
     } catch (error) {
         console.error("Error en updateSummary:", error)
@@ -49,7 +49,7 @@ export const updateSummary = async (summaryId, summaryData) => {
 
 export const deleteSummary = async (summaryId) => {
     try {
-        const response = await axiosInstance.delete(`/resumenes/${summaryId}`)
+        const response = await axiosInstance.delete(`resumenes/${summaryId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteSummary:", error)

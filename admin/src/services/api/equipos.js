@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getCountTeams = async () => {
     try {
-        const response = await axiosInstance.get('/equipos/stats/total')
+        const response = await axiosInstance.get('equipos/stats/total')
         return response.data
     } catch (error) {
         console.error("Error al obtener equipos:", error)
@@ -12,7 +12,7 @@ export const getCountTeams = async () => {
 
 export const getActiveTeams = async () => {
     try {
-        const response = await axiosInstance.get('/equipos/activos')
+        const response = await axiosInstance.get('equipos/activos')
         return response.data
     } catch (error) {
         console.error("Error al obtener equipos:", error)
@@ -22,7 +22,7 @@ export const getActiveTeams = async () => {
 
 export const getAllTeams = async () => {
     try {
-        const response = await axiosInstance.get('/equipos/')
+        const response = await axiosInstance.get('equipos/')
         return response.data
     } catch (error) {
         console.error("Error al obtener equipos:", error)
@@ -32,7 +32,7 @@ export const getAllTeams = async () => {
 
 export const registerTeam = async ( teamData ) => {
     try {
-        const response = await axiosInstance.post('/equipos/', teamData, {
+        const response = await axiosInstance.post('equipos/', teamData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -49,7 +49,7 @@ export const registerTeam = async ( teamData ) => {
 
 export const updateTeam = async (teamId, teamData) => {
     try {
-        const response = await axiosInstance.put(`/equipos/${teamId}`, teamData, {
+        const response = await axiosInstance.put(`equipos/${teamId}`, teamData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -66,7 +66,7 @@ export const updateTeam = async (teamId, teamData) => {
 
 export const deleteTeam = async (teamId) => {
     try {
-        const response = await axiosInstance.delete(`/equipos/${teamId}`)
+        const response = await axiosInstance.delete(`equipos/${teamId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteSeason:", error)

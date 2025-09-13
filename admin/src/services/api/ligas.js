@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getCountLeagues = async () => {
     try {
-        const response = await axiosInstance.get('/ligas/stats/total')
+        const response = await axiosInstance.get('ligas/stats/total')
         return response.data
     } catch (error) {
         console.error("Error al obtener ligas:", error)
@@ -12,7 +12,7 @@ export const getCountLeagues = async () => {
 
 export const getAllLeagues = async () => {
     try {
-        const response = await axiosInstance.get('/ligas/')
+        const response = await axiosInstance.get('ligas/')
         return response.data
     } catch (error) {
         console.error("Error al obtener ligas:", error)
@@ -22,7 +22,7 @@ export const getAllLeagues = async () => {
 
 export const registerLeague = async ( leagueData ) => {
     try {
-        const response = await axiosInstance.post('/ligas/', leagueData, {
+        const response = await axiosInstance.post('ligas/', leagueData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -39,7 +39,7 @@ export const registerLeague = async ( leagueData ) => {
 
 export const updateLeague = async (leagueId, leagueData) => {
     try {
-        const response = await axiosInstance.put(`/ligas/${leagueId}`, leagueData, {
+        const response = await axiosInstance.put(`ligas/${leagueId}`, leagueData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -56,7 +56,7 @@ export const updateLeague = async (leagueId, leagueData) => {
 
 export const deleteLeague = async (leagueId) => {
     try {
-        const response = await axiosInstance.delete(`/ligas/${leagueId}`)
+        const response = await axiosInstance.delete(`ligas/${leagueId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteLeague:", error)

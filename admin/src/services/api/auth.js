@@ -7,7 +7,7 @@ export const loginUser = async ({ username, password }) => {
         formData.append("username", username)
         formData.append("password", password)
 
-        const { data } = await axiosInstance.post("/login", formData, {
+        const { data } = await axiosInstance.post("login", formData, {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         })
         

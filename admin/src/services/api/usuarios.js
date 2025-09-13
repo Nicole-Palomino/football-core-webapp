@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getCountUser = async () => {
     try {
-        const response = await axiosInstance.get('/users/stats/total')
+        const response = await axiosInstance.get('users/stats/total')
         return response.data
     } catch (error) {
         console.error("Error al obtener usuarios:", error)
@@ -12,7 +12,7 @@ export const getCountUser = async () => {
 
 export const getAllUsers = async () => {
     try {
-        const response = await axiosInstance.get('/users/')
+        const response = await axiosInstance.get('users/')
         return response.data
     } catch (error) {
         console.error("Error al obtener usuarios:", error)
@@ -22,7 +22,7 @@ export const getAllUsers = async () => {
 
 export const registerUser = async ( userData ) => {
     try {
-        const response = await axiosInstance.post('/register-admin', userData, {
+        const response = await axiosInstance.post('register-admin', userData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -39,7 +39,7 @@ export const registerUser = async ( userData ) => {
 
 export const updateUser = async (userId, userData) => {
     try {
-        const response = await axiosInstance.put(`/users/admin/${userId}`, userData, {
+        const response = await axiosInstance.put(`users/admin/${userId}`, userData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -56,7 +56,7 @@ export const updateUser = async (userId, userData) => {
 
 export const deleteUser = async (userId) => {
     try {
-        const response = await axiosInstance.delete(`/users/${userId}`)
+        const response = await axiosInstance.delete(`users/${userId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteUser:", error)
@@ -69,7 +69,7 @@ export const deleteUser = async (userId) => {
 
 export const getUsersByDate = async () => {
     try {
-        const response = await axiosInstance.get("/users/stats/usuarios-por-dia")
+        const response = await axiosInstance.get("users/stats/usuarios-por-dia")
         return response.data
     } catch (error) {
         console.error("Error al obtener usuarios:", error)

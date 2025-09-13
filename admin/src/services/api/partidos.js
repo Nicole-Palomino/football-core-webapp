@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getCountMatches = async () => {
     try {
-        const response = await axiosInstance.get('/partidos/stats/total')
+        const response = await axiosInstance.get('partidos/stats/total')
         return response.data
     } catch (error) {
         console.error("Error al obtener partidos:", error)
@@ -12,7 +12,7 @@ export const getCountMatches = async () => {
 
 export const getAllMatches = async () => {
     try {
-        const response = await axiosInstance.get('/partidos/season/12')
+        const response = await axiosInstance.get('partidos/season/12')
         return response.data
     } catch (error) {
         console.error("Error al obtener partidos:", error)
@@ -22,7 +22,7 @@ export const getAllMatches = async () => {
 
 export const registerMatch = async ( matchData ) => {
     try {
-        const response = await axiosInstance.post('/partidos/', matchData, {
+        const response = await axiosInstance.post('partidos/', matchData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -39,7 +39,7 @@ export const registerMatch = async ( matchData ) => {
 
 export const updateMatch = async (matchId, matchData) => {
     try {
-        const response = await axiosInstance.put(`/partidos/${matchId}`, matchData, {
+        const response = await axiosInstance.put(`partidos/${matchId}`, matchData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -56,7 +56,7 @@ export const updateMatch = async (matchId, matchData) => {
 
 export const deleteMatch = async (matchId) => {
     try {
-        const response = await axiosInstance.delete(`/partidos/${matchId}`)
+        const response = await axiosInstance.delete(`partidos/${matchId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteMatch:", error)
@@ -69,7 +69,7 @@ export const deleteMatch = async (matchId) => {
 
 export const registerStat = async ( statData ) => {
     try {
-        const response = await axiosInstance.post('/estadisticas/', statData, {
+        const response = await axiosInstance.post('estadisticas/', statData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -86,7 +86,7 @@ export const registerStat = async ( statData ) => {
 
 export const updateStat = async (matchId, statData) => {
     try {
-        const response = await axiosInstance.put(`/estadisticas/by-partido/${matchId}`, statData, {
+        const response = await axiosInstance.put(`estadisticas/by-partido/${matchId}`, statData, {
             headers: {
                 "Content-Type": "application/json",
             },

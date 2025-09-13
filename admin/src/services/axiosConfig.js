@@ -1,8 +1,8 @@
 import axios from "axios"
 import { getToken, removeToken, setToken } from "./auth"
 
-// const API_URL_PRODUCTION = "https://web-production-e51c4.up.railway.app"
-const API_URL = "http://127.0.0.1:8000"
+const API_URL = "https://football-core-backend-production.up.railway.app/"
+// const API_URL = "http://127.0.0.1:8000"
 
 const axiosInstance = axios.create({
     baseURL: API_URL,
@@ -52,8 +52,8 @@ axiosInstance.interceptors.response.use(
         if (
             error.response?.status === 401 &&
             !originalRequest._retry &&
-            !originalRequest.url.includes("/login") &&
-            !originalRequest.url.includes("/register")
+            !originalRequest.url.includes("login") &&
+            !originalRequest.url.includes("register")
         ) {
             originalRequest._retry = true
 
@@ -68,7 +68,7 @@ axiosInstance.interceptors.response.use(
 
             isRefreshing = true
             try {
-                const { data } = await axiosInstance.post("/refresh", {}, { withCredentials: true })
+                const { data } = await axiosInstance.post("refresh", {}, { withCredentials: true })
                 const newToken = data.access_token
 
                 setToken(newToken)

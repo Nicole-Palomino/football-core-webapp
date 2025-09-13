@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getAllSeasons = async () => {
     try {
-        const response = await axiosInstance.get('/temporadas/')
+        const response = await axiosInstance.get('temporadas/')
         return response.data
     } catch (error) {
         console.error("Error al obtener temporadas:", error)
@@ -12,7 +12,7 @@ export const getAllSeasons = async () => {
 
 export const registerSeason = async ( seasonData ) => {
     try {
-        const response = await axiosInstance.post('/temporadas/', seasonData, {
+        const response = await axiosInstance.post('temporadas/', seasonData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -29,7 +29,7 @@ export const registerSeason = async ( seasonData ) => {
 
 export const updateSeason = async (seasonId, seasonData) => {
     try {
-        const response = await axiosInstance.put(`/temporadas/${seasonId}`, seasonData, {
+        const response = await axiosInstance.put(`temporadas/${seasonId}`, seasonData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -46,7 +46,7 @@ export const updateSeason = async (seasonId, seasonData) => {
 
 export const deleteSeason = async (seasonId) => {
     try {
-        const response = await axiosInstance.delete(`/temporadas/${seasonId}`)
+        const response = await axiosInstance.delete(`temporadas/${seasonId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteSeason:", error)

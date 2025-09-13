@@ -1,12 +1,99 @@
-# React + Vite
+# Panel de Administración - Football Core
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📋 Descripción
 
-Currently, two official plugins are available:
+Panel de administración desarrollado con React y Vite para el sistema de gestión de ligas de fútbol. Proporciona una interfaz de escritorio para los administradores del sistema.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠️ Tecnologías
 
-## Expanding the ESLint configuration
+- React 19.1.0
+- Vite 7.0.0
+- TailwindCSS
+- Material-UI
+- React Router DOM
+- Axios para peticiones HTTP
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 Instalación
+
+1. Instala las dependencias:
+```bash
+npm install
+```
+
+2. Inicia el servidor de desarrollo:
+```bash
+npm run dev
+```
+
+3. Para producción:
+```bash
+npm run build
+npm run preview
+```
+
+## 🗂️ Estructura del Proyecto
+
+```
+admin/
+├── src/
+│   ├── assets/        # Recursos estáticos
+│   ├── components/    # Componentes reutilizables
+│   ├── contexts/      # Contextos de React
+│   ├── hooks/         # Custom hooks
+│   ├── pages/         # Páginas de la aplicación
+│   ├── routers/       # Configuración de rutas
+│   ├── services/      # Servicios y API calls
+│   └── utils/         # Utilidades y helpers
+├── public/           # Archivos públicos
+└── index.html        # Punto de entrada HTML
+```
+
+## 🔑 Características Principales
+
+- **Gestión de Usuarios y Roles**
+  - Creación y edición de usuarios
+  - Asignación de roles y permisos
+  - Gestión de accesos
+
+- **Administración de Ligas**
+  - Creación y configuración de ligas
+  - Gestión de temporadas
+  - Control de equipos participantes
+
+- **Control de Partidos**
+  - Programación de encuentros
+  - Registro de resultados
+  - Actualización de estadísticas
+
+- **Reportes y Estadísticas**
+  - Visualización de datos
+  - Generación de informes
+  - Análisis de rendimiento
+
+## 🔒 Seguridad
+
+- Autenticación segura
+- Control de acceso basado en roles
+- Registro de actividades
+- Protección de datos sensibles
+
+## 📱 Interfaz de Usuario
+
+El panel está optimizado para:
+- Pantallas de escritorio
+- Monitores de alta resolución
+- Múltiples ventanas
+
+## 🧪 Testing
+
+Ejecutar tests:
+
+```bash
+npm run test
+```
+
+Con coverage:
+
+```bash
+npm run test:coverage
+```

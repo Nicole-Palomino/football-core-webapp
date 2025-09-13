@@ -2,7 +2,7 @@ import axiosInstance from "../axiosConfig"
 
 export const getAllStates = async () => {
     try {
-        const response = await axiosInstance.get('/estados/')
+        const response = await axiosInstance.get('estados/')
         return response.data
     } catch (error) {
         console.error("Error al obtener usuarios:", error)
@@ -12,7 +12,7 @@ export const getAllStates = async () => {
 
 export const registerState = async ( stateData ) => {
     try {
-        const response = await axiosInstance.post('/estados/', stateData, {
+        const response = await axiosInstance.post('estados/', stateData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -29,7 +29,7 @@ export const registerState = async ( stateData ) => {
 
 export const updateState = async (stateId, stateData) => {
     try {
-        const response = await axiosInstance.put(`/estados/${stateId}`, stateData, {
+        const response = await axiosInstance.put(`estados/${stateId}`, stateData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -46,7 +46,7 @@ export const updateState = async (stateId, stateData) => {
 
 export const deleteState = async (stateId) => {
     try {
-        const response = await axiosInstance.delete(`/estados/${stateId}`)
+        const response = await axiosInstance.delete(`estados/${stateId}`)
         return response.data
     } catch (error) {
         console.error("Error en deleteState:", error)

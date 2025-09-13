@@ -11,7 +11,6 @@ const Dashboard = () => {
     const contentClasses = `p-6 ${currentTheme.text}`
 
     const { users, teams, leagues, matches, userStats, isLoading, isError } = useStats()
-    console.log(userStats)
     if (isLoading) {
         return (
             <LoadingSpinner />
