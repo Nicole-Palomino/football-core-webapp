@@ -10,7 +10,7 @@ export const MatchesProvider = ({ seasonId = 12, children }) => {
     const { data = [], error, isLoading, isError } = useQuery({
         queryKey: ["match", seasonId],
         queryFn: () => getMatchAll(seasonId),
-        staleTime: 1000 * 60 * 15,
+        staleTime: 1000 * 60 * 30,
         cacheTime: 5 * 60 * 1000,
     })
 

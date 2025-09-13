@@ -5,7 +5,7 @@ import axiosInstance from '../axiosConfig'
 // get all the matches by season and state
 export const getMatchAll = async (seasonId) => {
     try {
-        const response = await axiosInstance.get(`/partidos/season/${seasonId}`)
+        const response = await axiosInstance.get(`partidos/season/${seasonId}`)
         return response.data
     } catch (err) {
         throw err
@@ -14,7 +14,7 @@ export const getMatchAll = async (seasonId) => {
 // get all the matches by teams
 export const getMatchesTeams = async (teams) => {
     try {
-        const response = await axiosInstance.get(`/partidos/h2h/${teams.equipo_1_id}&${teams.equipo_2_id}`)
+        const response = await axiosInstance.get(`partidos/h2h/${teams.equipo_1_id}&${teams.equipo_2_id}`)
         return response.data
     } catch (err) {
         throw err
@@ -23,7 +23,7 @@ export const getMatchesTeams = async (teams) => {
 // get all stats the matches
 export const getMatchesStats = async (teams) => {
     try {
-        const response = await axiosInstance.get(`/partidos/historicos/${teams.equipo_1_id}&${teams.equipo_2_id}`)
+        const response = await axiosInstance.get(`partidos/historicos/${teams.equipo_1_id}&${teams.equipo_2_id}`)
         return response.data
     } catch (err) {
         throw err
@@ -32,7 +32,7 @@ export const getMatchesStats = async (teams) => {
 
 export const getMatcheByID = async (teams) => {
     try {
-        const response = await axiosInstance.get(`/partidos/by-id/${teams.id_partido}`)
+        const response = await axiosInstance.get(`partidos/by-id/${teams.id_partido}`)
         return response.data
     } catch (err) {
         throw err

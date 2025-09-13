@@ -23,13 +23,14 @@ const Analysis = lazy(() => import('../pages/Analysis'))
 const Forecasts = lazy(() => import('../pages/Forecasts'))
 const PageProfile = lazy(() => import('../pages/PageProfile'))
 const PageSettings = lazy(() => import('../pages/PageSettings'))
+const NotFound = lazy(() => import('../pages/NotFound'))
 
 const AppRoutes = () => {
 
     useEffect(() => {
         import('../components/Header/Services')
-        import('../components/Header/AboutUs')
         import('../components/Header/Contact')
+        import('../components/Header/AboutUs')
     }, [])
 
     return (
@@ -67,7 +68,7 @@ const AppRoutes = () => {
                 <Route path='settings' element={<Suspense fallback={<LoadingPage />}><PageSettings /> </Suspense>} />
             </Route>
 
-            <Route path="*" element={<div>404 - Página no encontrada</div>} />
+            <Route path="*" element={<Suspense fallback={<LoadingPage />}><NotFound /> </Suspense>} />
         </Routes>
     )
 }

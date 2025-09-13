@@ -5,7 +5,7 @@ const PublicRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth()
 
     if (loading) {
-        return null
+        return <div>Cargando...</div>
     }
     // Si el usuario está autenticado, redirige al dashboard
     if (isAuthenticated) {

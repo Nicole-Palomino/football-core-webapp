@@ -5,7 +5,7 @@ import axiosInstance from '../axiosConfig'
 export const getResumenesByPartido = async (partidoId) => {
     try {
         console.log(partidoId)
-        const response = await axiosInstance.get(`/resumenes/partido/${partidoId}`)
+        const response = await axiosInstance.get(`resumenes/partido/${partidoId}`)
         return response.data
     } catch (err) {
         throw err

@@ -33,21 +33,21 @@ export const AuthProvider = ({ children }) => {
         return (token && isTokenValid(token)) ? token : null
     })
 
-    const { data: user, isLoading, isSuccess } = useQuery({
+    const { data: user, isLoading } = useQuery({
         queryKey: ['user'],
         queryFn: () => fetchUser(authToken),
-        enabled: !!authToken, // Solo se ejecuta si hay un token
-        initialData: getStoredUser(), // Carga inicial desde localStorage
+        enabled: !!authToken,
+        initialData: getStoredUser(),
         staleTime: 1000 * 60 * 10,
-        refetchOnWindowFocus: true, // Revalida los datos cuando la ventana vuelve a estar en foco
-        retry: false, // Desactiva los reintentos automáticos para no recargar en bucle si hay un error de auth
+        refetchOnWindowFocus: true,
+        retry: false,
         onSuccess: (data) => {
-            setStoredUser(data) // Guarda el usuario en localStorage
+            setStoredUser(data)
         },
         onError: (err) => {
             console.error("Error al obtener usuario:", err)
             if (err.response?.status === 401) {
-                logout() // Cierra la sesión si el token no es válido
+                logout()
             }
         },
     })
@@ -58,14 +58,38 @@ export const AuthProvider = ({ children }) => {
         }
     }, [authToken, queryClient])
 
+    /* -------------------------------
+       Sincronizar refresh con AuthContext
+    -------------------------------- */
+    useEffect(() => {
+        // interceptor para cuando axios refresque el token
+        const interceptor = axiosInstance.interceptors.response.use(
+            (res) => res,
+            async (error) => {
+                const originalRequest = error.config
+                if (
+                    error.response?.status === 401 &&
+                    originalRequest._retry
+                ) {
+                    // ⚠️ refresh ya falló → cerrar sesión
+                    logout()
+                }
+                return Promise.reject(error)
+            }
+        )
+
+        return () => {
+            axiosInstance.interceptors.response.eject(interceptor)
+        }
+    }, [])
+
     // Login → guarda token y refresca usuario
     const login = async (token) => {
         setToken(token)
         setAuthToken(token)
-        await queryClient.fetchQuery({
-            queryKey: ['user'],
-            queryFn: () => fetchUser(token),
-        })
+        const userData = await fetchUser(token)
+        queryClient.setQueryData(['user'], userData)
+        setStoredUser(userData)
     }
 
     // Logout → limpia todo

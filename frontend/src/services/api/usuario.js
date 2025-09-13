@@ -2,21 +2,30 @@ import axiosInstance from '../axiosConfig'
 import { setToken, getToken } from '../auth'
 
 // -------------------------------------- usuarios --------------------------------------
-
 // iniciar sesión
-export const loginUser = async ( { username, password } ) => {
+export const loginUser = async ({ username, password }) => {
     try {
         const formData = new URLSearchParams()
         formData.append("username", username)
         formData.append("password", password)
 
-        const { data } = await axiosInstance.post("/login", formData, {
+        const { data } = await axiosInstance.post("login", formData, {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
         })
-        
+
         return data
     } catch (error) {
-        throw new Error(error.response?.data?.detail || "Error al iniciar sesión")
+        console.log("CATCH LOGIN USER:", error)
+
+        if (error.response) {
+            const message =
+                error.response.data?.detail ||
+                error.response.data?.message ||
+                "Credenciales inválidas"
+            throw new Error(message)
+        }
+
+        throw new Error("Error de conexión con el servidor")
     }
 }
 
@@ -29,7 +38,7 @@ export const getCurrentUser = async () => {
     }
 
     try {
-        const response = await axiosInstance.get('/users/me/', {
+        const response = await axiosInstance.get('users/me/', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -43,9 +52,9 @@ export const getCurrentUser = async () => {
 }
 
 // registro de usuario
-export const registerUser = async ( userData ) => {
+export const registerUser = async (userData) => {
     try {
-        const response = await axiosInstance.post('/register', userData, {
+        const response = await axiosInstance.post('register', userData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -64,9 +73,9 @@ export const registerUser = async ( userData ) => {
 }
 
 // recuperar contraseña
-export const forgotUser = async ( userData ) => {
+export const forgotUser = async (userData) => {
     try {
-        const response = await axiosInstance.post('/request-password-reset', userData, {
+        const response = await axiosInstance.post('request-password-reset', userData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -85,9 +94,9 @@ export const forgotUser = async ( userData ) => {
 }
 
 // verificar contraseña
-export const verifyUser = async ( userData ) => {
+export const verifyUser = async (userData) => {
     try {
-        const response = await axiosInstance.post('/verify-password-code', userData, {
+        const response = await axiosInstance.post('verify-password-code', userData, {
             headers: {
                 "Content-Type": "application/json",
             },
@@ -106,9 +115,9 @@ export const verifyUser = async ( userData ) => {
 }
 
 // resetear contraseña
-export const resetUser = async ( userData ) => {
+export const resetUser = async (userData) => {
     try {
-        const response = await axiosInstance.post('/reset-password', userData, {
+        const response = await axiosInstance.post('reset-password', userData, {
             headers: { "Content-Type": "application/json" },
         })
 
@@ -133,7 +142,7 @@ export const resetUser = async ( userData ) => {
 // actualizar datos del usuario
 export const updateUser = async (userId, userData) => {
     try {
-        const response = await axiosInstance.put(`/users/${userId}`, userData, {
+        const response = await axiosInstance.put(`users/${userId}`, userData, {
             headers: {
                 "Content-Type": "application/json",
             },

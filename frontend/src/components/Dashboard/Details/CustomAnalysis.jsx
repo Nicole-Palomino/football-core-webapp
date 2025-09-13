@@ -18,25 +18,14 @@ import { motion } from 'framer-motion'
 import { useThemeMode } from '../../../contexts/ThemeContext'
 import { useRef } from 'react'
 import domtoimage from 'dom-to-image-more'
+import { useMatchStats } from '../../../hooks/useMatchStats'
 
 const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
     const { currentTheme } = useThemeMode()
     const analysisRef = useRef(null)
 
-    // 1. Consulta para Poisson
-    const {
-        data: matchPoisson,
-        isLoading: isLoadingPoisson,
-        isError: isErrorPoisson,
-        error: errorPoisson
-    } = useQuery({
-        queryKey: ["matchPoisson", equipo_local, equipo_visita],
-        queryFn: () => getPoisson(nombre_liga, equipo_local, equipo_visita),
-        enabled: Boolean(equipo_local && equipo_visita && nombre_liga),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
+    const { matchPoisson, isLoadingPoisson, isErrorPoisson, errorPoisson } = useMatchStats(equipo_local, equipo_visita, nombre_liga)
 
     // 2. Consulta para K-means
     const fetchClusterData = async (liga, equipo1, equipo2) => {

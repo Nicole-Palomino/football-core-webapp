@@ -53,16 +53,16 @@ const Footer = () => {
                             <div className="lg:col-span-2 space-y-6">
                                 <div>
                                     <h2 className={`text-2xl lg:text-3xl font-bold ${currentTheme.text} mb-4`}>
-                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">F</span>
-                                        OOT
-                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">B</span>
-                                        ALL{" "}
-                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">C</span>
-                                        ORE
+                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">S</span>
+                                        CORE
+                                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">X</span>
+                                        XPERT{" "}
+                                        {/* <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">C</span>
+                                        ORE */}
                                     </h2>
                                     
                                     <p className={`${currentTheme.textSecondary} leading-relaxed max-w-md`}>
-                                        FOOTBALL CORE: La plataforma esencial para el aficionado al fútbol que busca analizar y comprender el deporte desde un enfoque estadístico. Accede a datos históricos, pronósticos y resúmenes personalizados para profundizar en el rendimiento de tus equipos favoritos.
+                                        SCOREXPERT: La plataforma esencial para el aficionado al fútbol que busca analizar y comprender el deporte desde un enfoque estadístico. Accede a datos históricos, pronósticos y resúmenes personalizados para profundizar en el rendimiento de tus equipos favoritos.
                                     </p>
                                 </div>
 
@@ -163,10 +163,10 @@ const Footer = () => {
                         <div className={`mt-12 pt-8 ${currentTheme.border} border-t`}>
                             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <p className={`text-sm ${currentTheme.textSecondary} text-center sm:text-left`}>
-                                    © 2025 Football Core. Todos los derechos reservados.
+                                    © 2025 SCOREXPERT. Todos los derechos reservados.
                                 </p>
                                 
-                                <div className="flex flex-wrap justify-center sm:justify-end gap-6 text-sm">
+                                {/* <div className="flex flex-wrap justify-center sm:justify-end gap-6 text-sm">
                                     <span className={`${currentTheme.textSecondary} hover:text-blue-600 transition-colors duration-300 cursor-pointer`}>
                                         Política de Privacidad
                                     </span>
@@ -176,7 +176,7 @@ const Footer = () => {
                                     <span className={`${currentTheme.textSecondary} hover:text-blue-600 transition-colors duration-300 cursor-pointer`}>
                                         Cookies
                                     </span>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </motion.div>

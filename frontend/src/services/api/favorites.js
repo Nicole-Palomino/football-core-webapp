@@ -4,7 +4,7 @@ import axiosInstance from '../../services/axiosConfig'
 // add a favorite match
 export const addFavorite = async (partidoId, usuarioId) => {
     try {
-        const response = await axiosInstance.post(`/favoritos/`, {
+        const response = await axiosInstance.post(`favoritos/`, {
             id_partido: partidoId,
             id_usuario: usuarioId,
         })
@@ -17,7 +17,7 @@ export const addFavorite = async (partidoId, usuarioId) => {
 
 export const deleteFavorite = async (partidoId, usuarioId) => {
     try {
-        const response = await axiosInstance.delete(`/favoritos/${encodeURIComponent(partidoId)}/${encodeURIComponent(usuarioId)}`)
+        const response = await axiosInstance.delete(`favoritos/${encodeURIComponent(partidoId)}/${encodeURIComponent(usuarioId)}`)
         return response.data
     } catch (err) {
         console.error("Error deleting favorite:", err.response ? err.response.data : err.message)
@@ -27,7 +27,7 @@ export const deleteFavorite = async (partidoId, usuarioId) => {
 
 export const getFavorites = async (usuarioId) => {
     try {
-        const response = await axiosInstance.get("/favoritos/", {
+        const response = await axiosInstance.get("favoritos/", {
             params: { id_usuario: usuarioId },
         })
         return response.data

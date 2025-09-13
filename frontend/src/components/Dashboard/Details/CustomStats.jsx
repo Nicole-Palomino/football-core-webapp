@@ -1,12 +1,10 @@
-import React, { useRef, useState } from 'react'
+import { useState } from 'react'
 import TotalMatch from '../Match/graphics/TotalMatch'
 import PieChartsOne from '../Match/graphics/PieChartsOne'
 import CardChart from '../Match/graphics/CardChart'
 import CarruselSugerencias from '../Match/graphics/CarruselSugerencias'
 import TablaConPaginacion from '../Match/graphics/TablaConPaginacion'
-import { getCompleteAnalysis } from '../../../services/functions'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
-import { useQuery } from '@tanstack/react-query'
 import TableConColor from '../Match/graphics/TableConColor'
 import CustomAlertas from './CustomAlertas'
 import { useThemeMode } from '../../../contexts/ThemeContext'
@@ -27,70 +25,16 @@ import {
     ExclamationTriangleIcon,
     InformationCircleIcon
 } from '@heroicons/react/24/outline'
-import jsPDF from 'jspdf'
-import domtoimage from 'dom-to-image-more'
+import { useMatchStats } from '../../../hooks/useMatchStats'
+import { useDownloadStats } from '../../../hooks/useDownloadStats'
 
 const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
     const { currentTheme } = useThemeMode()
-    const statsRef = useRef(null)
     const [expandedMetrics, setExpandedMetrics] = useState(false)
 
-    // 1. Consulta para Match Stats
-    const {
-        data: matchesStats,
-        isLoading: isLoadingStats,
-        isError: isErrorStats,
-        error: errorStats
-    } = useQuery({
-        queryKey: ["matchesStats", equipo_local, equipo_visita],
-        queryFn: () => getCompleteAnalysis(nombre_liga, equipo_local, equipo_visita),
-        enabled: Boolean(equipo_local && equipo_visita && nombre_liga),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
-    const isLoading = isLoadingStats
-    const isError = isErrorStats
-
-    const downloadAsPNG = async () => {
-        if (!statsRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(statsRef.current, {
-                quality: 1,
-                bgcolor: currentTheme.background // mantiene el fondo de tu theme
-            })
-
-            const link = document.createElement('a')
-            link.download = `estadisticas-${equipo_local}-vs-${equipo_visita}.png`
-            link.href = dataUrl
-            link.click()
-        } catch (error) {
-            console.error('Error downloading PNG:', error)
-        }
-    }
-
-    const downloadAsPDF = async () => {
-        if (!statsRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(statsRef.current, {
-                quality: 1,
-                bgcolor: currentTheme.background // aquí respeta el tema
-            })
-
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const imgProps = pdf.getImageProperties(dataUrl)
-            const pdfWidth = pdf.internal.pageSize.getWidth()
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-
-            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-            pdf.save(`estadisticas-${equipo_local}-vs-${equipo_visita}.pdf`)
-        } catch (error) {
-            console.error('Error downloading PDF:', error)
-        }
-    }
+    const { matchesStats, isLoading, isError, error } = useMatchStats(equipo_local, equipo_visita, nombre_liga)
+    const { statsRef, downloadAsPNG, downloadAsPDF } = useDownloadStats()
 
     if (isLoading) return <LoadingSpinner />
 
@@ -99,7 +43,7 @@ const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
             <div className={`min-h-[400px] ${currentTheme.background} flex items-center justify-center`}>
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 text-center`}>
                     <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Error al cargar datos</h2>
-                    {isErrorStats && <p className={`${currentTheme.textSecondary}`}>Match Stats: {errorStats.message}</p>}
+                    {isErrorStats && <p className={`${currentTheme.textSecondary}`}>Match Stats: {error.message}</p>}
                 </div>
             </div>
         )
@@ -121,7 +65,7 @@ const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={downloadAsPNG}
+                            onClick={() => downloadAsPNG(equipo_local, equipo_visita)}
                             className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />
@@ -130,7 +74,7 @@ const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={downloadAsPDF}
+                            onClick={() => downloadAsPDF(equipo_local, equipo_visita)}
                             className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />

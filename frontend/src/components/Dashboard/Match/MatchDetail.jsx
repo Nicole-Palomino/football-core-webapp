@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { getMatcheByID } from '../../../services/api/matches'
 import { motion } from 'framer-motion'
-import { useQuery } from '@tanstack/react-query'
 import { formatFecha } from '../../../utils/helpers'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import CustomStats from '../Details/CustomStats'
@@ -15,6 +13,7 @@ import {
     ChartBarIcon,
     DocumentTextIcon,
 } from '@heroicons/react/24/outline'
+import { useMatches } from '../../../hooks/useMatch'
 
 const MatchDetail = () => {
     const { currentTheme } = useThemeMode()
@@ -26,24 +25,8 @@ const MatchDetail = () => {
     const equipo_local = location.state?.equipo_local
     const equipo_visita = location.state?.equipo_visita
 
-    // 1. Consulta para Match by ID
-    const {
-        data: matchData,
-        isLoading: isLoadingMatch,
-        isError: isErrorMatch,
-        error: errorMatch
-    } = useQuery({
-        queryKey: ["matchById", id_partido],
-        queryFn: () => getMatcheByID({ id_partido }),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
+    const { matchData, isLoading, isError, error } = useMatches(id_partido)
     const nombre_liga = matchData?.liga?.nombre_liga
-
-    // Manejo de estados de carga combinados
-    const isLoading = isLoadingMatch
-    const isError = isErrorMatch
 
     if (isLoading) return <LoadingSpinner />
 
@@ -52,7 +35,7 @@ const MatchDetail = () => {
             <div className={`min-h-screen ${currentTheme.background} flex items-center justify-center`}>
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 text-center`}>
                     <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Error al cargar datos</h2>
-                    <p className={`${currentTheme.textSecondary}`}>Match by ID: {errorMatch.message}</p>
+                    <p className={`${currentTheme.textSecondary}`}>Match by ID: {error.message}</p>
                 </div>
             </div>
         )

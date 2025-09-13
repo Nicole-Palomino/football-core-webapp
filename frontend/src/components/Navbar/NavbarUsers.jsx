@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from "react-router-dom"
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/outline"
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/solid"
@@ -78,13 +78,20 @@ const NavbarUsers = () => {
                 {/* Logo */}
                 <div className="flex flex-1">
                     <Link to="/dashboard" className="flex items-center space-x-2 group">
-                        <motion.h1
+                        {/* <motion.h1
                             whileHover={{ scale: 1.05 }}
                             className={`text-2xl md:text-3xl font-bold transition-all duration-300 ${currentTheme.text}`}
                         >
                             <span className={currentTheme.accent}>F</span>OOT
                             <span className={currentTheme.accent}>B</span>ALL
                             <span className={currentTheme.accent}> C</span>ORE
+                        </motion.h1> */}
+                        <motion.h1
+                            whileHover={{ scale: 1.05 }}
+                            className={`text-2xl md:text-3xl font-bold transition-all duration-300 ${currentTheme.text}`}
+                        >
+                            <span className={currentTheme.accent}>S</span>CORE
+                            <span className={currentTheme.accent}>X</span>PERT
                         </motion.h1>
                     </Link>
                 </div>
@@ -135,7 +142,7 @@ const NavbarUsers = () => {
                                                 {firstLetter}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className={`${currentTheme.text} font-medium truncate`}>{user.usuario}</p>
+                                                <p className={`${currentTheme.text} font-medium truncate`}>{user.nombre}</p>
                                                 <p className={`${currentTheme.textSecondary} text-sm truncate`}>{correo}</p>
                                             </div>
                                         </div>
@@ -211,9 +218,8 @@ const NavbarUsers = () => {
                             <div className={`flex items-center justify-between p-6 border-b ${currentTheme.border}`}>
                                 <Link to="/dashboard" className={`flex items-center space-x-2 ${currentTheme.text}`}>
                                     <h1 className={`text-2xl font-bold ${currentTheme.text}`}>
-                                        <span className={currentTheme.accent}>F</span>OOT
-                                        <span className={currentTheme.accent}>B</span>ALL
-                                        <span className={currentTheme.accent}> C</span>ORE
+                                        <span className={currentTheme.accent}>s</span>CORE
+                                        <span className={currentTheme.accent}>x</span>PERT
                                     </h1>
                                 </Link>
                                 <motion.button
@@ -256,7 +262,7 @@ const NavbarUsers = () => {
                                         {firstLetter}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className={`${currentTheme.text} font-medium truncate`}>{user.usuario}</p>
+                                        <p className={`${currentTheme.text} font-medium truncate`}>{user?.nombre}</p>
                                         <p className={`${currentTheme.textSecondary} text-sm truncate`}>{correo}</p>
                                     </div>
                                 </div>

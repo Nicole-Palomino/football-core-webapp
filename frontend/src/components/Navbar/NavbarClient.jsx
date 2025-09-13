@@ -20,13 +20,20 @@ const NavbarClient = () => {
                 {/* Logo */}
                 <div className="flex lg:flex-1">
                     <Link to='/' className='flex items-center space-x-2 group'>
-                        <motion.h1 
+                        {/* <motion.h1 
                             whileHover={{ scale: 1.05 }}
                             className={`text-2xl md:text-3xl font-bold transition-all duration-300 ${currentTheme.text}`}
                         >
                             <span className={`${currentTheme.accent}`}>F</span>OOT
                             <span className={`${currentTheme.accent}`}>B</span>ALL
                             <span className={`${currentTheme.accent}`}> C</span>ORE
+                        </motion.h1> */}
+                        <motion.h1 
+                            whileHover={{ scale: 1.05 }}
+                            className={`text-2xl md:text-3xl font-bold transition-all duration-300 ${currentTheme.text}`}
+                        >
+                            <span className={`${currentTheme.accent}`}>S</span>CORE
+                            <span className={`${currentTheme.accent}`}>X</span>PERT
                         </motion.h1>
                     </Link>
                 </div>
@@ -125,13 +132,20 @@ const NavbarClient = () => {
                             {/* Header del menú móvil */}
                             <div className={`flex items-center justify-between p-6 ${currentTheme.border} border-b`}>
                                 <Link to="/" className='flex items-center space-x-2 group'>
-                                    <motion.h1 
+                                    {/* <motion.h1 
                                         whileHover={{ scale: 1.05 }}
                                         className={`text-2xl font-bold transition-all duration-300 ${currentTheme.text}`}
                                     >
                                         <span className={`${currentTheme.accent}`}>F</span>OOT
                                         <span className={`${currentTheme.accent}`}>B</span>ALL
                                         <span className={`${currentTheme.accent}`}> C</span>ORE
+                                    </motion.h1> */}
+                                    <motion.h1 
+                                        whileHover={{ scale: 1.05 }}
+                                        className={`text-2xl font-bold transition-all duration-300 ${currentTheme.text}`}
+                                    >
+                                        <span className={`${currentTheme.accent}`}>S</span>CORE
+                                        <span className={`${currentTheme.accent}`}>X</span>PERT
                                     </motion.h1>
                                 </Link>
                                 <motion.button

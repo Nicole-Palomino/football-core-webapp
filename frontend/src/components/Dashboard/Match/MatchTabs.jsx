@@ -105,7 +105,7 @@ const MatchTabs = ({ type }) => {
                                             />
                                         )}
                                         
-                                        <div className="relative z-10 text-center">
+                                        <div className="relative z-10 text-center p-2">
                                             <div className={`font-semibold text-sm transition-colors duration-300 ${
                                                 isActive ? 'text-blue-600' : currentTheme.text
                                             }`}>

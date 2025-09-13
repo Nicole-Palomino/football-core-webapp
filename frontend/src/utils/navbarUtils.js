@@ -32,7 +32,7 @@ export const services = [
         description: "Predicciones precisas usando Random Forest para clasificación y regresión de resultados de partidos.",
         icon: SparklesIcon,
         features: ["Clasificación de resultados", "Regresión de marcadores", "Alta precisión"],
-        price: "$5/mes a partir del 30/08/25",
+        price: "$5/mes a partir del 30/09/25",
         isPremium: true,
         color: "from-orange-500 to-red-500",
         delay: 0.3
@@ -95,19 +95,19 @@ export const stats = [
     {
         icon: ChartBarIcon,
         number: "17,000+",
-        label: "Partidos Analizados",
+        label: "Partidos",
         color: "from-blue-500 to-cyan-500"
     },
     {
         icon: TrophyIcon,
-        number: "94.3%",
+        number: "84.3%",
         label: "Precisión en Predicciones",
         color: "from-green-500 to-emerald-500"
     },
     {
         icon: UserGroupIcon,
-        number: "5,000+",
-        label: "Usuarios Activos",
+        number: "1,000+",
+        label: "Usuarios",
         color: "from-purple-500 to-pink-500"
     },
     {
