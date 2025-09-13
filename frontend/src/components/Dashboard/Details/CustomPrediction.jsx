@@ -1,31 +1,20 @@
-import { Box, Card, CardContent, Fade, Grid, Typography, useTheme } from '@mui/material'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
-import { getPredictionRandom } from '../../../services/functions'
-import { useQuery } from '@tanstack/react-query'
 import CustomAlertas from './CustomAlertas'
-import {
-    Sports as SportsIcon, SportsSoccer as SportsSoccerIcon,
-    FormatListBulleted as FormatListBulletedIcon, ThumbsUpDown as ThumbsUpDownIcon,
-    Whatshot as WhatshotIcon, GolfCourse as GolfCourseIcon, Square as SquareIcon
-} from '@mui/icons-material'
-import TitleText from './TitleText'
 import MatchStatisticsBarChart from '../Match/graphics/MatchStatisticsBarChart'
 import PieChartsOne from '../Match/graphics/PieChartsOne'
 import {
     TrophyIcon,
     FireIcon,
     ChartBarIcon,
-    DocumentArrowDownIcon,
     FlagIcon,
     ExclamationTriangleIcon,
     CheckCircleIcon,
     XCircleIcon
 } from '@heroicons/react/24/outline'
-import jsPDF from 'jspdf'
-import domtoimage from 'dom-to-image-more'
 import { motion } from 'framer-motion'
 import { useThemeMode } from '../../../contexts/ThemeContext'
 import { useRef, useState } from 'react'
+import { usePredictions } from '../../../hooks/usePredictions'
 
 const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
@@ -40,72 +29,7 @@ const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
         redCards: useRef(null)
     }
 
-    // 1. Consulta para Match Forecasts
-    const {
-        data: matchesPrediction,
-        isLoading: isLoadingPrediction,
-        isError: isErrorPrediction,
-        error: errorPrediction
-    } = useQuery({
-        queryKey: ["matchesPrediction", equipo_local, equipo_visita],
-        queryFn: () => getPredictionRandom(nombre_liga, equipo_local, equipo_visita),
-        enabled: Boolean(equipo_local && equipo_visita && nombre_liga),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
-    const downloadChart = async (chartRef, filename, currentTheme) => {
-        if (!chartRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(chartRef.current, {
-                quality: 1,
-                bgcolor: '#fff',
-                style: {
-                    transform: 'scale(2)',        // simula scale de html2canvas
-                    transformOrigin: 'top left'
-                }
-            })
-
-            const link = document.createElement('a')
-            link.download = `${filename}.png`
-            link.href = dataUrl
-            link.click()
-        } catch (error) {
-            console.error('Error downloading PNG:', error)
-        }
-    }
-
-    const downloadChartAsPDF = async (chartRef, filename, currentTheme) => {
-        if (!chartRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(chartRef.current, {
-                quality: 1,
-                bgcolor: '#fff',
-                style: {
-                    transform: 'scale(2)',
-                    transformOrigin: 'top left'
-                }
-            })
-
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const imgWidth = 190
-            const img = new Image()
-            img.src = dataUrl
-
-            img.onload = () => {
-                const imgHeight = (img.height * imgWidth) / img.width
-                pdf.addImage(dataUrl, 'PNG', 10, 10, imgWidth, imgHeight)
-                pdf.save(`${filename}.pdf`)
-            }
-        } catch (error) {
-            console.error('Error downloading PDF:', error)
-        }
-    }
-
-    const isLoading = isLoadingPrediction
-    const isError = isErrorPrediction
+    const { matchesPrediction, isLoading, isError, error } = usePredictions(equipo_local, equipo_visita, nombre_liga)
 
     if (isLoading) return <LoadingSpinner />
 
@@ -113,7 +37,7 @@ const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
         return (
             <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6`}>
                 <h2 className={`${currentTheme.text} text-xl font-bold mb-2`}>Error al cargar datos</h2>
-                {isErrorPrediction && <p className={`${currentTheme.textSecondary}`}>Match Prediction: {errorPrediction.message}</p>}
+                {isError && <p className={`${currentTheme.textSecondary}`}>Match Prediction: {error.message}</p>}
             </div>
         )
     }
@@ -143,24 +67,6 @@ const CustomPrediction = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         </div>
                         <h3 className={`${currentTheme.text} text-lg font-bold`}>{title}</h3>
                     </div>
-                    {filename && (
-                        <div className="flex gap-1">
-                            <button
-                                onClick={() => downloadChart(chartRef, filename)}
-                                className="p-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-                                title="Descargar PNG"
-                            >
-                                PNG
-                            </button>
-                            <button
-                                onClick={() => downloadChartAsPDF(chartRef, filename)}
-                                className="p-1.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
-                                title="Descargar PDF"
-                            >
-                                PDF
-                            </button>
-                        </div>
-                    )}
                 </div>
                 {children}
             </div>

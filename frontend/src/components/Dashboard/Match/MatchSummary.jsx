@@ -1,6 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
-import { getMatcheByID } from '../../../services/api/matches'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import { motion } from 'framer-motion'
 import { formatFecha } from '../../../utils/helpers'
@@ -13,74 +11,21 @@ import {
     DocumentArrowDownIcon
 } from '@heroicons/react/24/outline'
 import { useThemeMode } from '../../../contexts/ThemeContext'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
-import { useRef } from 'react'
+import { useMatches } from '../../../hooks/useMatch'
+import { useDownloadStats } from '../../../hooks/useDownloadStats'
 
 const MatchSummary = () => {
 
     const { currentTheme } = useThemeMode()
     const { id_partido } = useParams()
+    const location = useLocation()
     const navigate = useNavigate()
-    const contentRef = useRef(null)
 
-    // 1. Consulta para Match by ID
-    const {
-        data: matchData,
-        isLoading: isLoadingMatch,
-        isError: isErrorMatch,
-        error: errorMatch
-    } = useQuery({
-        queryKey: ["matchById", id_partido],
-        queryFn: () => getMatcheByID({ id_partido }),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
+    const equipo_local = location.state?.equipo_local
+    const equipo_visita = location.state?.equipo_visita
 
-    // Manejo de estados de carga combinados
-    const isLoading = isLoadingMatch
-    const isError = isErrorMatch
-
-    const downloadAsPNG = async () => {
-        if (contentRef.current) {
-            const canvas = await html2canvas(contentRef.current, {
-                backgroundColor: currentTheme.background === 'bg-gray-900' ? '#111827' : '#ffffff',
-                scale: 2
-            })
-            const link = document.createElement('a')
-            link.download = `resumen-partido-${id_partido}.png`
-            link.href = canvas.toDataURL()
-            link.click()
-        }
-    }
-
-    const downloadAsPDF = async () => {
-        if (contentRef.current) {
-            const canvas = await html2canvas(contentRef.current, {
-                backgroundColor: currentTheme.background === 'bg-gray-900' ? '#111827' : '#ffffff',
-                scale: 2
-            })
-            const imgData = canvas.toDataURL('image/png')
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const imgWidth = 210
-            const pageHeight = 295
-            const imgHeight = (canvas.height * imgWidth) / canvas.width
-            let heightLeft = imgHeight
-
-            let position = 0
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-            heightLeft -= pageHeight
-
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight
-                pdf.addPage()
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-                heightLeft -= pageHeight
-            }
-
-            pdf.save(`resumen-partido-${id_partido}.pdf`)
-        }
-    }
+    const { matchData, isLoading, isError, error } = useMatches(id_partido)
+    const { statsRef, downloadAsPNG, downloadAsPDF } = useDownloadStats()
 
     if (isLoading) return <LoadingSpinner />
 
@@ -89,7 +34,7 @@ const MatchSummary = () => {
             <div className={`${currentTheme.background} min-h-screen flex items-center justify-center`}>
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6`}>
                     <h2 className={`${currentTheme.text} text-xl font-bold mb-2`}>Error al cargar datos</h2>
-                    {isErrorMatch && <p className={`${currentTheme.textSecondary}`}>Summary by ID: {errorMatch.message}</p>}
+                    {isError && <p className={`${currentTheme.textSecondary}`}>Summary by ID: {error.message}</p>}
                 </div>
             </div>
         )
@@ -125,7 +70,7 @@ const MatchSummary = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={downloadAsPNG}
+                                onClick={() => downloadAsPNG('resumen', equipo_local, equipo_visita)}
                                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
                             >
                                 <DocumentArrowDownIcon className="w-4 h-4" />
@@ -134,7 +79,7 @@ const MatchSummary = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={downloadAsPDF}
+                                onClick={() => downloadAsPDF('resumen', equipo_local, equipo_visita)}
                                 className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
                             >
                                 <DocumentArrowDownIcon className="w-4 h-4" />
@@ -145,7 +90,7 @@ const MatchSummary = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-6" ref={contentRef}>
+            <div className="max-w-7xl mx-auto px-4 py-6" ref={statsRef}>
                 {finalMatchDataAsArray.map((partidoID, index) => (
                     <motion.div
                         key={index}

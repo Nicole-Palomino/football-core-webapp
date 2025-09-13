@@ -17,7 +17,7 @@ createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <ThemeProvider>
             <App />
-            <ReactQueryDevtools initialIsOpen={false} />
+            {/* <ReactQueryDevtools initialIsOpen={false} /> */}
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>

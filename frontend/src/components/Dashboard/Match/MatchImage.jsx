@@ -1,12 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
-import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { formatFecha } from '../../../utils/helpers'
-import { getMatcheByID } from '../../../services/api/matches'
 import CustomImage from '../Details/CustomImage'
 import { ArrowLeftIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline'
 import { useThemeMode } from '../../../contexts/ThemeContext'
+import { useMatches } from '../../../hooks/useMatch'
 
 const MatchImage = () => {
 
@@ -14,23 +13,8 @@ const MatchImage = () => {
     const { id_partido } = useParams()
     const navigate = useNavigate()
 
-    // 1. Consulta para Match by ID
-    const {
-        data: matchData,
-        isLoading: isLoadingMatch,
-        isError: isErrorMatch,
-        error: errorMatch
-    } = useQuery({
-        queryKey: ["matchById", id_partido],
-        queryFn: () => getMatcheByID({ id_partido }),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
+    const { matchData, isLoading, isError, error } = useMatches(id_partido)
     
-    // Manejo de estados de carga combinados
-    const isLoading = isLoadingMatch
-    const isError = isErrorMatch
-
     if (isLoading) return <LoadingSpinner />
 
     if (isError) {
@@ -38,7 +22,7 @@ const MatchImage = () => {
             <div className="flex flex-col items-center justify-center min-h-screen p-4">
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6 max-w-md w-full text-center`}>
                     <h2 className={`${currentTheme.text} text-xl font-bold mb-4`}>Error al cargar datos</h2>
-                    {isErrorMatch && <p className={`${currentTheme.textSecondary} text-sm`}>Match by ID: {errorMatch.message}</p>}
+                    {isError && <p className={`${currentTheme.textSecondary} text-sm`}>Match by ID: {error.message}</p>}
                 </div>
             </div>
         )

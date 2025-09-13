@@ -1,7 +1,4 @@
-import { useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { getMatcheByID } from '../../../services/api/matches'
-import { useQuery } from '@tanstack/react-query'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import { motion } from 'framer-motion'
 import { formatFecha } from '../../../utils/helpers'
@@ -13,8 +10,8 @@ import {
     DocumentArrowDownIcon
 } from '@heroicons/react/24/outline'
 import { useThemeMode } from '../../../contexts/ThemeContext'
-import jsPDF from 'jspdf'
-import domtoimage from 'dom-to-image-more'
+import { useMatches } from '../../../hooks/useMatch'
+import { useDownloadStats } from '../../../hooks/useDownloadStats'
 
 const MatchPrediction = () => {
 
@@ -22,29 +19,13 @@ const MatchPrediction = () => {
     const { id_partido } = useParams()
     const location = useLocation()
     const navigate = useNavigate()
-    const contentRef = useRef(null)
 
     const equipo_local = location.state?.equipo_local
     const equipo_visita = location.state?.equipo_visita
 
-    // 1. Consulta para Match by ID
-    const {
-        data: matchData,
-        isLoading: isLoadingMatch,
-        isError: isErrorMatch,
-        error: errorMatch
-    } = useQuery({
-        queryKey: ["matchById", id_partido],
-        queryFn: () => getMatcheByID({ id_partido }),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
+    const { matchData, isLoading, isError, error } = useMatches(id_partido)
+    const { statsRef, downloadAsPNG, downloadAsPDF } = useDownloadStats()
     const nombre_liga = matchData?.liga?.nombre_liga
-
-    // Manejo de estados de carga combinados
-    const isLoading = isLoadingMatch
-    const isError = isErrorMatch
 
     if (isLoading) return <LoadingSpinner />
 
@@ -53,7 +34,7 @@ const MatchPrediction = () => {
             <div className={`${currentTheme.background} min-h-screen flex items-center justify-center`}>
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6`}>
                     <h2 className={`${currentTheme.text} text-xl font-bold mb-2`}>Error al cargar datos</h2>
-                    {isErrorMatch && <p className={`${currentTheme.textSecondary}`}>Match by ID: {errorMatch.message}</p>}
+                    {isError && <p className={`${currentTheme.textSecondary}`}>Match by ID: {error.message}</p>}
                 </div>
             </div>
         )
@@ -64,45 +45,6 @@ const MatchPrediction = () => {
         : []
 
     const handleGoBack = () => navigate(-1)
-
-    const downloadAsPNG = async () => {
-        if (!statsRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(statsRef.current, {
-                quality: 1,
-                bgcolor: currentTheme.background // mantiene el fondo de tu theme
-            })
-
-            const link = document.createElement('a')
-            link.download = `estadisticas-${equipo_local}-vs-${equipo_visita}.png`
-            link.href = dataUrl
-            link.click()
-        } catch (error) {
-            console.error('Error downloading PNG:', error)
-        }
-    }
-
-    const downloadAsPDF = async () => {
-        if (!statsRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(statsRef.current, {
-                quality: 1,
-                bgcolor: currentTheme.background // aquí respeta el tema
-            })
-
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const imgProps = pdf.getImageProperties(dataUrl)
-            const pdfWidth = pdf.internal.pageSize.getWidth()
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-
-            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-            pdf.save(`estadisticas-${equipo_local}-vs-${equipo_visita}.pdf`)
-        } catch (error) {
-            console.error('Error downloading PDF:', error)
-        }
-    }
 
     return (
         <div className={`${currentTheme.background} min-h-screen`}>
@@ -129,7 +71,7 @@ const MatchPrediction = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={downloadAsPNG}
+                                onClick={() => downloadAsPNG('predicciones', equipo_local, equipo_visita)}
                                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
                             >
                                 <DocumentArrowDownIcon className="w-4 h-4" />
@@ -138,7 +80,7 @@ const MatchPrediction = () => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={downloadAsPDF}
+                                onClick={() => downloadAsPDF('predicciones', equipo_local, equipo_visita)}
                                 className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
                             >
                                 <DocumentArrowDownIcon className="w-4 h-4" />
@@ -149,7 +91,7 @@ const MatchPrediction = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-6" ref={contentRef}>
+            <div className="max-w-7xl mx-auto px-4 py-6" ref={statsRef}>
                 {finalMatchDataAsArray.map((partidoID, index) => (
                     <motion.div
                         key={index}

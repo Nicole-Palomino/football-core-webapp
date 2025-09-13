@@ -15,28 +15,10 @@ export const useMatchStats = (equipo_local, equipo_visita, nombre_liga) => {
         cacheTime: 5 * 60 * 1000
     })
 
-    const {
-        data: matchPoisson,
-        isLoading: isLoadingPoisson,
-        isError: isErrorPoisson,
-        error: errorPoisson
-    } = useQuery({
-        queryKey: ["matchPoisson", equipo_local, equipo_visita],
-        queryFn: () => getPoisson(nombre_liga, equipo_local, equipo_visita),
-        enabled: Boolean(equipo_local && equipo_visita && nombre_liga),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
     return {
         matchesStats,
-        matchPoisson,
         isLoading: isLoadingStats,
         isError: isErrorStats,
         error: errorStats,
-
-        isLoadingPoisson,
-        isErrorPoisson,
-        errorPoisson
     }
 }

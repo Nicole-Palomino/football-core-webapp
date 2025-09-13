@@ -1,6 +1,4 @@
-import { combinarAnalisisYPrediccion, getAnalyticsCluster, getPoisson, getPredictionCluster } from '../../../services/functions'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
-import { useQuery } from '@tanstack/react-query'
 import CustomAlertas from './CustomAlertas'
 import EntreEquipos from './EntreEquipos'
 import {
@@ -13,80 +11,17 @@ import {
     FireIcon,
     RectangleStackIcon
 } from '@heroicons/react/24/outline'
-import jsPDF from 'jspdf'
 import { motion } from 'framer-motion'
 import { useThemeMode } from '../../../contexts/ThemeContext'
-import { useRef } from 'react'
-import domtoimage from 'dom-to-image-more'
-import { useMatchStats } from '../../../hooks/useMatchStats'
+import { usePoisson } from '../../../hooks/usePoisson'
+import { useDownloadStats } from '../../../hooks/useDownloadStats'
 
 const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
 
     const { currentTheme } = useThemeMode()
-    const analysisRef = useRef(null)
 
-    const { matchPoisson, isLoadingPoisson, isErrorPoisson, errorPoisson } = useMatchStats(equipo_local, equipo_visita, nombre_liga)
-
-    // 2. Consulta para K-means
-    const fetchClusterData = async (liga, equipo1, equipo2) => {
-        const clusterAnalysis = await getAnalyticsCluster(liga, equipo1, equipo2)
-        const clusterPrediction = await getPredictionCluster(liga, equipo1, equipo2)
-        return combinarAnalisisYPrediccion(clusterAnalysis, clusterPrediction) || []
-    }
-
-    const {
-        data: clusterData,
-        isLoading: isLoadingCluster,
-        isError: isErrorCluster,
-        error: errorCluster
-    } = useQuery({
-        queryKey: ["clusterData", equipo_local, equipo_visita],
-        queryFn: () => fetchClusterData(nombre_liga, equipo_local, equipo_visita),
-        enabled: Boolean(nombre_liga, equipo_local, equipo_visita),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
-    const isLoading = isLoadingPoisson || isLoadingCluster
-    const isError = isErrorPoisson || isErrorCluster
-
-    const downloadAsPNG = async () => {
-        if (!analysisRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(analysisRef.current, {
-                quality: 1,
-                bgcolor: '#ffffff' // fondo blanco opcional
-            })
-            const link = document.createElement('a')
-            link.download = `analisis-${equipo_local}-vs-${equipo_visita}.png`
-            link.href = dataUrl
-            link.click()
-        } catch (error) {
-            console.error('Error downloading PNG:', error)
-        }
-    }
-
-    const downloadAsPDF = async () => {
-        if (!analysisRef.current) return
-
-        try {
-            const dataUrl = await domtoimage.toPng(analysisRef.current, {
-                quality: 1,
-                bgcolor: '#ffffff'
-            })
-
-            const pdf = new jsPDF('p', 'mm', 'a4')
-            const imgProps = pdf.getImageProperties(dataUrl)
-            const pdfWidth = pdf.internal.pageSize.getWidth()
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-
-            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-            pdf.save(`analisis-${equipo_local}-vs-${equipo_visita}.pdf`)
-        } catch (error) {
-            console.error('Error downloading PDF:', error)
-        }
-    }
+    const { matchPoisson, clusterData, isLoading, isError, error } = usePoisson(equipo_local, equipo_visita, nombre_liga)
+    const { statsRef, downloadAsPNG, downloadAsPDF } = useDownloadStats()
 
     if (isLoading) return <LoadingSpinner />
 
@@ -95,8 +30,7 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
             <div className={`min-h-[400px] ${currentTheme.background} flex items-center justify-center`}>
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 text-center`}>
                     <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Error al cargar datos</h2>
-                    {isErrorPoisson && <p className={`${currentTheme.textSecondary} mb-2`}>Match Poisson: {errorPoisson.message}</p>}
-                    {isErrorCluster && <p className={`${currentTheme.textSecondary}`}>Match Cluster: {errorCluster.message}</p>}
+                    {isError && <p className={`${currentTheme.textSecondary} mb-2`}>Match Poisson: {error.message}</p>}
                 </div>
             </div>
         )
@@ -119,7 +53,7 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={downloadAsPNG}
+                            onClick={() => downloadAsPNG('análisis', equipo_local, equipo_visita)}
                             className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />
@@ -128,7 +62,7 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={downloadAsPDF}
+                            onClick={() => downloadAsPDF('análisis', equipo_local, equipo_visita)}
                             className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />
@@ -136,7 +70,7 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         </motion.button>
                     </div>
 
-                    <div ref={analysisRef} className={`${currentTheme.background} p-6 rounded-2xl`}>
+                    <div ref={statsRef} className={`${currentTheme.background} p-6 rounded-2xl`}>
                         {/* Poisson Analysis Section */}
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -287,11 +221,9 @@ const CustomAnalysis = ({ equipo_local, equipo_visita, nombre_liga }) => {
                                     </div>
                                     <h3 className={`text-lg font-bold ${currentTheme.text}`}>Resumen del Partido</h3>
                                 </div>
-                                {/* {finalMatchCluster?.descripcion_cluster_predicho && (
-                                    <p className={`${currentTheme.text} text-sm leading-relaxed whitespace-pre-line`}>
-                                        {finalMatchCluster.descripcion_cluster_predicho}
-                                    </p>
-                                )} */}
+                                <p className={`${currentTheme.text} text-sm leading-relaxed whitespace-pre-line`}>
+                                    {finalMatchCluster?.prediccion?.resumen}
+                                </p>
                             </motion.div>
 
                             {/* Predictions Grid */}

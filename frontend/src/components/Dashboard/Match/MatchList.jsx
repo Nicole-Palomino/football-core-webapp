@@ -37,8 +37,13 @@ const MatchList = React.memo(({ partidos, type }) => {
         })
     }
 
-    const onResumenClick = (partido_id) => {
-        navigate(`/dashboard/summary/${partido_id}`)
+    const onResumenClick = (team1_id, team2_id, partido_id) => {
+        navigate(`/dashboard/summary/${partido_id}`, {
+            state: {
+                equipo_local: team1_id,
+                equipo_visita: team2_id
+            }
+        })
     }
 
     const onImagenesClick = (partido_id) => {
@@ -166,7 +171,11 @@ const MatchList = React.memo(({ partidos, type }) => {
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.95 }}
-                                            onClick={() => onResumenClick(partido.id_partido)}
+                                            onClick={() => onResumenClick(
+                                                partido.equipo_local.nombre_equipo,
+                                                partido.equipo_visita.nombre_equipo,
+                                                partido.id_partido
+                                            )}
                                             className={`p-2 rounded-lg ${currentTheme.hover} transition-colors duration-200 group/btn`}
                                             title="Resumen"
                                         >

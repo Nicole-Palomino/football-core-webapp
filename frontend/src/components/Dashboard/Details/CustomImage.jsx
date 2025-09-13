@@ -1,36 +1,18 @@
-import { Box, Card, CardContent, Dialog, DialogContent, Fade, Grid, Typography, useTheme } from '@mui/material'
-import React, { useState } from 'react'
-import { getResumenesByPartido } from '../../../services/api/summaries'
+import { useState } from 'react'
 import LoadingSpinner from '../../Loading/LoadingSpinner'
 import CustomAlertas from './CustomAlertas'
-import TitleText from './TitleText'
 import ButtonDownload from '../../Buttons/ButtonDownload'
-import { useQuery } from '@tanstack/react-query'
-import TableChartIcon from '@mui/icons-material/TableChart'
 import { ChartBarIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useThemeMode } from '../../../contexts/ThemeContext'
+import { useImages } from '../../../hooks/useImage'
 
 const CustomImage = ({ id_partido }) => {
 
     const { currentTheme } = useThemeMode()
     const [openImage, setOpenImage] = useState(null)
 
-    const {
-        data: matchImage,
-        isLoading: isLoadingImage,
-        isError: isErrorImage,
-        error: errorImage
-    } = useQuery({
-        queryKey: ["matchImage", id_partido],
-        queryFn: () => getResumenesByPartido(id_partido),
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
-    // Manejo de estados de carga combinados
-    const isLoading = isLoadingImage
-    const isError = isErrorImage
+    const { matchImage, isLoading, isError, error } = useImages(id_partido)
 
     if (isLoading) return <LoadingSpinner />
 
@@ -39,7 +21,7 @@ const CustomImage = ({ id_partido }) => {
             <div className="flex flex-col items-center justify-center p-8">
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-xl p-6 max-w-md w-full text-center`}>
                     <h2 className={`${currentTheme.text} text-lg font-bold mb-4`}>Error al cargar datos</h2>
-                    {isErrorImage && <p className={`${currentTheme.textSecondary} text-sm`}>Summary by ID: {errorImage.message}</p>}
+                    {isError && <p className={`${currentTheme.textSecondary} text-sm`}>Summary by ID: {error.message}</p>}
                 </div>
             </div>
         )

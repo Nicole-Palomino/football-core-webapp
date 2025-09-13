@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Box, Container, useTheme } from '@mui/material'
-import { getLigues, getTeams } from '../services/functions'
-import { useQuery } from '@tanstack/react-query'
+import { getTeams } from '../services/functions'
 import CustomAnalysis from '../components/Dashboard/Details/CustomAnalysis'
 import CustomStats from '../components/Dashboard/Details/CustomStats'
 import LoadingSpinner from '../components/Loading/LoadingSpinner'
 import SelectionControls from '../components/Forms/controls/SelectionControls'
 import Header from '../components/Forms/controls/Header'
 import LoadingMessage from '../components/Loading/LoadingMessage'
+import { useLeagues } from '../hooks/useLeagues'
 
 const Analysis = () => {
 
@@ -20,27 +20,9 @@ const Analysis = () => {
     const [showStats, setShowStats] = useState(false)
     const theme = useTheme()
 
-    function parseLigas(raw) {
-        return Object.entries(raw).map(([key, value]) => ({
-            id: key,
-            nombre: key,
-            logo: value.logo,
-            color: value.color,
-        }));
-    }
+    const { ligas, isLoading } = useLeagues()
 
-    const { data: ligas, isLoading: isLoadingLigas, isError: isErrorLigas } = useQuery({
-        queryKey: ['ligas'],
-        queryFn: async () => {
-            const response = await getLigues()
-            return parseLigas(response.ligas)
-        },
-        // staleTime: Infinity,
-        staleTime: 1000 * 60 * 15,
-        cacheTime: 5 * 60 * 1000
-    })
-
-    if (isLoadingLigas) {
+    if (isLoading) {
         return (
             <LoadingSpinner />
         )
@@ -51,7 +33,6 @@ const Analysis = () => {
             setLoading(true)
             const response = await getTeams(liga)
             setEquipos(response.equipos || [])
-            console.log(response.equipos)
         } catch (error) {
             console.error('Error fetching equipos:', error)
         } finally {

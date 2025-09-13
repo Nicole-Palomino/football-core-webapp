@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { formatFechaHora } from '../utils/helpers'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
@@ -95,9 +95,9 @@ const PageProfile = () => {
     useEffect(() => {
         if (user) {
             let completion = 0
-            if (user.usuario) completion += 25
+            if (user.nombre) completion += 25
             if (user.correo) completion += 25
-            if (user.rol?.nombre_rol) completion += 25
+            if (user.roles) completion += 25
             if (user.is_active) completion += 25
             setProfileCompletion(completion)
         }
@@ -105,7 +105,7 @@ const PageProfile = () => {
 
     const handleEditProfile = () => {
         reset({
-            usuario: user?.usuario || "",
+            usuario: user?.nombre || "",
             correo: user?.correo || ""
         })
         setEditModalOpen(true)
@@ -139,9 +139,12 @@ const PageProfile = () => {
     }
 
     const getRoleConfig = (roleName) => {
-        switch (roleName?.toLowerCase()) {
+
+        const role = Array.isArray(roleName) ? roleName[0] : roleName
+
+        switch (role?.toLowerCase()) {
             case 'admin':
-            case 'administrador':
+            case 'Administrador':
                 return {
                     bg: 'from-red-500 to-red-600',
                     text: 'text-red-500',
@@ -149,14 +152,14 @@ const PageProfile = () => {
                     icon: ShieldSolidIcon
                 }
             case 'user':
-            case 'usuario':
+            case 'Usuario':
                 return {
                     bg: 'from-blue-500 to-blue-600',
                     text: 'text-blue-500',
                     bgColor: 'bg-blue-500/10',
                     icon: UserSolidIcon
                 }
-            case 'moderador':
+            case 'Editor':
                 return {
                     bg: 'from-yellow-500 to-yellow-600',
                     text: 'text-yellow-500',
@@ -185,7 +188,7 @@ const PageProfile = () => {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     }
 
-    const roleConfig = getRoleConfig(user.rol?.nombre_rol)
+    const roleConfig = getRoleConfig(user.roles)
     const daysActive = calculateDaysActive(user.registro)
 
     return (
@@ -258,7 +261,7 @@ const PageProfile = () => {
                                     {/* Avatar with badge */}
                                     <div className="relative">
                                         <div className={`w-32 h-32 rounded-full bg-gradient-to-r ${roleConfig.bg} flex items-center justify-center text-white text-4xl font-bold shadow-2xl border-4 border-white/10`}>
-                                            {getInitials(user.usuario)}
+                                            {getInitials(user.nombre)}
                                         </div>
                                         {user.is_active && (
                                             <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-gray-800">
@@ -270,7 +273,7 @@ const PageProfile = () => {
                                     {/* User Info */}
                                     <div className="flex-1 space-y-4">
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                            <h2 className={`text-3xl font-bold ${currentTheme.text}`}>@{user.usuario}</h2>
+                                            <h2 className={`text-3xl font-bold ${currentTheme.text}`}>@{user.nombre}</h2>
                                             <motion.button
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
@@ -286,7 +289,7 @@ const PageProfile = () => {
                                         <div className="flex flex-wrap gap-3">
                                             <div className={`flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r ${roleConfig.bg} rounded-full text-white text-sm font-bold`}>
                                                 <roleConfig.icon className="w-4 h-4" />
-                                                {user.rol?.nombre_rol || 'Usuario'}
+                                                {user.roles || 'Usuario'}
                                             </div>
                                             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold ${user.is_active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
                                                 <ShieldCheckIcon className="w-4 h-4" />

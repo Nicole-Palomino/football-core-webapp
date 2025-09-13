@@ -7,7 +7,7 @@ export const useDownloadStats = () => {
     const { currentTheme } = useThemeMode()
     const statsRef = useRef(null)
 
-    const downloadAsPNG = async (local, visita) => {
+    const downloadAsPNG = async (title, local, visita) => {
         if (!statsRef.current) return
         
         try {
@@ -21,7 +21,7 @@ export const useDownloadStats = () => {
             })
 
             const link = document.createElement('a')
-            link.download = `estadisticas-${local}-vs-${visita}.png`
+            link.download = `${title}-${local}-vs-${visita}.png`
             link.href = dataUrl
             document.body.appendChild(link)
             link.click()
@@ -31,7 +31,7 @@ export const useDownloadStats = () => {
         }
     }
 
-    const downloadAsPDF = async (local, visita) => {
+    const downloadAsPDF = async (title, local, visita) => {
         if (!statsRef.current) return
 
         try {
@@ -63,7 +63,7 @@ export const useDownloadStats = () => {
                 const y = (pageHeight - finalHeight) / 2
 
                 pdf.addImage(dataUrl, 'PNG', x, y, finalWidth, finalHeight, '', 'FAST')
-                pdf.save(`estadisticas-${local}-vs-${visita}.pdf`)
+                pdf.save(`${title}-${local}-vs-${visita}.pdf`)
             }
 
             img.src = dataUrl

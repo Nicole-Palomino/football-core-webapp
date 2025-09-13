@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { deleteFavorite } from '../services/api/favorites'
-import { getStoredUser } from '../services/auth'
 import { formatFecha } from '../utils/helpers'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -18,9 +17,10 @@ import {
     HeartIcon as HeartOutlineIcon
 } from '@heroicons/react/24/outline'
 import { useThemeMode } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContexts'
 
 const Favorite = () => {
-    const user = getStoredUser()
+    const { user } = useAuth()
     const id_usuario = user?.id_usuario
     const queryClient = useQueryClient()
     const [hoveredItem, setHoveredItem] = useState(null)

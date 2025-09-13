@@ -43,7 +43,7 @@ const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
             <div className={`min-h-[400px] ${currentTheme.background} flex items-center justify-center`}>
                 <div className={`${currentTheme.card} ${currentTheme.border} border rounded-2xl p-8 text-center`}>
                     <h2 className={`text-2xl font-bold ${currentTheme.text} mb-4`}>Error al cargar datos</h2>
-                    {isErrorStats && <p className={`${currentTheme.textSecondary}`}>Match Stats: {error.message}</p>}
+                    {isError && <p className={`${currentTheme.textSecondary}`}>Match Stats: {error.message}</p>}
                 </div>
             </div>
         )
@@ -65,7 +65,7 @@ const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => downloadAsPNG(equipo_local, equipo_visita)}
+                            onClick={() => downloadAsPNG('estadísticas', equipo_local, equipo_visita)}
                             className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />
@@ -74,7 +74,7 @@ const CustomStats = ({ equipo_local, equipo_visita, nombre_liga }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => downloadAsPDF(equipo_local, equipo_visita)}
+                            onClick={() => downloadAsPDF('estadísticas', equipo_local, equipo_visita)}
                             className={`flex items-center gap-2 ${currentTheme.card} ${currentTheme.border} border rounded-lg px-4 py-2 ${currentTheme.hover} transition-all duration-200`}
                         >
                             <ArrowDownTrayIcon className="w-4 h-4" />
