@@ -10,7 +10,7 @@ import { useFunctions } from '../../hooks/useFunctions'
 import { useLeagues } from '../../hooks/useLeagues'
 import { useSeason } from '../../hooks/useSeason'
 import LoadingSpinner from '../Loading/LoadingSpinner'
-import { formatDate, formatOnlyDate, formatTime } from '../../utils/utils'
+import { formatTime } from '../../utils/utils'
 import { Alert, Snackbar } from '@mui/material'
 
 const Partidos = () => {
@@ -1126,7 +1126,7 @@ const Partidos = () => {
                                         <button 
                                             type="submit" 
                                             className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center space-x-2"
-                                            disabled={modalType === 'estadisticas-create' ? createEstadistica.isLoading : updatedStat.isLoading}
+                                            disabled={modalType === 'estadisticas-create' ? createStat.isLoading : updatedStat.isLoading}
                                         >
                                             <BarChart3 size={16} />
                                             <span>
