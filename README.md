@@ -9,7 +9,7 @@ Aplicación web completa para la gestión de ligas de fútbol, que incluye un pa
 El proyecto está dividido en cuatro componentes principales:
 
 ### 🖥️ Admin (Panel de Administración)
-- Tecnología: Electron.js
+- Tecnología: React + Vite
 - Propósito: Interfaz de escritorio para administradores del sistema
 - Funcionalidades:
   - Gestión de usuarios y roles
@@ -30,9 +30,9 @@ El proyecto está dividido en cuatro componentes principales:
 - Tecnología: React + Vite
 - Propósito: Interfaz web para usuarios finales
 - Características:
-  - Diseño responsivo con TailwindCSS
-  - Componentes de Material-UI
-  - Gestión de estado eficiente
+  - Diseño responsive con TailwindCSS
+  - Visualización de datos en tiempo real
+  - Seguimiento de ligas y equipos
   - Experiencia de usuario optimizada
 
 ### 📱 Mobile (App)
@@ -46,28 +46,74 @@ El proyecto está dividido en cuatro componentes principales:
 
 ## 🚀 Inicio Rápido
 
-Cada componente tiene su propio README con instrucciones detalladas de instalación y configuración.
-
 1. Clona el repositorio:
 ```bash
 git clone [url-del-repositorio]
 cd football-core-webapp
 ```
 
-2. Sigue las instrucciones de instalación en cada carpeta:
-- `/admin/README.md` - Para el panel de administración
-- `/backend/README.md` - Para la API
-- `/frontend/README.md` - Para la web
-- `/mobiles/README.md` - Para la app móvil
+2. Configura cada componente:
 
-## 📝 Licencia
+### Admin
+```bash
+cd admin
+npm install
+npm run dev
+```
 
-Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
+### Backend
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+source venv/bin/activate  # Unix/MacOS
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
-## ✨ Contribuir
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Las contribuciones son bienvenidas. Por favor, lee las guías de contribución antes de enviar un pull request.
+### Mobile
+```bash
+cd mobiles
+npm install
+npx expo start
+```
+
+## 🔒 Seguridad
+
+- Autenticación JWT en todos los componentes
+- Control de acceso basado en roles
+- Protección de datos sensibles
+- Rate limiting y validación de datos
+
+## 📱 Compatibilidad
+
+- **Web**: Chrome, Firefox, Safari, Edge (últimas versiones)
+- **Mobile**: iOS 13+ y Android 8+
+- **Desktop**: Windows 10+, macOS 10.15+, Linux
+
+## 🧪 Testing
+
+Cada componente incluye su propia suite de tests. Consulta los README individuales para más detalles sobre testing.
+
+## 📝 Contribuir
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
 ## 👥 Autores
 
 - Nicole Palomino Alvarado
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
